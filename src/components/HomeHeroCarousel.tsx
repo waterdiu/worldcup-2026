@@ -58,15 +58,30 @@ export function HomeHeroCarousel({ slides, locale }: HomeHeroCarouselProps) {
             : null;
           const isPromo = slide.type === 'promo';
           const isOpening = slide.accent === 'opening';
+          const dailyArtworkUrl = slide.accent === 'daily' ? slide.artworkUrl : undefined;
+          const isGeneratedPoster = Boolean(dailyArtworkUrl);
+          const matchLinkLabel = isOpening
+            ? locale === 'zh'
+              ? '进入揭幕战详情页'
+              : 'open opening match detail page'
+            : slide.ctaLabel;
+          const slideStyle = isGeneratedPoster
+            ? ({
+                '--home-daily-artwork': slide.fallbackArtworkUrl
+                  ? `image-set(url("${publicAssetPath(dailyArtworkUrl!)}") type("image/webp"), url("${publicAssetPath(slide.fallbackArtworkUrl)}") type("image/jpeg"))`
+                  : `url("${publicAssetPath(dailyArtworkUrl!)}")`
+              } as CSSProperties)
+            : undefined;
 
           return (
             <article
               key={slide.id}
               className={`home-hero__slide home-hero__slide--${slide.accent ?? 'default'}`}
+              style={slideStyle}
             >
               <div className="home-hero__media" aria-hidden="true" />
               <div className="home-hero__visual" aria-hidden="true" />
-              {!isOpening ? (
+              {!isOpening && !isGeneratedPoster ? (
                 <div className="home-hero__content">
                   <p className="home-hero__eyebrow">{slide.eyebrow}</p>
                   <h1>{slide.title}</h1>
@@ -106,7 +121,7 @@ export function HomeHeroCarousel({ slides, locale }: HomeHeroCarouselProps) {
                 <a
                   className="home-hero__hitarea"
                   href={localizePath(slide.href, locale)}
-                  aria-label={locale === 'zh' ? '进入揭幕战详情页' : 'open opening match detail page'}
+                  aria-label={matchLinkLabel}
                 />
               )}
             </article>
