@@ -70,10 +70,25 @@ export interface AppCopy {
   };
 }
 
+export function appBasePath(): string {
+  const base = import.meta.env.BASE_URL || '/';
+  return base.endsWith('/') ? base.slice(0, -1) : base;
+}
+
+export function stripAppBasePath(pathname: string): string {
+  const base = appBasePath();
+  if (!base || base === '/') return pathname;
+  if (pathname === base) return '/';
+  if (pathname.startsWith(`${base}/`)) return pathname.slice(base.length) || '/';
+  return pathname;
+}
+
 export function localizePath(path: string, locale: Locale): string {
-  if (locale === 'zh') return path;
-  if (path === '/') return '/en';
-  return `/en${path}`;
+  const localizedPath = locale === 'zh' ? path : path === '/' ? '/en' : `/en${path}`;
+  const base = appBasePath();
+  if (!base || base === '/') return localizedPath;
+  if (localizedPath === '/') return `${base}/`;
+  return `${base}${localizedPath}`;
 }
 
 export const contentByLocale: Record<Locale, AppCopy> = {
@@ -225,5 +240,5 @@ export const contentByLocale: Record<Locale, AppCopy> = {
 };
 
 export function getLocaleFromPathname(pathname: string): Locale {
-  return pathname.startsWith('/en') ? 'en' : 'zh';
+  return stripAppBasePath(pathname).startsWith('/en') ? 'en' : 'zh';
 }

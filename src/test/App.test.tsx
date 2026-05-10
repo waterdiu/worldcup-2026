@@ -11,6 +11,23 @@ describe('App routes', () => {
     window.history.replaceState({}, '', '/');
   });
 
+  it('uses the GitHub Pages base path for internal navigation links', () => {
+    vi.stubEnv('BASE_URL', '/worldcup-2026/');
+
+    try {
+      window.history.replaceState({}, '', '/worldcup-2026/stats');
+      render(<App />);
+
+      expect(screen.getByRole('heading', { name: '统计' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: '首页' })).toHaveAttribute('href', '/worldcup-2026/');
+      expect(screen.getByRole('link', { name: '预选赛' })).toHaveAttribute('href', '/worldcup-2026/qualifiers');
+      expect(screen.getByRole('link', { name: '统计' })).toHaveAttribute('href', '/worldcup-2026/stats');
+    } finally {
+      cleanup();
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('renders the chinese homepage at the root route with unprefixed navigation links', () => {
     window.history.replaceState({}, '', '/');
     render(<App />);

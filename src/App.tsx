@@ -13,7 +13,7 @@ import {
   qualifierDetails,
   tournamentMeta
 } from './data';
-import { contentByLocale, getLocaleFromPathname, type Locale } from './i18n/content';
+import { contentByLocale, getLocaleFromPathname, stripAppBasePath, type Locale } from './i18n/content';
 import { CitiesPage } from './pages/CitiesPage';
 import { GroupDetailPage } from './pages/GroupDetailPage';
 import { GroupsPage } from './pages/GroupsPage';
@@ -179,8 +179,9 @@ function renderPage(pathname: string, locale: Locale) {
 }
 
 export default function App() {
+  const appPathname = stripAppBasePath(window.location.pathname);
   const locale = getLocaleFromPathname(window.location.pathname);
-  const normalizedPathname = normalizePathname(window.location.pathname);
+  const normalizedPathname = normalizePathname(appPathname);
   const copy = contentByLocale[locale];
 
   return (
