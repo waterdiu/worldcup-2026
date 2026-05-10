@@ -123,6 +123,12 @@
     #f7f1e6 var(--home-opening-artwork) center center / cover no-repeat;
 }
 
+.home-hero__slide--daily .home-hero__media {
+  background:
+    linear-gradient(180deg, rgba(7, 17, 30, 0.00) 0%, rgba(7, 17, 30, 0.08) 100%),
+    #08121f var(--home-daily-artwork) center center / cover no-repeat;
+}
+
 .home-hero__slide::after {
   content: '';
   position: absolute;
@@ -147,7 +153,9 @@
 }
 
 .home-hero__slide--opening::after,
-.home-hero__slide--opening::before {
+.home-hero__slide--opening::before,
+.home-hero__slide--daily::after,
+.home-hero__slide--daily::before {
   content: none;
 }
 
