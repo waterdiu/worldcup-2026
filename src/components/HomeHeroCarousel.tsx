@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { formatMatchupLabel, formatVenueName } from '../i18n/formatters';
 import { localizePath, type Locale } from '../i18n/content';
 import type { HeroSlideData } from '../data/home';
+import { publicAssetPath } from '../utils/publicAssets';
 
 interface HomeHeroCarouselProps {
   slides: HeroSlideData[];
@@ -9,7 +10,12 @@ interface HomeHeroCarouselProps {
 }
 
 const TOURNAMENT_PROMO_VIDEO_URL =
-  '/worldcup-assets/2026worldcup.mp4';
+  publicAssetPath('/worldcup-assets/2026worldcup.mp4');
+
+const heroAssetStyles = {
+  '--home-promo-artwork': `url("${publicAssetPath('/worldcup-assets/2026worldcup-合成.png')}")`,
+  '--home-opening-artwork': `url("${publicAssetPath('/worldcup-assets/opening-match-poster.png')}")`
+} as CSSProperties;
 
 export function HomeHeroCarousel({ slides, locale }: HomeHeroCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -41,7 +47,7 @@ export function HomeHeroCarousel({ slides, locale }: HomeHeroCarouselProps) {
   }
 
   return (
-    <section className="home-hero">
+    <section className="home-hero" style={heroAssetStyles}>
       <div
         className="home-hero__track"
         style={{ transform: `translateX(-${activeIndex * 100}%)` }}
