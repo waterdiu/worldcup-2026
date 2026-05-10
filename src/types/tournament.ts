@@ -102,6 +102,7 @@ export interface DailyHeroData {
   venue: string;
   poster: string;
   fallbackPoster: string;
+  posterSource: 'manual' | 'template';
   reason: string;
 }
 
