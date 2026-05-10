@@ -105,7 +105,7 @@
 .home-hero__slide--promo .home-hero__media {
   background:
     linear-gradient(180deg, rgba(7, 17, 30, 0.02) 0%, rgba(7, 17, 30, 0.12) 100%),
-    #ffffff url('/worldcup-assets/2026worldcup-合成.png') center center / cover no-repeat;
+    #ffffff var(--home-promo-artwork) center center / cover no-repeat;
 }
 
 .home-hero__slide--opening .home-hero__media,
@@ -120,7 +120,7 @@
 .home-hero__slide--opening .home-hero__media {
   background:
     linear-gradient(180deg, rgba(7, 17, 30, 0.04) 0%, rgba(7, 17, 30, 0.28) 100%),
-    #f7f1e6 url('/worldcup-assets/opening-match-poster.png') center center / cover no-repeat;
+    #f7f1e6 var(--home-opening-artwork) center center / cover no-repeat;
 }
 
 .home-hero__slide::after {
