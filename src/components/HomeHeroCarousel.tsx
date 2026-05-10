@@ -13,7 +13,7 @@ const TOURNAMENT_PROMO_VIDEO_URL =
   publicAssetPath('/worldcup-assets/2026worldcup.mp4');
 
 const heroAssetStyles = {
-  '--home-promo-artwork': `url("${publicAssetPath('/worldcup-assets/optimized/home-promo-hero.jpg')}")`,
+  '--home-promo-artwork': `image-set(url("${publicAssetPath('/worldcup-assets/optimized/home-promo-hero.webp')}") type("image/webp"), url("${publicAssetPath('/worldcup-assets/optimized/home-promo-hero-small.jpg')}") type("image/jpeg"))`,
   '--home-opening-artwork': `url("${publicAssetPath('/worldcup-assets/optimized/opening-match-poster-v2.jpg')}")`
 } as CSSProperties;
 
