@@ -90,6 +90,21 @@ export interface GroupFixtureData {
   predictionStatus: string;
 }
 
+export interface DailyHeroData {
+  generatedAt: string;
+  referenceDate: string;
+  date: string;
+  matchId: string;
+  title: string;
+  homeTeam: string;
+  awayTeam: string;
+  kickoff: string;
+  venue: string;
+  poster: string;
+  fallbackPoster: string;
+  reason: string;
+}
+
 export interface GroupStageMatchData extends GroupFixtureData {
   matchdayLabel: string;
 }
