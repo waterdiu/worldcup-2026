@@ -14,7 +14,7 @@ const TOURNAMENT_PROMO_VIDEO_URL =
 
 const heroAssetStyles = {
   '--home-promo-artwork': `url("${publicAssetPath('/worldcup-assets/optimized/home-promo-hero.jpg')}")`,
-  '--home-opening-artwork': `url("${publicAssetPath('/worldcup-assets/optimized/opening-match-poster.jpg')}")`
+  '--home-opening-artwork': `url("${publicAssetPath('/worldcup-assets/optimized/opening-match-poster-v2.jpg')}")`
 } as CSSProperties;
 
 export function HomeHeroCarousel({ slides, locale }: HomeHeroCarouselProps) {
