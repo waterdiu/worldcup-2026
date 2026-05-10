@@ -103,11 +103,12 @@ describe('App routes', () => {
     expect(screen.getByRole('heading', { name: /官方宣传片/i })).toBeInTheDocument();
     expect(screen.queryByText(/观看官方宣传片/)).not.toBeInTheDocument();
     expect(screen.queryByText(/进入揭幕战详情/)).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /揭幕战/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/🇲🇽 墨西哥 vs 🇿🇦 南非/).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('heading', { name: /揭幕战/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/🇲🇽 墨西哥 vs 🇿🇦 南非/)).not.toBeInTheDocument();
     expect(container.querySelector('.home-hero__poster--opening')).not.toBeInTheDocument();
     expect(container.querySelector('.home-hero__cutout--home')).not.toBeInTheDocument();
     expect(container.querySelector('.home-hero__cutout--away')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/进入揭幕战详情页/i)).toHaveAttribute('href', '/matches/1');
 
     await user.click(screen.getByLabelText(/打开官方宣传片/i));
     expect(screen.getByLabelText(/官方宣传片播放器/i)).toHaveAttribute(
