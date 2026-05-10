@@ -1,7 +1,7 @@
-import { bracket, confederations, finalsMatchResults, groupFixtures, groups, groupStageMatches, hostCityDetails, tournamentMeta } from '../data';
+import { bracket, confederations, finalsMatchResults, getHomepageHeroSlides, groupFixtures, groups, groupStageMatches, hostCityDetails, tournamentMeta } from '../data';
 import { buildHostCityScatterData, filterHostCountries } from '../data/cityGeoMap';
 import { getTeamDisplay } from '../i18n/formatters';
-import fs from 'node:fs';
+import * as fs from 'node:fs';
 
 describe('tournament data', () => {
   it('defines the official tournament scale', () => {
@@ -84,6 +84,41 @@ describe('tournament data', () => {
       sourceLabel: 'Generated schedule scaffold'
     });
     expect(finalsMatchResults.some((match) => match.id === '104' && match.stageType === 'knockout')).toBe(true);
+  });
+
+  it('uses generated daily hero data for the post-kickoff homepage', () => {
+    const slides = getHomepageHeroSlides(new Date('2026-06-12T23:30:00Z'), 'zh');
+
+    expect(slides).toHaveLength(1);
+    expect(slides[0]).toMatchObject({
+      id: 'daily-hero-7',
+      type: 'match',
+      accent: 'daily',
+      title: '巴西 vs 摩洛哥',
+      href: '/matches/7',
+      artworkUrl: '/worldcup-assets/home/daily/2026-06-13-match-7.webp',
+      fallbackArtworkUrl: '/worldcup-assets/home/daily/2026-06-13-match-7.jpg'
+    });
+  });
+
+  it('publishes daily hero json and static poster assets', () => {
+    const dailyHero = JSON.parse(
+      fs.readFileSync('public/worldcup-assets/home/daily-hero.json', 'utf8')
+    ) as {
+      date: string;
+      matchId: string;
+      poster: string;
+      fallbackPoster: string;
+    };
+
+    expect(dailyHero).toMatchObject({
+      date: '2026-06-13',
+      matchId: '7',
+      poster: '/worldcup-assets/home/daily/2026-06-13-match-7.webp',
+      fallbackPoster: '/worldcup-assets/home/daily/2026-06-13-match-7.jpg'
+    });
+    expect(fs.readFileSync(`public${dailyHero.poster}`, 'base64').length).toBeGreaterThan(0);
+    expect(fs.readFileSync(`public${dailyHero.fallbackPoster}`, 'base64').length).toBeGreaterThan(0);
   });
 
   it('documents the local finals result import contract', () => {
