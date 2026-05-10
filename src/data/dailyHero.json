@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-10T20:41:18Z",
+  "generatedAt": "2026-05-10T21:04:22Z",
   "referenceDate": "2026-06-12",
   "date": "2026-06-13",
   "matchId": "7",
@@ -10,5 +10,6 @@
   "venue": "New York New Jersey Stadium",
   "poster": "/worldcup-assets/home/daily/2026-06-13-match-7.webp",
   "fallbackPoster": "/worldcup-assets/home/daily/2026-06-13-match-7.jpg",
+  "posterSource": "template",
   "reason": "Selected by host-team, marquee-team, and matchup-balance editorial priority."
 }
