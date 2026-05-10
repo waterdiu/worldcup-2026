@@ -115,7 +115,8 @@ describe('tournament data', () => {
       date: '2026-06-13',
       matchId: '7',
       poster: '/worldcup-assets/home/daily/2026-06-13-match-7.webp',
-      fallbackPoster: '/worldcup-assets/home/daily/2026-06-13-match-7.jpg'
+      fallbackPoster: '/worldcup-assets/home/daily/2026-06-13-match-7.jpg',
+      posterSource: 'template'
     });
     expect(fs.readFileSync(`public${dailyHero.poster}`, 'base64').length).toBeGreaterThan(0);
     expect(fs.readFileSync(`public${dailyHero.fallbackPoster}`, 'base64').length).toBeGreaterThan(0);
