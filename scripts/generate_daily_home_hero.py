@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +13,7 @@ FIXTURES_PATH = ROOT / "src/data/groupFixtures.ts"
 PUBLIC_HERO_JSON = ROOT / "public/worldcup-assets/home/daily-hero.json"
 SRC_HERO_JSON = ROOT / "src/data/dailyHero.json"
 POSTER_DIR = ROOT / "public/worldcup-assets/home/daily"
+MANUAL_POSTER_DIR = ROOT / "public/worldcup-assets/home/manual"
 
 TEAM_ZH = {
     "Australia": "澳大利亚",
@@ -136,7 +137,50 @@ def draw_centered(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, tex
     draw.text((xy[0] - (bbox[2] - bbox[0]) / 2, xy[1]), text, font=text_font, fill=fill)
 
 
-def render_poster(fixture: Fixture, target_iso: str) -> tuple[str, str]:
+def poster_paths(target_iso: str, fixture: Fixture) -> tuple[Path, Path, str, str]:
+    POSTER_DIR.mkdir(parents=True, exist_ok=True)
+    base_name = f"{target_iso}-match-{fixture.id}"
+    webp_path = POSTER_DIR / f"{base_name}.webp"
+    jpg_path = POSTER_DIR / f"{base_name}.jpg"
+    return (
+        webp_path,
+        jpg_path,
+        f"/worldcup-assets/home/daily/{base_name}.webp",
+        f"/worldcup-assets/home/daily/{base_name}.jpg",
+    )
+
+
+def find_manual_poster(fixture: Fixture, target_iso: str, manual_dir: Path = MANUAL_POSTER_DIR) -> Path | None:
+    base_names = [
+        f"{target_iso}-match-{fixture.id}",
+        f"match-{fixture.id}",
+        target_iso,
+    ]
+    extensions = [".png", ".jpg", ".jpeg", ".webp"]
+
+    for base_name in base_names:
+        for extension in extensions:
+            candidate = manual_dir / f"{base_name}{extension}"
+            if candidate.exists():
+                return candidate
+    return None
+
+
+def normalize_manual_poster(source: Path, fixture: Fixture, target_iso: str) -> tuple[str, str]:
+    webp_path, jpg_path, webp_url, jpg_url = poster_paths(target_iso, fixture)
+    with Image.open(source) as original:
+        image = ImageOps.fit(
+            original.convert("RGB"),
+            (1600, 1000),
+            method=Image.Resampling.LANCZOS,
+            centering=(0.5, 0.5),
+        )
+        image.save(webp_path, "WEBP", quality=82, method=6)
+        image.save(jpg_path, "JPEG", quality=82, optimize=True, progressive=True)
+    return webp_url, jpg_url
+
+
+def render_template_poster(fixture: Fixture, target_iso: str) -> tuple[str, str]:
     POSTER_DIR.mkdir(parents=True, exist_ok=True)
     width, height = 1600, 1000
     image = Image.new("RGB", (width, height), "#08121f")
@@ -170,20 +214,22 @@ def render_poster(fixture: Fixture, target_iso: str) -> tuple[str, str]:
     draw_centered(draw, (width // 2, 590), venue_zh, meta_font, (206, 247, 226, 235))
     draw_centered(draw, (width // 2, 735), "FIFA WORLD CUP 2026", small_font, (255, 255, 255, 190))
 
-    base_name = f"{target_iso}-match-{fixture.id}"
-    webp_path = POSTER_DIR / f"{base_name}.webp"
-    jpg_path = POSTER_DIR / f"{base_name}.jpg"
+    webp_path, jpg_path, webp_url, jpg_url = poster_paths(target_iso, fixture)
     image.save(webp_path, "WEBP", quality=78, method=6)
     image.save(jpg_path, "JPEG", quality=78, optimize=True, progressive=True)
-    return (
-        f"/worldcup-assets/home/daily/{base_name}.webp",
-        f"/worldcup-assets/home/daily/{base_name}.jpg",
-    )
+    return webp_url, jpg_url
 
 
-def write_daily_hero(reference_date: str) -> dict:
+def write_daily_hero(reference_date: str, manual_dir: Path = MANUAL_POSTER_DIR) -> dict:
     target_iso, fixture = select_spotlight_fixture(parse_fixtures(), reference_date)
-    poster, fallback = render_poster(fixture, target_iso)
+    manual_poster = find_manual_poster(fixture, target_iso, manual_dir)
+    if manual_poster:
+        poster, fallback = normalize_manual_poster(manual_poster, fixture, target_iso)
+        poster_source = "manual"
+    else:
+        poster, fallback = render_template_poster(fixture, target_iso)
+        poster_source = "template"
+
     payload = {
         "generatedAt": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "referenceDate": reference_date,
@@ -196,6 +242,7 @@ def write_daily_hero(reference_date: str) -> dict:
         "venue": fixture.venue,
         "poster": poster,
         "fallbackPoster": fallback,
+        "posterSource": poster_source,
         "reason": "Selected by host-team, marquee-team, and matchup-balance editorial priority.",
     }
 
@@ -208,8 +255,9 @@ def write_daily_hero(reference_date: str) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--date", default=datetime.now(timezone.utc).date().isoformat())
+    parser.add_argument("--manual-dir", default=str(MANUAL_POSTER_DIR))
     args = parser.parse_args()
-    payload = write_daily_hero(args.date)
+    payload = write_daily_hero(args.date, Path(args.manual_dir))
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
 
