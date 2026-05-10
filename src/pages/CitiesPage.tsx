@@ -4,6 +4,7 @@ import { hostCityDetails } from '../data/hostCityDetails';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatHostCityName } from '../i18n/formatters';
 import type { TournamentMeta } from '../types/tournament';
+import { publicAssetPath } from '../utils/publicAssets';
 
 interface CitiesPageProps {
   meta: TournamentMeta;
@@ -11,7 +12,7 @@ interface CitiesPageProps {
 }
 
 const SHOW_CITY_POSTERS = true;
-const RENDERED_MAP_URL = '/worldcup-assets/cities-map-stage.png';
+const RENDERED_MAP_URL = publicAssetPath('/worldcup-assets/cities-map-stage.png');
 
 const cityMarkerPlacements: Record<string, { left: string; top: string; label: string }> = {
   'New York New Jersey': { left: '62.62%', top: '51.43%', label: '纽约/新泽西' },
