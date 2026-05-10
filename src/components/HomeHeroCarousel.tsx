@@ -57,6 +57,7 @@ export function HomeHeroCarousel({ slides, locale }: HomeHeroCarouselProps) {
             ? formatMatchupLabel(slide.matchupLabel, locale)
             : null;
           const isPromo = slide.type === 'promo';
+          const isOpening = slide.accent === 'opening';
 
           return (
             <article
@@ -65,16 +66,25 @@ export function HomeHeroCarousel({ slides, locale }: HomeHeroCarouselProps) {
             >
               <div className="home-hero__media" aria-hidden="true" />
               <div className="home-hero__visual" aria-hidden="true" />
-              <div className="home-hero__content">
-                <p className="home-hero__eyebrow">{slide.eyebrow}</p>
-                <h1>{slide.title}</h1>
-                {matchupLabel ? <p className="home-hero__matchup">{matchupLabel}</p> : null}
-                <p className="home-hero__description">{slide.description}</p>
-                {slide.dateLabel ? <p className="home-hero__meta">{slide.dateLabel}</p> : null}
-                {slide.venueLabel ? (
-                  <p className="home-hero__meta">{formatVenueName(slide.venueLabel, locale)}</p>
-                ) : null}
-              </div>
+              {isOpening ? (
+                <div className="home-hero__opening-card">
+                  <h1>{locale === 'zh' ? '揭幕战' : 'Opening Match'}</h1>
+                  <p>{matchupLabel}</p>
+                  <span>{locale === 'zh' ? '2026 年 6 月 11 日' : 'June 11, 2026'}</span>
+                  <strong>{locale === 'zh' ? '墨西哥城球场' : 'Mexico City Stadium'}</strong>
+                </div>
+              ) : (
+                <div className="home-hero__content">
+                  <p className="home-hero__eyebrow">{slide.eyebrow}</p>
+                  <h1>{slide.title}</h1>
+                  {matchupLabel ? <p className="home-hero__matchup">{matchupLabel}</p> : null}
+                  <p className="home-hero__description">{slide.description}</p>
+                  {slide.dateLabel ? <p className="home-hero__meta">{slide.dateLabel}</p> : null}
+                  {slide.venueLabel ? (
+                    <p className="home-hero__meta">{formatVenueName(slide.venueLabel, locale)}</p>
+                  ) : null}
+                </div>
+              )}
 
               {isPromo ? (
                 <>
