@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1672 941" width="1672" height="941">
+  <defs>
+    <radialGradient id="dotUSA" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#afffdf"/>
+      <stop offset="100%" stop-color="#00c890"/>
+    </radialGradient>
+    <radialGradient id="dotCAN" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#ffb0b0"/>
+      <stop offset="100%" stop-color="#d83030"/>
+    </radialGradient>
+    <radialGradient id="dotMEX" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#c8ff80"/>
+      <stop offset="100%" stop-color="#48b818"/>
+    </radialGradient>
+    <filter id="blur" x="-30%" y="-60%" width="160%" height="220%">
+      <feGaussianBlur stdDeviation="2.5"/>
+    </filter>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  
+  <!-- New York/NJ -->
+  <circle cx="1047" cy="484" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="1047" cy="484" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="1047" cy="484" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="1047" cy="484" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="1047" y="468" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">纽约/新泽西</text>
+  <text x="1047" y="468" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">纽约/新泽西</text>
+  <!-- Los Angeles -->
+  <circle cx="667" cy="543" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="667" cy="543" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="667" cy="543" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="667" cy="543" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="667" y="569" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">洛杉矶</text>
+  <text x="667" y="569" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">洛杉矶</text>
+  <!-- San Francisco -->
+  <circle cx="649" cy="505" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="649" cy="505" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="649" cy="505" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="649" cy="505" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="649" y="489" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">旧金山</text>
+  <text x="649" y="489" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">旧金山</text>
+  <!-- Dallas -->
+  <circle cx="831" cy="574" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="831" cy="574" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="831" cy="574" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="831" cy="574" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="831" y="558" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">达拉斯</text>
+  <text x="831" y="558" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">达拉斯</text>
+  <!-- Houston -->
+  <circle cx="843" cy="611" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="843" cy="611" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="843" cy="611" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="843" cy="611" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="843" y="637" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">休斯顿</text>
+  <text x="843" y="637" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">休斯顿</text>
+  <!-- Atlanta -->
+  <circle cx="975" cy="568" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="975" cy="568" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="975" cy="568" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="975" cy="568" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="975" y="552" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">亚特兰大</text>
+  <text x="975" y="552" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">亚特兰大</text>
+  <!-- Miami -->
+  <circle cx="1010" cy="649" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="1010" cy="649" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="1010" cy="649" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="1010" cy="649" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="1010" y="633" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">迈阿密</text>
+  <text x="1010" y="633" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">迈阿密</text>
+  <!-- Seattle -->
+  <circle cx="662" cy="407" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="662" cy="407" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="662" cy="407" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="662" cy="407" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="662" y="391" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">西雅图</text>
+  <text x="662" y="391" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">西雅图</text>
+  <!-- Kansas City -->
+  <circle cx="876" cy="496" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="876" cy="496" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="876" cy="496" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="876" cy="496" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="876" y="480" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">堪萨斯城</text>
+  <text x="876" y="480" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">堪萨斯城</text>
+  <!-- Boston -->
+  <circle cx="1070" cy="463" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="1070" cy="463" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="1070" cy="463" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="1070" cy="463" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="1070" y="447" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">波士顿</text>
+  <text x="1070" y="447" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">波士顿</text>
+  <!-- Philadelphia -->
+  <circle cx="1038" cy="506" r="18" fill="#00e8a8" fill-opacity="0.15"/>
+  <circle cx="1038" cy="506" r="12" fill="#00e8a8" fill-opacity="0.25"/>
+  <circle cx="1038" cy="506" r="8" fill="url(#dotUSA)" opacity="0.95"/>
+  <circle cx="1038" cy="506" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="1038" y="532" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">费城</text>
+  <text x="1038" y="532" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#c0fff0">费城</text>
+  <!-- Toronto -->
+  <circle cx="1010" cy="437" r="18" fill="#ff7070" fill-opacity="0.15"/>
+  <circle cx="1010" cy="437" r="12" fill="#ff7070" fill-opacity="0.25"/>
+  <circle cx="1010" cy="437" r="8" fill="url(#dotCAN)" opacity="0.95"/>
+  <circle cx="1010" cy="437" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="1010" y="421" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">多伦多</text>
+  <text x="1010" y="421" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#ffd0d0">多伦多</text>
+  <!-- Vancouver -->
+  <circle cx="655" cy="366" r="18" fill="#ff7070" fill-opacity="0.15"/>
+  <circle cx="655" cy="366" r="12" fill="#ff7070" fill-opacity="0.25"/>
+  <circle cx="655" cy="366" r="8" fill="url(#dotCAN)" opacity="0.95"/>
+  <circle cx="655" cy="366" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="655" y="350" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">温哥华</text>
+  <text x="655" y="350" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#ffd0d0">温哥华</text>
+  <!-- Mexico City -->
+  <circle cx="823" cy="727" r="18" fill="#80e840" fill-opacity="0.15"/>
+  <circle cx="823" cy="727" r="12" fill="#80e840" fill-opacity="0.25"/>
+  <circle cx="823" cy="727" r="8" fill="url(#dotMEX)" opacity="0.95"/>
+  <circle cx="823" cy="727" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="823" y="711" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">墨西哥城</text>
+  <text x="823" y="711" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#d0ffa0">墨西哥城</text>
+  <!-- Guadalajara -->
+  <circle cx="766" cy="709" r="18" fill="#80e840" fill-opacity="0.15"/>
+  <circle cx="766" cy="709" r="12" fill="#80e840" fill-opacity="0.25"/>
+  <circle cx="766" cy="709" r="8" fill="url(#dotMEX)" opacity="0.95"/>
+  <circle cx="766" cy="709" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="766" y="693" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">瓜达拉哈拉</text>
+  <text x="766" y="693" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#d0ffa0">瓜达拉哈拉</text>
+  <!-- Monterrey -->
+  <circle cx="808" cy="661" r="18" fill="#80e840" fill-opacity="0.15"/>
+  <circle cx="808" cy="661" r="12" fill="#80e840" fill-opacity="0.25"/>
+  <circle cx="808" cy="661" r="8" fill="url(#dotMEX)" opacity="0.95"/>
+  <circle cx="808" cy="661" r="8" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.7"/>
+  <text x="808" y="645" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#000000" opacity="0.7" filter="url(#blur)">蒙特雷</text>
+  <text x="808" y="645" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="15" font-weight="600" fill="#d0ffa0">蒙特雷</text>
+
+  <!-- Legend -->
+  <rect x="22" y="858" width="200" height="72" rx="6" fill="#000000" fill-opacity="0.55"/>
+  <circle cx="42" cy="876" r="6" fill="url(#dotCAN)"/>
+  <text x="56" y="881" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" fill="#ffd0d0">加拿大 Canada</text>
+  <circle cx="42" cy="899" r="6" fill="url(#dotUSA)"/>
+  <text x="56" y="904" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" fill="#c0fff0">美国 USA</text>
+  <circle cx="42" cy="922" r="6" fill="url(#dotMEX)"/>
+  <text x="56" y="927" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" fill="#d0ffa0">墨西哥 Mexico</text>
+</svg>

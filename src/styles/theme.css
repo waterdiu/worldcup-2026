@@ -1,0 +1,14 @@
+:root {
+  --bg: #07111e;
+  --bg-elevated: rgba(12, 25, 42, 0.82);
+  --bg-soft: rgba(12, 25, 42, 0.62);
+  --surface: rgba(10, 19, 33, 0.9);
+  --surface-strong: rgba(18, 35, 58, 0.98);
+  --border: rgba(167, 194, 217, 0.18);
+  --text: #f4f7fb;
+  --muted: #a8b6c9;
+  --green: #6ef2aa;
+  --lime: #d6ff5d;
+  --orange: #ff7a45;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+}

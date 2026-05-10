@@ -1,0 +1,31 @@
+import { localizePath, type Locale } from '../i18n/content';
+
+const links = [
+  { href: '/', label: { en: 'Home', zh: '首页' } },
+  { href: '/qualifiers', label: { en: 'Qualifiers', zh: '预选赛' } },
+  { href: '/stats', label: { en: 'Stats', zh: '统计' } }
+];
+
+interface PageNavProps {
+  pathname: string;
+  locale: Locale;
+}
+
+export function PageNav({ pathname, locale }: PageNavProps) {
+  return (
+    <nav aria-label="Page navigation" className="page-nav">
+      {links.map((link) => {
+        const isActive = pathname === link.href;
+        return (
+          <a
+            key={link.href}
+            href={localizePath(link.href, locale)}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            {link.label[locale]}
+          </a>
+        );
+      })}
+    </nav>
+  );
+}

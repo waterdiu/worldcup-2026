@@ -1,0 +1,29 @@
+{
+  "sourceLabel": "Local finals result import sample",
+  "updatedAt": "2026-06-11",
+  "matches": [
+    {
+      "id": "1",
+      "status": "completed",
+      "homeScore": 2,
+      "awayScore": 1,
+      "goals": [
+        {
+          "minute": "12",
+          "team": "Mexico",
+          "player": "Example scorer"
+        },
+        {
+          "minute": "54",
+          "team": "South Africa",
+          "player": "Example equalizer"
+        },
+        {
+          "minute": "88",
+          "team": "Mexico",
+          "player": "Example winner"
+        }
+      ]
+    }
+  ]
+}
