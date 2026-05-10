@@ -1,3 +1,5 @@
+import { publicAssetPath } from '../utils/publicAssets';
+
 export interface HostCityDetail {
   city: string;
   country: string;
@@ -13,19 +15,19 @@ export interface HostCityDetail {
 }
 
 function cityPoster(filename: string): string {
-  return `/worldcup-assets/cities-normalized/${filename}.png`;
+  return publicAssetPath(`/worldcup-assets/cities-normalized/${filename}.png`);
 }
 
 function cityPhoto(filename: string): string {
-  return `/worldcup-assets/cities/${filename}.jpg`;
+  return publicAssetPath(`/worldcup-assets/cities/${filename}.jpg`);
 }
 
 function stadiumPhoto(filename: string): string {
-  return `/worldcup-assets/stadiums/${filename}.jpg`;
+  return publicAssetPath(`/worldcup-assets/stadiums/${filename}.jpg`);
 }
 
 function stadiumImage(filename: string): string {
-  return `/worldcup-assets/stadiums/${filename}`;
+  return publicAssetPath(`/worldcup-assets/stadiums/${filename}`);
 }
 
 export const hostCityDetails: HostCityDetail[] = [
