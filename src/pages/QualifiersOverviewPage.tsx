@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { SectionHeader } from '../components/SectionHeader';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatConfederationName, formatTeamName } from '../i18n/formatters';
 import type { ConfederationCardData, QualifierMatchData } from '../types/tournament';
@@ -113,15 +112,15 @@ export function QualifiersOverviewPage({
 
   return (
     <section className="section qualifier-match-board">
-      <SectionHeader
-        eyebrow={copy.locale === 'zh' ? '预选赛中心' : 'Qualifiers'}
-        title={copy.locale === 'zh' ? '世界杯预选赛比赛记录' : 'World Cup Qualifier Match Records'}
-        description={
-          copy.locale === 'zh'
+      <div className="qualifier-hero">
+        <span>{copy.locale === 'zh' ? '预选赛中心' : 'Qualifiers'}</span>
+        <h1>{copy.locale === 'zh' ? '世界杯预选赛比赛记录' : 'World Cup Qualifier Match Records'}</h1>
+        <p>
+          {copy.locale === 'zh'
             ? '按大洲整理已完赛预选赛记录。每场比赛可进入详情页查看比分、事件、阵容、统计、评分和缺失数据。'
-            : 'Completed qualifier records grouped by confederation, with match detail pages for scores, events, lineups, stats, ratings, and missing data.'
-        }
-      />
+            : 'Completed qualifier records grouped by confederation, with match detail pages for scores, events, lineups, stats, ratings, and missing data.'}
+        </p>
+      </div>
 
       <article className="qualifier-coverage-card">
         <h3>{copy.locale === 'zh' ? '数据缺失统计' : 'Missing Data Summary'}</h3>
