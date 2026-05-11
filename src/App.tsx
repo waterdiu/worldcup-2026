@@ -27,6 +27,7 @@ import { StatsPage } from './pages/StatsPage';
 import { TeamDetailPage } from './pages/TeamDetailPage';
 import { TeamsPage } from './pages/TeamsPage';
 import { CityDetailPage } from './pages/CityDetailPage';
+import { UserCenterPage } from './pages/UserCenterPage';
 import './styles/theme.css';
 import './styles/world-cup-page.css';
 
@@ -91,6 +92,10 @@ function renderPage(pathname: string, locale: Locale) {
         copy={copy}
       />
     );
+  }
+
+  if (pathname === '/me') {
+    return <UserCenterPage copy={copy} />;
   }
 
   if (pathname === '/groups') {
