@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { bracket, groupStageMatches } from '../data';
+import { bracket, finalsMatchResults, groupStageMatches } from '../data';
 import { useAuth } from '../hooks/useAuth';
 import { useFavoritesList } from '../hooks/useFavoritesList';
 import { usePredictionsList } from '../hooks/usePredictionsList';
@@ -19,24 +19,34 @@ interface MatchSummary {
   meta: string;
   homeLabel: string;
   awayLabel: string;
+  status: 'scheduled' | 'completed';
+  homeScore?: number;
+  awayScore?: number;
 }
 
 function buildMatchLookup(locale: AppCopy['locale']) {
+  const resultById = new Map(finalsMatchResults.map((result) => [result.id, result]));
   const groupMatches = groupStageMatches.map((match) => ({
     id: match.id,
-    title: `${formatTeamName(match.homeTeam, locale)} ${locale === 'zh' ? '对' : 'vs'} ${formatTeamName(match.awayTeam, locale)}`,
+    title: `${formatTeamName(match.homeTeam, locale)} VS ${formatTeamName(match.awayTeam, locale)}`,
     meta: `${locale === 'zh' ? `${match.groupId} 组` : `Group ${match.groupId}`} · ${match.dateLabel} · ${formatVenueName(match.venue, locale)}`,
     homeLabel: formatTeamName(match.homeTeam, locale),
-    awayLabel: formatTeamName(match.awayTeam, locale)
+    awayLabel: formatTeamName(match.awayTeam, locale),
+    status: resultById.get(match.id)?.status ?? 'scheduled',
+    homeScore: resultById.get(match.id)?.homeScore,
+    awayScore: resultById.get(match.id)?.awayScore
   }));
 
   const knockoutMatches = bracket.flatMap((round) =>
     round.matches.map((match) => ({
       id: match.id,
-      title: `${formatBracketLabel(match.homeLabel, locale)} ${locale === 'zh' ? '对' : 'vs'} ${formatBracketLabel(match.awayLabel, locale)}`,
+      title: `${formatBracketLabel(match.homeLabel, locale)} VS ${formatBracketLabel(match.awayLabel, locale)}`,
       meta: `${formatBracketLabel(round.round, locale)} · ${match.dateLabel} · ${formatVenueName(match.venue, locale)}`,
       homeLabel: formatBracketLabel(match.homeLabel, locale),
-      awayLabel: formatBracketLabel(match.awayLabel, locale)
+      awayLabel: formatBracketLabel(match.awayLabel, locale),
+      status: resultById.get(match.id)?.status ?? 'scheduled',
+      homeScore: resultById.get(match.id)?.homeScore,
+      awayScore: resultById.get(match.id)?.awayScore
     }))
   );
 
@@ -49,7 +59,8 @@ function getFallbackMatch(id: string, locale: AppCopy['locale']): MatchSummary {
     title: locale === 'zh' ? `比赛 ${id}` : `Match ${id}`,
     meta: locale === 'zh' ? '赛程信息待同步' : 'Match metadata pending sync',
     homeLabel: locale === 'zh' ? '主队' : 'Home',
-    awayLabel: locale === 'zh' ? '客队' : 'Away'
+    awayLabel: locale === 'zh' ? '客队' : 'Away',
+    status: 'scheduled'
   };
 }
 
@@ -63,6 +74,49 @@ function getFavoriteHref(targetType: string, targetId: string, locale: AppCopy['
   if (targetType === 'team') return localizePath(`/teams/${encodeURIComponent(targetId)}`, locale);
   if (targetType === 'city') return localizePath(`/cities/${encodeURIComponent(targetId)}`, locale);
   return localizePath(`/matches/${encodeURIComponent(targetId)}`, locale);
+}
+
+function getPredictedScoreLabel(homeScore: number, awayScore: number): string {
+  return `${homeScore}-${awayScore}`;
+}
+
+function getActualResultLabel(match: MatchSummary, locale: AppCopy['locale']): string {
+  if (match.status !== 'completed' || match.homeScore === undefined || match.awayScore === undefined) {
+    return locale === 'zh' ? '未赛' : 'Not played';
+  }
+  return `${match.homeScore}-${match.awayScore}`;
+}
+
+function getActualWinner(match: MatchSummary): 'home' | 'draw' | 'away' | null {
+  if (match.status !== 'completed' || match.homeScore === undefined || match.awayScore === undefined) return null;
+  if (match.homeScore > match.awayScore) return 'home';
+  if (match.homeScore < match.awayScore) return 'away';
+  return 'draw';
+}
+
+function getPredictionCompareLabel(
+  prediction: { winner: string; home_score: number; away_score: number },
+  match: MatchSummary,
+  locale: AppCopy['locale']
+): string {
+  const actualWinner = getActualWinner(match);
+  if (!actualWinner) return locale === 'zh' ? '等待赛果' : 'Awaiting result';
+  const winnerHit = prediction.winner === actualWinner;
+  const scoreHit = prediction.home_score === match.homeScore && prediction.away_score === match.awayScore;
+  if (scoreHit) return locale === 'zh' ? '比分命中' : 'Exact score';
+  if (winnerHit) return locale === 'zh' ? '胜负命中' : 'Pick correct';
+  return locale === 'zh' ? '未命中' : 'Missed';
+}
+
+function getPredictionCompareClass(
+  prediction: { winner: string; home_score: number; away_score: number },
+  match: MatchSummary
+): string {
+  const actualWinner = getActualWinner(match);
+  if (!actualWinner) return 'is-pending';
+  if (prediction.home_score === match.homeScore && prediction.away_score === match.awayScore) return 'is-exact';
+  if (prediction.winner === actualWinner) return 'is-hit';
+  return 'is-miss';
 }
 
 export function UserCenterPage({ copy }: UserCenterPageProps) {
@@ -110,10 +164,10 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
   return (
     <section className="section user-center-page">
       <div className="user-center-hero">
-        <div className="user-center-hero__intro">
-          <div>
-            <p className="section-header__eyebrow">{copy.locale === 'zh' ? '用户中心' : 'User Center'}</p>
+          <div className="user-center-hero__intro">
+          <div className="user-center-hero__title">
             <h1>{copy.locale === 'zh' ? '我的世界杯' : 'My World Cup'}</h1>
+            {!signedIn ? <p>{copy.locale === 'zh' ? '登录后可以同步收藏和预测。' : 'Sign in to sync favorites and predictions.'}</p> : null}
           </div>
           {signedIn && user ? (
             <div className="user-profile-card__body">
@@ -138,7 +192,7 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
               </form>
             </div>
           ) : (
-            <p>{copy.locale === 'zh' ? '登录后可以同步收藏和预测。' : 'Sign in to sync favorites and predictions.'}</p>
+            null
           )}
         </div>
         {!signedIn ? (
@@ -206,7 +260,6 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
       <div className="user-center-grid">
         <article className="user-center-card">
           <div className="user-center-card__heading">
-            <span className="user-center-card__eyebrow">{copy.locale === 'zh' ? 'Favorites' : 'Favorites'}</span>
             <h2>{copy.locale === 'zh' ? '我的收藏' : 'My Favorites'}</h2>
           </div>
           {signedIn && favorites.length > 0 ? (
@@ -216,9 +269,16 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
                 const isMatchFavorite = favorite.target_type === 'match';
                 return (
                   <li key={favorite.id}>
-                    <a href={getFavoriteHref(favorite.target_type, favorite.target_id, copy.locale)}>
-                      <strong>{isMatchFavorite ? match.title : favorite.target_id}</strong>
-                      <span>{isMatchFavorite ? match.meta : favorite.target_type}</span>
+                    <a className="user-match-card" href={getFavoriteHref(favorite.target_type, favorite.target_id, copy.locale)}>
+                      <span className="user-match-card__main">
+                        <strong>{isMatchFavorite ? match.title : favorite.target_id}</strong>
+                        <span>{isMatchFavorite ? match.meta : favorite.target_type}</span>
+                      </span>
+                      {isMatchFavorite ? (
+                        <span className="user-match-card__status">
+                          {copy.locale === 'zh' ? '实际结果' : 'Result'} <b>{getActualResultLabel(match, copy.locale)}</b>
+                        </span>
+                      ) : null}
                     </a>
                   </li>
                 );
@@ -239,7 +299,6 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
 
         <article className="user-center-card">
           <div className="user-center-card__heading">
-            <span className="user-center-card__eyebrow">{copy.locale === 'zh' ? 'Predictions' : 'Predictions'}</span>
             <h2>{copy.locale === 'zh' ? '我的预测' : 'My Predictions'}</h2>
           </div>
           {signedIn && predictions.length > 0 ? (
@@ -248,9 +307,24 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
                 const match = matchLookup.get(prediction.match_id) ?? getFallbackMatch(prediction.match_id, copy.locale);
                 return (
                   <li key={prediction.id}>
-                    <a href={localizePath(`/matches/${encodeURIComponent(match.id)}`, copy.locale)}>
-                      <strong>{match.title}</strong>
-                      <span>{`${getWinnerLabel(prediction.winner, match, copy.locale)} · ${prediction.home_score}-${prediction.away_score} · ${match.meta}`}</span>
+                    <a className="user-match-card user-match-card--prediction" href={localizePath(`/matches/${encodeURIComponent(match.id)}`, copy.locale)}>
+                      <span className="user-match-card__main">
+                        <strong>{match.title}</strong>
+                        <span>{match.meta}</span>
+                      </span>
+                      <span className="user-prediction-result">
+                        <span>
+                          <em>{copy.locale === 'zh' ? '我的预测' : 'My pick'}</em>
+                          <b>{getWinnerLabel(prediction.winner, match, copy.locale)} · {getPredictedScoreLabel(prediction.home_score, prediction.away_score)}</b>
+                        </span>
+                        <span>
+                          <em>{copy.locale === 'zh' ? '实际结果' : 'Result'}</em>
+                          <b>{getActualResultLabel(match, copy.locale)}</b>
+                        </span>
+                        <span className={`user-prediction-result__badge ${getPredictionCompareClass(prediction, match)}`}>
+                          {getPredictionCompareLabel(prediction, match, copy.locale)}
+                        </span>
+                      </span>
                     </a>
                   </li>
                 );
