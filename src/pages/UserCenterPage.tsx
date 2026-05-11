@@ -97,24 +97,10 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
   return (
     <section className="section user-center-page">
       <div className="user-center-hero">
-        <p className="section-header__eyebrow">{copy.locale === 'zh' ? '用户中心' : 'User Center'}</p>
-        <h1>{copy.locale === 'zh' ? '我的世界杯' : 'My World Cup'}</h1>
-        <p>
-          {signedIn
-            ? copy.locale === 'zh'
-              ? '管理你的账号资料、收藏比赛和比分预测。'
-              : 'Manage your profile, saved matches, and score predictions.'
-            : copy.locale === 'zh'
-              ? '登录后可以同步收藏和预测。'
-              : 'Sign in to sync favorites and predictions.'}
-        </p>
-      </div>
-
-      <div className="user-center-grid">
-        <article className="user-center-card user-profile-card">
-          <div className="user-center-card__heading">
-            <span className="user-center-card__eyebrow">{copy.locale === 'zh' ? 'Account' : 'Account'}</span>
-            <h2>{copy.locale === 'zh' ? '账号信息' : 'Profile'}</h2>
+        <div className="user-center-hero__intro">
+          <div>
+            <p className="section-header__eyebrow">{copy.locale === 'zh' ? '用户中心' : 'User Center'}</p>
+            <h1>{copy.locale === 'zh' ? '我的世界杯' : 'My World Cup'}</h1>
           </div>
           {signedIn && user ? (
             <div className="user-profile-card__body">
@@ -139,17 +125,22 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
               </form>
             </div>
           ) : (
-            <div className="user-auth-actions">
-              <button type="button" onClick={signInWithGoogle} disabled={loading || !isSupabaseConfigured}>
-                {copy.locale === 'zh' ? '使用 Google 登录' : 'Sign in with Google'}
-              </button>
-              {!isSupabaseConfigured ? (
-                <span>{copy.locale === 'zh' ? 'Supabase 尚未配置' : 'Supabase is not configured'}</span>
-              ) : null}
-            </div>
+            <p>{copy.locale === 'zh' ? '登录后可以同步收藏和预测。' : 'Sign in to sync favorites and predictions.'}</p>
           )}
-        </article>
+        </div>
+        {!signedIn ? (
+          <div className="user-auth-actions">
+            <button type="button" onClick={signInWithGoogle} disabled={loading || !isSupabaseConfigured}>
+              {copy.locale === 'zh' ? '使用 Google 登录' : 'Sign in with Google'}
+            </button>
+            {!isSupabaseConfigured ? (
+              <span>{copy.locale === 'zh' ? 'Supabase 尚未配置' : 'Supabase is not configured'}</span>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
 
+      <div className="user-center-grid">
         <article className="user-center-card">
           <div className="user-center-card__heading">
             <span className="user-center-card__eyebrow">{copy.locale === 'zh' ? 'Favorites' : 'Favorites'}</span>
