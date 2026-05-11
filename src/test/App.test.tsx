@@ -22,10 +22,22 @@ describe('App routes', () => {
       expect(screen.getByRole('link', { name: '首页' })).toHaveAttribute('href', '/worldcup-2026/');
       expect(screen.getByRole('link', { name: '预选赛' })).toHaveAttribute('href', '/worldcup-2026/qualifiers');
       expect(screen.getByRole('link', { name: '统计' })).toHaveAttribute('href', '/worldcup-2026/stats');
+      expect(screen.getByRole('link', { name: '我的' })).toHaveAttribute('href', '/worldcup-2026/me');
     } finally {
       cleanup();
       vi.unstubAllEnvs();
     }
+  });
+
+  it('renders the signed-out user center with Google login', () => {
+    window.history.replaceState({}, '', '/me');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: /我的世界杯/i })).toBeInTheDocument();
+    expect(screen.getByText(/登录后可以同步收藏和预测/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /使用 Google 登录/i })).toBeInTheDocument();
+    expect(screen.getByText(/我的收藏/i)).toBeInTheDocument();
+    expect(screen.getByText(/我的预测/i)).toBeInTheDocument();
   });
 
   it('renders the chinese homepage at the root route with unprefixed navigation links', () => {
