@@ -66,6 +66,12 @@ function getAccessLevel(permission: AdminPagePermissionRecord) {
   return 'public';
 }
 
+function getAccessLabel(level: string, isZh: boolean) {
+  if (level === 'admin') return isZh ? '管理员' : 'Admin';
+  if (level === 'login') return isZh ? '登录用户' : 'Signed in';
+  return isZh ? '公开' : 'Public';
+}
+
 function toPermissionLevel(permission: AdminPagePermissionRecord, level: string): AdminPagePermissionRecord {
   return {
     ...permission,
@@ -158,16 +164,7 @@ export function AdminPage({ copy }: AdminPageProps) {
   return (
     <section className="section admin-page stats-page">
       <article className="admin-hero">
-        <span>{isZh ? '管理后台' : 'Admin Console'}</span>
         <h1>{isZh ? '管理后台' : 'Admin Console'}</h1>
-        <p>
-          {isZh
-            ? '统一管理用户、注册审批、访问权限和用户行为数据。'
-            : 'Manage users, registration review, access controls, and user activity data.'}
-        </p>
-        <button type="button" onClick={dashboard.refresh} disabled={dashboard.loading}>
-          {dashboard.loading ? (isZh ? '刷新中...' : 'Refreshing...') : isZh ? '刷新数据' : 'Refresh data'}
-        </button>
       </article>
 
       {dashboard.error ? (
@@ -196,12 +193,17 @@ export function AdminPage({ copy }: AdminPageProps) {
             <section className="stats-section">
               <h2>{isZh ? '用户管理' : 'User Management'}</h2>
               <article className="admin-card admin-card--compact">
-                <div className="admin-card__header">
-                  <div>
-                    <h3>{isZh ? '所有用户' : 'All Users'}</h3>
-                    <p>{isZh ? '新增/永久删除真实登录用户需要 Supabase Edge Function；当前前端提供审批、修改、置为不可用和角色管理。' : 'Creating/permanently deleting real auth users requires a Supabase Edge Function; this frontend handles approval, edits, disabling, and roles.'}</p>
-                  </div>
-                  <button type="button" disabled>{isZh ? '新增用户' : 'New user'}</button>
+                <div className="admin-table-toolbar">
+                  <h3>{isZh ? '所有用户' : 'All Users'}</h3>
+                  <button
+                    type="button"
+                    className="admin-icon-button"
+                    disabled
+                    title={isZh ? '新增真实登录用户需要 Supabase 服务端函数' : 'Creating auth users requires a Supabase server function'}
+                  >
+                    <span aria-hidden="true">+</span>
+                    {isZh ? '新增用户' : 'New user'}
+                  </button>
                 </div>
                 <div className="admin-data-table">
                   <div className="admin-data-row admin-data-row--head admin-data-row--users">
@@ -213,29 +215,41 @@ export function AdminPage({ copy }: AdminPageProps) {
                     <span>{isZh ? '注册时间' : 'Created'}</span>
                     <span>{isZh ? '操作' : 'Actions'}</span>
                   </div>
-                  {dashboard.profiles.map((profile) => (
-                    <div className="admin-data-row admin-data-row--users" key={profile.id}>
-                      <span title={profile.id}>{profile.display_name || profile.email || profile.id}</span>
-                      <span>{profile.email || '-'}</span>
-                      <span>{profile.email ? (isZh ? '邮箱/Google' : 'Email/Google') : '-'}</span>
-                      <select value={profile.status ?? 'pending'} onChange={(event) => dashboard.saveProfile({ ...profile, status: event.target.value })}>
-                        <option value="pending">{isZh ? '待审批' : 'Pending'}</option>
-                        <option value="active">{isZh ? '已启用' : 'Active'}</option>
-                        <option value="disabled">{isZh ? '已禁用' : 'Disabled'}</option>
-                        <option value="rejected">{isZh ? '已拒绝' : 'Rejected'}</option>
-                      </select>
-                      <select value={roleByUserId.get(profile.id) ?? 'user'} onChange={(event) => dashboard.saveRole(profile.id, event.target.value === 'admin' ? 'admin' : null)}>
-                        <option value="user">{isZh ? '普通用户' : 'User'}</option>
-                        <option value="admin">{isZh ? '管理员' : 'Admin'}</option>
-                      </select>
-                      <span>{formatDate(profile.created_at)}</span>
-                      <div className="admin-row-actions">
-                        <button type="button" onClick={() => dashboard.saveProfile({ ...profile, status: 'active' })}>{isZh ? '通过' : 'Approve'}</button>
-                        <button type="button" className="admin-button--secondary" onClick={() => dashboard.saveProfile({ ...profile, status: 'rejected' })}>{isZh ? '拒绝' : 'Reject'}</button>
-                        <button type="button" className="admin-button--secondary" onClick={() => dashboard.saveProfile({ ...profile, status: 'disabled' })}>{isZh ? '置为不可用' : 'Disable'}</button>
+                  {dashboard.profiles.map((profile) => {
+                    const status = profile.status ?? 'pending';
+                    const role = roleByUserId.get(profile.id) === 'admin' ? 'admin' : 'user';
+                    return (
+                      <div className="admin-data-row admin-data-row--users" key={profile.id}>
+                        <span className="admin-user-cell" title={profile.id}>
+                          <b>{profile.display_name || profile.email || (isZh ? '未命名用户' : 'Unnamed user')}</b>
+                          <small>{profile.id}</small>
+                        </span>
+                        <span>{profile.email || '-'}</span>
+                        <span>{profile.email ? (isZh ? '邮箱/Google' : 'Email/Google') : '-'}</span>
+                        <span className={`admin-status-chip is-${status}`}>{formatStatus(status, isZh)}</span>
+                        <span className={`admin-role-chip is-${role}`}>{role === 'admin' ? (isZh ? '管理员' : 'Admin') : (isZh ? '普通用户' : 'User')}</span>
+                        <span>{formatDate(profile.created_at)}</span>
+                        <div className="admin-row-actions admin-row-actions--users">
+                          {status !== 'active' ? (
+                            <button type="button" onClick={() => dashboard.saveProfile({ ...profile, status: 'active' })}>{isZh ? '通过' : 'Approve'}</button>
+                          ) : null}
+                          {status !== 'disabled' ? (
+                            <button type="button" className="admin-button--secondary" onClick={() => dashboard.saveProfile({ ...profile, status: 'disabled' })}>{isZh ? '置为不可用' : 'Disable'}</button>
+                          ) : null}
+                          {status !== 'rejected' ? (
+                            <button type="button" className="admin-button--secondary" onClick={() => dashboard.saveProfile({ ...profile, status: 'rejected' })}>{isZh ? '拒绝' : 'Reject'}</button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="admin-button--secondary"
+                            onClick={() => dashboard.saveRole(profile.id, role === 'admin' ? null : 'admin')}
+                          >
+                            {role === 'admin' ? (isZh ? '取消管理员' : 'Remove admin') : (isZh ? '设为管理员' : 'Make admin')}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </article>
             </section>
@@ -315,44 +329,52 @@ export function AdminPage({ copy }: AdminPageProps) {
               <h2>{isZh ? '权限设置' : 'Permissions'}</h2>
               <article className="admin-card admin-card--compact">
                 <h3>{isZh ? '页面默认权限' : 'Default Page Access'}</h3>
-                <p>{isZh ? '常规方案：公开页面默认所有人可访问，“我的”需要登录，“管理后台”仅管理员可访问。' : 'Standard setup: public pages are open, Me requires login, Admin is admin-only.'}</p>
                 <div className="admin-data-table">
                   <div className="admin-data-row admin-data-row--head admin-data-row--permissions">
                     <span>{isZh ? '页面名称' : 'Page'}</span>
                     <span>{isZh ? '路径' : 'Path'}</span>
                     <span>{isZh ? '默认访问级别' : 'Default access'}</span>
-                    <span>{isZh ? '操作' : 'Action'}</span>
+                    <span>{isZh ? '当前' : 'Current'}</span>
                   </div>
                   {dashboard.pagePermissions.map((permission) => (
                     <div className="admin-data-row admin-data-row--permissions" key={permission.path}>
                       <span>{permission.label}</span>
                       <span>{permission.path}</span>
-                      <select value={getAccessLevel(permission)} onChange={(event) => dashboard.savePagePermission(toPermissionLevel(permission, event.target.value))}>
-                        <option value="public">{isZh ? '公开访问' : 'Public'}</option>
-                        <option value="login">{isZh ? '登录可访问' : 'Login required'}</option>
-                        <option value="admin">{isZh ? '管理员可访问' : 'Admin only'}</option>
-                      </select>
-                      <span>{isZh ? '自动保存' : 'Auto-save'}</span>
+                      <span className="admin-segmented-control">
+                        {['public', 'login', 'admin'].map((level) => (
+                          <button
+                            key={level}
+                            type="button"
+                            className={getAccessLevel(permission) === level ? 'is-active' : undefined}
+                            onClick={() => dashboard.savePagePermission(toPermissionLevel(permission, level))}
+                          >
+                            {getAccessLabel(level, isZh)}
+                          </button>
+                        ))}
+                      </span>
+                      <span className="admin-current-access">{getAccessLabel(getAccessLevel(permission), isZh)}</span>
                     </div>
                   ))}
                 </div>
               </article>
               <article className="admin-card admin-card--compact">
                 <h3>{isZh ? '用户单独权限' : 'Per-user Access'}</h3>
-                <p>{isZh ? '用户默认继承页面默认权限；下面只做单用户覆盖，用于禁止或允许特定页面。' : 'Users inherit defaults; use overrides below to allow or deny specific pages.'}</p>
                 <div className="admin-user-list">
                   {dashboard.profiles.map((profile) => (
                     <div className="admin-user-permission-card" key={profile.id}>
-                      <strong>{profile.display_name || profile.email || profile.id}</strong>
-                      <span>{formatStatus(profile.status, isZh)} · {roleByUserId.get(profile.id) === 'admin' ? (isZh ? '管理员' : 'Admin') : (isZh ? '普通用户' : 'User')}</span>
+                      <div className="admin-user-permission-card__head">
+                        <strong>{profile.display_name || profile.email || profile.id}</strong>
+                        <span>{formatStatus(profile.status, isZh)} · {roleByUserId.get(profile.id) === 'admin' ? (isZh ? '管理员' : 'Admin') : (isZh ? '普通用户' : 'User')}</span>
+                      </div>
                       <div className="admin-permission-grid">
                         {dashboard.pagePermissions.map((permission) => {
                           const existing = dashboard.userPagePermissions.find((item) => item.user_id === profile.id && item.path === permission.path);
+                          const checked = existing?.can_access ?? true;
                           return (
-                            <label key={permission.path}>
+                            <label className={checked ? 'is-allowed' : 'is-denied'} key={permission.path}>
                               <input
                                 type="checkbox"
-                                checked={existing?.can_access ?? true}
+                                checked={checked}
                                 onChange={(event) =>
                                   dashboard.saveUserPagePermission({
                                     user_id: profile.id,
@@ -362,7 +384,8 @@ export function AdminPage({ copy }: AdminPageProps) {
                                   })
                                 }
                               />
-                              {permission.label}
+                              <span>{permission.label}</span>
+                              <em>{checked ? (isZh ? '允许' : 'Allow') : (isZh ? '禁止' : 'Deny')}</em>
                             </label>
                           );
                         })}
