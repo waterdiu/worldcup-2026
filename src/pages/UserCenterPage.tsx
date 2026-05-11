@@ -66,11 +66,15 @@ function getFavoriteHref(targetType: string, targetId: string, locale: AppCopy['
 }
 
 export function UserCenterPage({ copy }: UserCenterPageProps) {
-  const { user, loading, signInWithGoogle, signOut } = useAuth();
+  const { user, loading, authMessage, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuth();
   const { favorites, loading: favoritesLoading } = useFavoritesList(user);
   const { predictions, loading: predictionsLoading } = usePredictionsList(user);
   const { profile, loading: profileLoading, saving: profileSaving, saveProfile } = useUserProfile(user);
   const [displayName, setDisplayName] = useState('');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
   const signedIn = Boolean(user);
   const matchLookup = useMemo(() => buildMatchLookup(copy.locale), [copy.locale]);
   const avatarUrl =
@@ -92,6 +96,15 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
       display_name: displayName,
       avatar_url: avatarUrl ?? null
     });
+  }
+
+  async function handleEmailAuth(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (authMode === 'register') {
+      await signUpWithEmail({ email: authEmail, password: authPassword, displayName: registerName });
+      return;
+    }
+    await signInWithEmail(authEmail, authPassword);
   }
 
   return (
@@ -129,10 +142,60 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
           )}
         </div>
         {!signedIn ? (
-          <div className="user-auth-actions">
-            <button type="button" onClick={signInWithGoogle} disabled={loading || !isSupabaseConfigured}>
-              {copy.locale === 'zh' ? '使用 Google 登录' : 'Sign in with Google'}
-            </button>
+          <div className="user-auth-panel">
+            <div className="user-auth-tabs">
+              <button
+                type="button"
+                className={authMode === 'login' ? 'is-active' : undefined}
+                onClick={() => setAuthMode('login')}
+              >
+                {copy.locale === 'zh' ? '邮箱登录' : 'Email login'}
+              </button>
+              <button
+                type="button"
+                className={authMode === 'register' ? 'is-active' : undefined}
+                onClick={() => setAuthMode('register')}
+              >
+                {copy.locale === 'zh' ? '邮箱注册' : 'Email sign up'}
+              </button>
+            </div>
+            <form className="user-auth-form" onSubmit={handleEmailAuth}>
+              {authMode === 'register' ? (
+                <label>
+                  {copy.locale === 'zh' ? '昵称' : 'Display name'}
+                  <input value={registerName} onChange={(event) => setRegisterName(event.target.value)} required />
+                </label>
+              ) : null}
+              <label>
+                Email
+                <input type="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required />
+              </label>
+              <label>
+                {copy.locale === 'zh' ? '密码' : 'Password'}
+                <input
+                  minLength={6}
+                  type="password"
+                  value={authPassword}
+                  onChange={(event) => setAuthPassword(event.target.value)}
+                  required
+                />
+              </label>
+              <button type="submit" disabled={loading || !isSupabaseConfigured}>
+                {authMode === 'register'
+                  ? copy.locale === 'zh'
+                    ? '注册账号'
+                    : 'Create account'
+                  : copy.locale === 'zh'
+                    ? '登录'
+                    : 'Sign in'}
+              </button>
+            </form>
+            <div className="user-auth-actions">
+              <button type="button" onClick={signInWithGoogle} disabled={loading || !isSupabaseConfigured}>
+                {copy.locale === 'zh' ? '使用 Google 登录' : 'Sign in with Google'}
+              </button>
+            </div>
+            {authMessage ? <p className="user-auth-message">{authMessage}</p> : null}
             {!isSupabaseConfigured ? (
               <span>{copy.locale === 'zh' ? 'Supabase 尚未配置' : 'Supabase is not configured'}</span>
             ) : null}
