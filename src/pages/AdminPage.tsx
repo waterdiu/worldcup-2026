@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { bracket, groupStageMatches } from '../data';
+import { bracket, finalsMatchResults, groupStageMatches } from '../data';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminDashboard, type AdminPagePermissionRecord, type AdminProfileRecord } from '../hooks/useAdminDashboard';
 import { useAdminStatus } from '../hooks/useAdminStatus';
@@ -16,6 +16,8 @@ interface AdminPageProps {
 interface MatchSummary {
   id: string;
   title: string;
+  status: 'scheduled' | 'completed';
+  resultLabel: string;
 }
 
 function formatDate(value: string | null | undefined) {
@@ -37,15 +39,31 @@ function formatWinner(winner: string, isZh: boolean) {
   return isZh ? '平局' : 'Draw';
 }
 
+function formatResultLabel(match: MatchSummary, isZh: boolean) {
+  if (match.status !== 'completed') return isZh ? '赛果待定' : 'Pending';
+  return match.resultLabel;
+}
+
 function buildMatchLookup(locale: AppCopy['locale']) {
+  const resultById = new Map(finalsMatchResults.map((result) => [result.id, result]));
   const groupMatches = groupStageMatches.map((match) => ({
     id: match.id,
-    title: `${formatTeamName(match.homeTeam, locale)} ${locale === 'zh' ? '对' : 'vs'} ${formatTeamName(match.awayTeam, locale)}`
+    title: `${formatTeamName(match.homeTeam, locale)} VS ${formatTeamName(match.awayTeam, locale)}`,
+    status: resultById.get(match.id)?.status ?? 'scheduled',
+    resultLabel:
+      resultById.get(match.id)?.homeScore !== undefined && resultById.get(match.id)?.awayScore !== undefined
+        ? `${resultById.get(match.id)?.homeScore}-${resultById.get(match.id)?.awayScore}`
+        : ''
   }));
   const knockoutMatches = bracket.flatMap((round) =>
     round.matches.map((match) => ({
       id: match.id,
-      title: `${formatBracketLabel(match.homeLabel, locale)} ${locale === 'zh' ? '对' : 'vs'} ${formatBracketLabel(match.awayLabel, locale)}`
+      title: `${formatBracketLabel(match.homeLabel, locale)} VS ${formatBracketLabel(match.awayLabel, locale)}`,
+      status: resultById.get(match.id)?.status ?? 'scheduled',
+      resultLabel:
+        resultById.get(match.id)?.homeScore !== undefined && resultById.get(match.id)?.awayScore !== undefined
+          ? `${resultById.get(match.id)?.homeScore}-${resultById.get(match.id)?.awayScore}`
+          : ''
     }))
   );
   return new Map([...groupMatches, ...knockoutMatches].map((match) => [match.id, match]));
@@ -53,6 +71,11 @@ function buildMatchLookup(locale: AppCopy['locale']) {
 
 function getMatchTitle(matchLookup: Map<string, MatchSummary>, id: string, isZh: boolean) {
   return matchLookup.get(id)?.title ?? (isZh ? `比赛 ${id}` : `Match ${id}`);
+}
+
+function getMatchResult(matchLookup: Map<string, MatchSummary>, id: string, isZh: boolean) {
+  const match = matchLookup.get(id);
+  return match ? formatResultLabel(match, isZh) : isZh ? '赛果待定' : 'Pending';
 }
 
 function getProfileName(profileById: Map<string, AdminProfileRecord>, userId: string, isZh: boolean) {
@@ -108,6 +131,27 @@ export function AdminPage({ copy }: AdminPageProps) {
   }, {});
   const mostFavoritedMatch = Object.entries(favoriteCountByMatch).sort((a, b) => b[1] - a[1])[0];
   const mostPredictedMatch = Object.entries(predictionCountByMatch).sort((a, b) => b[1] - a[1])[0];
+  const fallbackPagePermissions = useMemo<AdminPagePermissionRecord[]>(
+    () => [
+      { path: '/', label: '首页', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/qualifiers', label: '预选赛', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/qualifiers/*', label: '预选赛子页面', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/stats', label: '统计', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/groups', label: '小组', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/groups/*', label: '小组子页面', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/matches', label: '比赛', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/matches/*', label: '比赛详情', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/teams', label: '球队', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/teams/*', label: '球队详情', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/cities', label: '城市', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/cities/*', label: '城市详情', require_login: false, admin_only: false, updated_at: '' },
+      { path: '/me', label: '我的', require_login: true, admin_only: false, updated_at: '' },
+      { path: '/admin', label: '管理后台', require_login: true, admin_only: true, updated_at: '' }
+    ],
+    []
+  );
+  const permissionByPath = new Map(dashboard.pagePermissions.map((permission) => [permission.path, permission]));
+  const pagePermissions = fallbackPagePermissions.map((permission) => permissionByPath.get(permission.path) ?? permission);
 
   if (!isSupabaseConfigured) {
     return (
@@ -174,9 +218,7 @@ export function AdminPage({ copy }: AdminPageProps) {
         </article>
       ) : null}
 
-      <div className="admin-shell">
-        <aside className="stats-side-nav admin-side-nav">
-          <span>{isZh ? '后台模块' : 'Modules'}</span>
+      <div className="admin-tabs" role="tablist" aria-label={isZh ? '后台模块' : 'Admin modules'}>
           <button className={activeTab === 'users' ? 'is-active' : undefined} type="button" onClick={() => setActiveTab('users')}>
             {isZh ? '用户管理' : 'Users'}
           </button>
@@ -186,7 +228,7 @@ export function AdminPage({ copy }: AdminPageProps) {
           <button className={activeTab === 'permissions' ? 'is-active' : undefined} type="button" onClick={() => setActiveTab('permissions')}>
             {isZh ? '权限设置' : 'Permissions'}
           </button>
-        </aside>
+      </div>
 
         <div className="stats-content">
           {activeTab === 'users' ? (
@@ -199,7 +241,6 @@ export function AdminPage({ copy }: AdminPageProps) {
                     type="button"
                     className="admin-icon-button"
                     disabled
-                    title={isZh ? '新增真实登录用户需要 Supabase 服务端函数' : 'Creating auth users requires a Supabase server function'}
                   >
                     <span aria-hidden="true">+</span>
                     {isZh ? '新增用户' : 'New user'}
@@ -220,7 +261,7 @@ export function AdminPage({ copy }: AdminPageProps) {
                     const role = roleByUserId.get(profile.id) === 'admin' ? 'admin' : 'user';
                     return (
                       <div className="admin-data-row admin-data-row--users" key={profile.id}>
-                        <span className="admin-user-cell" title={profile.id}>
+                        <span className="admin-user-cell">
                           <b>{profile.display_name || profile.email || (isZh ? '未命名用户' : 'Unnamed user')}</b>
                           <small>{profile.id}</small>
                         </span>
@@ -310,6 +351,7 @@ export function AdminPage({ copy }: AdminPageProps) {
                     <span>{isZh ? '比赛名' : 'Match'}</span>
                     <span>{isZh ? '胜负预测' : 'Pick'}</span>
                     <span>{isZh ? '比分预测' : 'Score'}</span>
+                    <span>{isZh ? '实际结果' : 'Result'}</span>
                   </div>
                   {dashboard.predictions.map((prediction) => (
                     <div className="admin-data-row admin-data-row--prediction-records" key={prediction.id}>
@@ -317,6 +359,7 @@ export function AdminPage({ copy }: AdminPageProps) {
                       <span>{getMatchTitle(matchLookup, prediction.match_id, isZh)}</span>
                       <span>{formatWinner(prediction.winner, isZh)}</span>
                       <span>{prediction.home_score}-{prediction.away_score}</span>
+                      <span>{getMatchResult(matchLookup, prediction.match_id, isZh)}</span>
                     </div>
                   ))}
                 </div>
@@ -336,7 +379,7 @@ export function AdminPage({ copy }: AdminPageProps) {
                     <span>{isZh ? '默认访问级别' : 'Default access'}</span>
                     <span>{isZh ? '当前' : 'Current'}</span>
                   </div>
-                  {dashboard.pagePermissions.map((permission) => (
+                  {pagePermissions.map((permission) => (
                     <div className="admin-data-row admin-data-row--permissions" key={permission.path}>
                       <span>{permission.label}</span>
                       <span>{permission.path}</span>
@@ -367,7 +410,7 @@ export function AdminPage({ copy }: AdminPageProps) {
                         <span>{formatStatus(profile.status, isZh)} · {roleByUserId.get(profile.id) === 'admin' ? (isZh ? '管理员' : 'Admin') : (isZh ? '普通用户' : 'User')}</span>
                       </div>
                       <div className="admin-permission-grid">
-                        {dashboard.pagePermissions.map((permission) => {
+                        {pagePermissions.map((permission) => {
                           const existing = dashboard.userPagePermissions.find((item) => item.user_id === profile.id && item.path === permission.path);
                           const checked = existing?.can_access ?? true;
                           return (
@@ -396,7 +439,6 @@ export function AdminPage({ copy }: AdminPageProps) {
               </article>
             </section>
           ) : null}
-        </div>
       </div>
     </section>
   );
