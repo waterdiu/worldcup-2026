@@ -18,6 +18,9 @@ export function AdminPage({ copy }: AdminPageProps) {
   const { isAdmin, loading: adminLoading } = useAdminStatus(user);
   const dashboard = useAdminDashboard(Boolean(user && isAdmin));
   const isZh = copy.locale === 'zh';
+  const pendingUsers = dashboard.profiles.filter((profile) => (profile.status ?? 'pending') === 'pending');
+  const activeUsers = dashboard.profiles.filter((profile) => (profile.status ?? 'pending') === 'active');
+  const roleByUserId = new Map(dashboard.roles.map((role) => [role.user_id, role.role]));
 
   if (!isSupabaseConfigured) {
     return (
@@ -35,7 +38,7 @@ export function AdminPage({ copy }: AdminPageProps) {
     return (
       <section className="section admin-page">
         <article className="admin-hero">
-          <span>{isZh ? '管理员' : 'Admin'}</span>
+          <span>{isZh ? '用户管理' : 'User Management'}</span>
           <h1>{isZh ? '管理员登录' : 'Admin Sign In'}</h1>
           <p>{isZh ? '请先登录管理员账号。' : 'Sign in with an administrator account.'}</p>
           <button type="button" onClick={signInWithGoogle}>{isZh ? '使用 Google 登录' : 'Sign in with Google'}</button>
@@ -48,7 +51,7 @@ export function AdminPage({ copy }: AdminPageProps) {
     return (
       <section className="section admin-page">
         <article className="admin-hero">
-          <span>{isZh ? '管理员' : 'Admin'}</span>
+          <span>{isZh ? '用户管理' : 'User Management'}</span>
           <h1>{isZh ? '正在检查权限' : 'Checking Access'}</h1>
         </article>
       </section>
@@ -59,7 +62,7 @@ export function AdminPage({ copy }: AdminPageProps) {
     return (
       <section className="section admin-page">
         <article className="admin-hero">
-          <span>{isZh ? '管理员' : 'Admin'}</span>
+          <span>{isZh ? '用户管理' : 'User Management'}</span>
           <h1>{isZh ? '没有管理员权限' : 'No Admin Access'}</h1>
           <p>
             {isZh
@@ -74,12 +77,12 @@ export function AdminPage({ copy }: AdminPageProps) {
   return (
     <section className="section admin-page">
       <article className="admin-hero">
-        <span>{isZh ? '管理员' : 'Admin'}</span>
-        <h1>{isZh ? '管理后台' : 'Admin Console'}</h1>
+        <span>{isZh ? '用户管理' : 'User Management'}</span>
+        <h1>{isZh ? '用户管理' : 'User Management'}</h1>
         <p>
           {isZh
-            ? '管理账号、收藏、预测和前端页面访问配置。数据安全由 Supabase RLS 控制。'
-            : 'Manage accounts, favorites, predictions, and frontend page-access settings. Data security is enforced by Supabase RLS.'}
+            ? '查看用户、审批注册、调整角色和页面访问权限。默认用户可以访问公开页面，敏感数据由 Supabase RLS 控制。'
+            : 'Review users, approve registrations, adjust roles, and manage page access. Public pages remain open by default; sensitive data is protected by Supabase RLS.'}
         </p>
         <button type="button" onClick={dashboard.refresh} disabled={dashboard.loading}>
           {dashboard.loading ? (isZh ? '刷新中...' : 'Refreshing...') : isZh ? '刷新数据' : 'Refresh data'}
@@ -99,27 +102,79 @@ export function AdminPage({ copy }: AdminPageProps) {
       ) : null}
 
       <div className="admin-metric-grid">
-        <div><span>{isZh ? '账号' : 'Accounts'}</span><strong>{dashboard.profiles.length}</strong></div>
-        <div><span>{isZh ? '收藏' : 'Favorites'}</span><strong>{dashboard.favorites.length}</strong></div>
-        <div><span>{isZh ? '预测' : 'Predictions'}</span><strong>{dashboard.predictions.length}</strong></div>
-        <div><span>{isZh ? '页面权限' : 'Page rules'}</span><strong>{dashboard.pagePermissions.length}</strong></div>
+        <div><span>{isZh ? '总用户' : 'Users'}</span><strong>{dashboard.profiles.length}</strong></div>
+        <div><span>{isZh ? '待审批' : 'Pending'}</span><strong>{pendingUsers.length}</strong></div>
+        <div><span>{isZh ? '已启用' : 'Active'}</span><strong>{activeUsers.length}</strong></div>
+        <div><span>{isZh ? '预测总数' : 'Predictions'}</span><strong>{dashboard.predictions.length}</strong></div>
       </div>
 
       <article className="admin-card">
-        <h2>{isZh ? '账号管理' : 'Accounts'}</h2>
+        <h2>{isZh ? '注册审批' : 'Registration Review'}</h2>
+        {pendingUsers.length > 0 ? (
+          <div className="admin-user-list">
+            {pendingUsers.map((profile) => (
+              <div className="admin-user-card" key={profile.id}>
+                <div>
+                  <strong>{profile.display_name || profile.email || profile.id}</strong>
+                  <span>{profile.email || profile.id}</span>
+                </div>
+                <button type="button" onClick={() => dashboard.saveProfile({ ...profile, status: 'active' })}>
+                  {isZh ? '通过' : 'Approve'}
+                </button>
+                <button type="button" className="admin-button--secondary" onClick={() => dashboard.saveProfile({ ...profile, status: 'rejected' })}>
+                  {isZh ? '拒绝' : 'Reject'}
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p>{isZh ? '当前没有待审批用户。' : 'No users are pending review.'}</p>
+        )}
+      </article>
+
+      <article className="admin-card">
+        <h2>{isZh ? '用户列表与权限' : 'Users and Access'}</h2>
         <div className="admin-table">
-          <div className="admin-table__row admin-table__row--head">
+          <div className="admin-table__row admin-table__row--head admin-table__row--users">
             <span>{isZh ? '用户' : 'User'}</span>
-            <span>Email</span>
-            <span>{isZh ? '创建时间' : 'Created'}</span>
+            <span>{isZh ? '状态' : 'Status'}</span>
+            <span>{isZh ? '角色' : 'Role'}</span>
+            <span>{isZh ? '操作' : 'Actions'}</span>
           </div>
           {dashboard.profiles.map((profile) => (
-            <div className="admin-table__row" key={profile.id}>
-              <span>{profile.display_name || profile.id}</span>
-              <span>{profile.email || '-'}</span>
-              <span>{formatDate(profile.created_at)}</span>
+            <div className="admin-table__row admin-table__row--users" key={profile.id}>
+              <span title={profile.id}>{profile.display_name || profile.email || profile.id}<small>{profile.email || formatDate(profile.created_at)}</small></span>
+              <select
+                value={profile.status ?? 'pending'}
+                onChange={(event) => dashboard.saveProfile({ ...profile, status: event.target.value })}
+              >
+                <option value="pending">{isZh ? '待审批' : 'Pending'}</option>
+                <option value="active">{isZh ? '已启用' : 'Active'}</option>
+                <option value="disabled">{isZh ? '已禁用' : 'Disabled'}</option>
+                <option value="rejected">{isZh ? '已拒绝' : 'Rejected'}</option>
+              </select>
+              <select
+                value={roleByUserId.get(profile.id) ?? 'user'}
+                onChange={(event) => dashboard.saveRole(profile.id, event.target.value === 'admin' ? 'admin' : null)}
+              >
+                <option value="user">{isZh ? '普通用户' : 'User'}</option>
+                <option value="admin">{isZh ? '管理员' : 'Admin'}</option>
+              </select>
+              <button type="button" className="admin-button--secondary" onClick={() => dashboard.saveProfile({ ...profile, status: 'disabled' })}>
+                {isZh ? '禁用' : 'Disable'}
+              </button>
             </div>
           ))}
+        </div>
+      </article>
+
+      <article className="admin-card">
+        <h2>{isZh ? '用户相关统计' : 'User Statistics'}</h2>
+        <div className="admin-metric-grid">
+          <div><span>{isZh ? '收藏总数' : 'Favorites'}</span><strong>{dashboard.favorites.length}</strong></div>
+          <div><span>{isZh ? '预测总数' : 'Predictions'}</span><strong>{dashboard.predictions.length}</strong></div>
+          <div><span>{isZh ? '页面规则' : 'Page rules'}</span><strong>{dashboard.pagePermissions.length}</strong></div>
+          <div><span>{isZh ? '用户权限' : 'User rules'}</span><strong>{dashboard.userPagePermissions.length}</strong></div>
         </div>
       </article>
 
@@ -160,7 +215,7 @@ export function AdminPage({ copy }: AdminPageProps) {
       </article>
 
       <article className="admin-card">
-        <h2>{isZh ? '页面访问权限' : 'Page Access'}</h2>
+        <h2>{isZh ? '默认页面访问权限' : 'Default Page Access'}</h2>
         <p>
           {isZh
             ? '这是前端路由权限配置。GitHub Pages 是静态托管，不能真正隐藏公开静态文件；敏感数据仍必须依赖 Supabase RLS。'
@@ -189,6 +244,40 @@ export function AdminPage({ copy }: AdminPageProps) {
                 />
                 {isZh ? '仅管理员' : 'Admin only'}
               </label>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <article className="admin-card">
+        <h2>{isZh ? '单用户页面权限审批' : 'Per-user Page Access Review'}</h2>
+        <p>{isZh ? '默认用户可以访问全部公开页面；这里用于给某个用户单独禁止页面，或标记需要审批。' : 'Users can access public pages by default; use this section to deny a page for a specific user or mark it for review.'}</p>
+        <div className="admin-user-list">
+          {dashboard.profiles.map((profile) => (
+            <div className="admin-user-permission-card" key={profile.id}>
+              <strong>{profile.display_name || profile.email || profile.id}</strong>
+              <div className="admin-permission-grid">
+                {dashboard.pagePermissions.map((permission) => {
+                  const existing = dashboard.userPagePermissions.find((item) => item.user_id === profile.id && item.path === permission.path);
+                  return (
+                    <label key={permission.path}>
+                      <input
+                        type="checkbox"
+                        checked={existing?.can_access ?? true}
+                        onChange={(event) =>
+                          dashboard.saveUserPagePermission({
+                            user_id: profile.id,
+                            path: permission.path,
+                            can_access: event.target.checked,
+                            requires_approval: existing?.requires_approval ?? false
+                          })
+                        }
+                      />
+                      {permission.label}
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>
