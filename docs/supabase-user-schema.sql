@@ -71,7 +71,16 @@ insert into public.page_permissions (path, label, require_login, admin_only)
 values
   ('/', '首页', false, false),
   ('/qualifiers', '预选赛', false, false),
+  ('/qualifiers/*', '预选赛子页面', false, false),
   ('/stats', '统计', false, false),
+  ('/groups', '小组', false, false),
+  ('/groups/*', '小组子页面', false, false),
+  ('/matches', '比赛', false, false),
+  ('/matches/*', '比赛详情', false, false),
+  ('/teams', '球队', false, false),
+  ('/teams/*', '球队详情', false, false),
+  ('/cities', '城市', false, false),
+  ('/cities/*', '城市详情', false, false),
   ('/me', '我的', true, false),
   ('/admin', '管理后台', true, true)
 on conflict (path) do nothing;
