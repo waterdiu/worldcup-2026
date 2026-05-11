@@ -1,63 +1,174 @@
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import { bracket, groupStageMatches } from '../data';
 import { useAuth } from '../hooks/useAuth';
 import { useFavoritesList } from '../hooks/useFavoritesList';
 import { usePredictionsList } from '../hooks/usePredictionsList';
+import { useUserProfile } from '../hooks/useUserProfile';
+import { localizePath, type AppCopy } from '../i18n/content';
+import { formatBracketLabel, formatTeamName, formatVenueName } from '../i18n/formatters';
 import { getAuthDisplayName, isSupabaseConfigured } from '../lib/supabase';
-import type { AppCopy } from '../i18n/content';
 
 interface UserCenterPageProps {
   copy: AppCopy;
+}
+
+interface MatchSummary {
+  id: string;
+  title: string;
+  meta: string;
+  homeLabel: string;
+  awayLabel: string;
+}
+
+function buildMatchLookup(locale: AppCopy['locale']) {
+  const groupMatches = groupStageMatches.map((match) => ({
+    id: match.id,
+    title: `${formatTeamName(match.homeTeam, locale)} ${locale === 'zh' ? '对' : 'vs'} ${formatTeamName(match.awayTeam, locale)}`,
+    meta: `${locale === 'zh' ? `${match.groupId} 组` : `Group ${match.groupId}`} · ${match.dateLabel} · ${formatVenueName(match.venue, locale)}`,
+    homeLabel: formatTeamName(match.homeTeam, locale),
+    awayLabel: formatTeamName(match.awayTeam, locale)
+  }));
+
+  const knockoutMatches = bracket.flatMap((round) =>
+    round.matches.map((match) => ({
+      id: match.id,
+      title: `${formatBracketLabel(match.homeLabel, locale)} ${locale === 'zh' ? '对' : 'vs'} ${formatBracketLabel(match.awayLabel, locale)}`,
+      meta: `${formatBracketLabel(round.round, locale)} · ${match.dateLabel} · ${formatVenueName(match.venue, locale)}`,
+      homeLabel: formatBracketLabel(match.homeLabel, locale),
+      awayLabel: formatBracketLabel(match.awayLabel, locale)
+    }))
+  );
+
+  return new Map([...groupMatches, ...knockoutMatches].map((match) => [match.id, match]));
+}
+
+function getFallbackMatch(id: string, locale: AppCopy['locale']): MatchSummary {
+  return {
+    id,
+    title: locale === 'zh' ? `比赛 ${id}` : `Match ${id}`,
+    meta: locale === 'zh' ? '赛程信息待同步' : 'Match metadata pending sync',
+    homeLabel: locale === 'zh' ? '主队' : 'Home',
+    awayLabel: locale === 'zh' ? '客队' : 'Away'
+  };
+}
+
+function getWinnerLabel(winner: string, match: MatchSummary, locale: AppCopy['locale']) {
+  if (winner === 'home') return locale === 'zh' ? `${match.homeLabel} 胜` : `${match.homeLabel} win`;
+  if (winner === 'away') return locale === 'zh' ? `${match.awayLabel} 胜` : `${match.awayLabel} win`;
+  return locale === 'zh' ? '平局' : 'Draw';
+}
+
+function getFavoriteHref(targetType: string, targetId: string, locale: AppCopy['locale']) {
+  if (targetType === 'team') return localizePath(`/teams/${encodeURIComponent(targetId)}`, locale);
+  if (targetType === 'city') return localizePath(`/cities/${encodeURIComponent(targetId)}`, locale);
+  return localizePath(`/matches/${encodeURIComponent(targetId)}`, locale);
 }
 
 export function UserCenterPage({ copy }: UserCenterPageProps) {
   const { user, loading, signInWithGoogle, signOut } = useAuth();
   const { favorites, loading: favoritesLoading } = useFavoritesList(user);
   const { predictions, loading: predictionsLoading } = usePredictionsList(user);
+  const { profile, loading: profileLoading, saving: profileSaving, saveProfile } = useUserProfile(user);
+  const [displayName, setDisplayName] = useState('');
   const signedIn = Boolean(user);
+  const matchLookup = useMemo(() => buildMatchLookup(copy.locale), [copy.locale]);
+  const avatarUrl =
+    profile?.avatar_url ??
+    (typeof user?.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url : undefined) ??
+    (typeof user?.user_metadata?.picture === 'string' ? user.user_metadata.picture : undefined);
+
+  useEffect(() => {
+    if (!user) {
+      setDisplayName('');
+      return;
+    }
+    setDisplayName(profile?.display_name ?? getAuthDisplayName(user));
+  }, [profile?.display_name, user]);
+
+  async function handleProfileSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await saveProfile({
+      display_name: displayName,
+      avatar_url: avatarUrl ?? null
+    });
+  }
 
   return (
     <section className="section user-center-page">
       <div className="user-center-hero">
-        <p className="section-header__eyebrow">
-          {copy.locale === 'zh' ? '用户中心' : 'User Center'}
-        </p>
+        <p className="section-header__eyebrow">{copy.locale === 'zh' ? '用户中心' : 'User Center'}</p>
         <h1>{copy.locale === 'zh' ? '我的世界杯' : 'My World Cup'}</h1>
         <p>
           {signedIn
             ? copy.locale === 'zh'
-              ? `已登录：${getAuthDisplayName(user)}`
-              : `Signed in as ${getAuthDisplayName(user)}`
+              ? '管理你的账号资料、收藏比赛和比分预测。'
+              : 'Manage your profile, saved matches, and score predictions.'
             : copy.locale === 'zh'
-              ? '登录后可以同步收藏和预测。第一版会先保存比赛收藏、球队关注和比分预测。'
-              : 'Sign in to sync favorites and predictions. The first release stores match favorites, followed teams, and score picks.'}
+              ? '登录后可以同步收藏和预测。'
+              : 'Sign in to sync favorites and predictions.'}
         </p>
-        <div className="user-auth-actions">
-          {signedIn ? (
-            <button type="button" onClick={signOut}>
-              {copy.locale === 'zh' ? '退出登录' : 'Sign out'}
-            </button>
-          ) : (
-            <button type="button" onClick={signInWithGoogle} disabled={loading || !isSupabaseConfigured}>
-              {copy.locale === 'zh' ? '使用 Google 登录' : 'Sign in with Google'}
-            </button>
-          )}
-          {!isSupabaseConfigured ? (
-            <span>{copy.locale === 'zh' ? 'Supabase 尚未配置' : 'Supabase is not configured'}</span>
-          ) : null}
-        </div>
       </div>
 
       <div className="user-center-grid">
+        <article className="user-center-card user-profile-card">
+          <div className="user-center-card__heading">
+            <span className="user-center-card__eyebrow">{copy.locale === 'zh' ? 'Account' : 'Account'}</span>
+            <h2>{copy.locale === 'zh' ? '账号信息' : 'Profile'}</h2>
+          </div>
+          {signedIn && user ? (
+            <div className="user-profile-card__body">
+              <div className="user-profile-card__identity">
+                {avatarUrl ? <img src={avatarUrl} alt="" /> : <div className="user-profile-card__avatar">{getAuthDisplayName(user).slice(0, 1).toUpperCase()}</div>}
+                <div>
+                  <strong>{profile?.display_name || getAuthDisplayName(user)}</strong>
+                  <span>{user.email}</span>
+                </div>
+              </div>
+              <form className="user-profile-form" onSubmit={handleProfileSubmit}>
+                <label>
+                  {copy.locale === 'zh' ? '显示昵称' : 'Display name'}
+                  <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} disabled={profileLoading} />
+                </label>
+                <button type="submit" disabled={profileSaving || profileLoading}>
+                  {profileSaving ? (copy.locale === 'zh' ? '保存中...' : 'Saving...') : copy.locale === 'zh' ? '保存资料' : 'Save profile'}
+                </button>
+                <button type="button" className="user-profile-form__secondary" onClick={signOut}>
+                  {copy.locale === 'zh' ? '退出登录' : 'Sign out'}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="user-auth-actions">
+              <button type="button" onClick={signInWithGoogle} disabled={loading || !isSupabaseConfigured}>
+                {copy.locale === 'zh' ? '使用 Google 登录' : 'Sign in with Google'}
+              </button>
+              {!isSupabaseConfigured ? (
+                <span>{copy.locale === 'zh' ? 'Supabase 尚未配置' : 'Supabase is not configured'}</span>
+              ) : null}
+            </div>
+          )}
+        </article>
+
         <article className="user-center-card">
-          <span>{copy.locale === 'zh' ? 'Favorites' : 'Favorites'}</span>
-          <h2>{copy.locale === 'zh' ? '我的收藏' : 'My Favorites'}</h2>
+          <div className="user-center-card__heading">
+            <span className="user-center-card__eyebrow">{copy.locale === 'zh' ? 'Favorites' : 'Favorites'}</span>
+            <h2>{copy.locale === 'zh' ? '我的收藏' : 'My Favorites'}</h2>
+          </div>
           {signedIn && favorites.length > 0 ? (
-            <ul className="user-center-list">
-              {favorites.map((favorite) => (
-                <li key={favorite.id}>
-                  <strong>{favorite.target_type}</strong>
-                  <span>{favorite.target_id}</span>
-                </li>
-              ))}
+            <ul className="user-center-list user-center-list--matches">
+              {favorites.map((favorite) => {
+                const match = matchLookup.get(favorite.target_id) ?? getFallbackMatch(favorite.target_id, copy.locale);
+                const isMatchFavorite = favorite.target_type === 'match';
+                return (
+                  <li key={favorite.id}>
+                    <a href={getFavoriteHref(favorite.target_type, favorite.target_id, copy.locale)}>
+                      <strong>{isMatchFavorite ? match.title : favorite.target_id}</strong>
+                      <span>{isMatchFavorite ? match.meta : favorite.target_type}</span>
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p>
@@ -66,22 +177,30 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
                   ? '正在读取收藏...'
                   : 'Loading favorites...'
                 : copy.locale === 'zh'
-                  ? '这里会汇总你收藏的比赛、球队和城市。'
-                  : 'This area will collect saved matches, teams, and cities.'}
+                  ? '还没有收藏比赛。进入比赛详情页，点击“收藏比赛”后会显示在这里。'
+                  : 'No saved matches yet. Save a match from its detail page to see it here.'}
             </p>
           )}
         </article>
+
         <article className="user-center-card">
-          <span>{copy.locale === 'zh' ? 'Predictions' : 'Predictions'}</span>
-          <h2>{copy.locale === 'zh' ? '我的预测' : 'My Predictions'}</h2>
+          <div className="user-center-card__heading">
+            <span className="user-center-card__eyebrow">{copy.locale === 'zh' ? 'Predictions' : 'Predictions'}</span>
+            <h2>{copy.locale === 'zh' ? '我的预测' : 'My Predictions'}</h2>
+          </div>
           {signedIn && predictions.length > 0 ? (
-            <ul className="user-center-list">
-              {predictions.map((prediction) => (
-                <li key={prediction.id}>
-                  <strong>{copy.locale === 'zh' ? `比赛 ${prediction.match_id}` : `Match ${prediction.match_id}`}</strong>
-                  <span>{`${prediction.home_score}-${prediction.away_score} · ${prediction.winner}`}</span>
-                </li>
-              ))}
+            <ul className="user-center-list user-center-list--matches">
+              {predictions.map((prediction) => {
+                const match = matchLookup.get(prediction.match_id) ?? getFallbackMatch(prediction.match_id, copy.locale);
+                return (
+                  <li key={prediction.id}>
+                    <a href={localizePath(`/matches/${encodeURIComponent(match.id)}`, copy.locale)}>
+                      <strong>{match.title}</strong>
+                      <span>{`${getWinnerLabel(prediction.winner, match, copy.locale)} · ${prediction.home_score}-${prediction.away_score} · ${match.meta}`}</span>
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p>
@@ -90,19 +209,10 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
                   ? '正在读取预测...'
                   : 'Loading predictions...'
                 : copy.locale === 'zh'
-                  ? '这里会展示你的胜负选择和比分预测。'
-                  : 'This area will show your winner picks and score predictions.'}
+                  ? '还没有预测。进入比赛详情页，填写胜平负和比分后会显示在这里。'
+                  : 'No predictions yet. Submit a winner and score from a match detail page to see it here.'}
             </p>
           )}
-        </article>
-        <article className="user-center-card">
-          <span>{copy.locale === 'zh' ? 'Next' : 'Next'}</span>
-          <h2>{copy.locale === 'zh' ? '下一步' : 'Next Step'}</h2>
-          <p>
-            {copy.locale === 'zh'
-              ? '数据库表建好后，就可以把收藏按钮和预测表单接入 Supabase。'
-              : 'After the database tables are created, favorites and prediction forms can write to Supabase.'}
-          </p>
         </article>
       </div>
     </section>
