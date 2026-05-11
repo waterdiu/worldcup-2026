@@ -134,6 +134,43 @@
   color: var(--muted);
 }
 
+.favorite-button {
+  width: fit-content;
+  border: 1px solid rgba(215, 255, 93, 0.48);
+  border-radius: 999px;
+  padding: 10px 16px;
+  color: #d7ff5d;
+  background: rgba(215, 255, 93, 0.1);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.favorite-button:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.user-center-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.user-center-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .hero {
   position: relative;
   overflow: hidden;
