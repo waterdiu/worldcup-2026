@@ -51,37 +51,57 @@ export function PredictionForm({ matchId, homeLabel, awayLabel, locale, compact 
     await savePrediction({ winner, homeScore, awayScore });
   }
 
+  const winnerOptions = [
+    { value: 'home', label: locale === 'zh' ? '胜' : 'Home', title: homeLabel },
+    { value: 'draw', label: locale === 'zh' ? '平' : 'Draw', title: locale === 'zh' ? '平局' : 'Draw' },
+    { value: 'away', label: locale === 'zh' ? '负' : 'Away', title: awayLabel }
+  ];
+
   const form = (
-    <form className="prediction-form" onSubmit={handleSubmit}>
-      <label>
-        {locale === 'zh' ? '胜负选择' : 'Winner'}
-        <select value={winner} onChange={(event) => setWinner(event.target.value)}>
-          <option value="home">{homeLabel}</option>
-          <option value="draw">{locale === 'zh' ? '平局' : 'Draw'}</option>
-          <option value="away">{awayLabel}</option>
-        </select>
-      </label>
-      <div className="prediction-form__scores">
-        <label>
-          {homeLabel}
-          <input
-            min="0"
-            type="number"
-            value={homeScore}
-            onChange={(event) => setHomeScore(Number(event.target.value))}
-          />
-        </label>
-        <label>
-          {awayLabel}
-          <input
-            min="0"
-            type="number"
-            value={awayScore}
-            onChange={(event) => setAwayScore(Number(event.target.value))}
-          />
-        </label>
+    <form className={`prediction-form${compact ? ' prediction-form--compact' : ''}`} onSubmit={handleSubmit}>
+      <div className="prediction-form__winner">
+        <span>{locale === 'zh' ? '胜负选择' : 'Winner'}</span>
+        <div className="prediction-form__winner-buttons" role="group" aria-label={locale === 'zh' ? '胜负选择' : 'Winner'}>
+          {winnerOptions.map((option) => (
+            <button
+              aria-pressed={winner === option.value}
+              className={winner === option.value ? 'is-selected' : undefined}
+              key={option.value}
+              title={option.title}
+              type="button"
+              onClick={() => setWinner(option.value)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </div>
-      <button type="submit" disabled={loading}>
+      <div className="prediction-form__scoreline">
+        <span>{locale === 'zh' ? '比分预测' : 'Score'}</span>
+        <div className="prediction-form__scores">
+          <label>
+            <span>{homeLabel}</span>
+            <input
+              aria-label={homeLabel}
+              min="0"
+              type="number"
+              value={homeScore}
+              onChange={(event) => setHomeScore(Number(event.target.value))}
+            />
+          </label>
+          <label>
+            <span>{awayLabel}</span>
+            <input
+              aria-label={awayLabel}
+              min="0"
+              type="number"
+              value={awayScore}
+              onChange={(event) => setAwayScore(Number(event.target.value))}
+            />
+          </label>
+        </div>
+      </div>
+      <button className="prediction-form__submit" type="submit" disabled={loading}>
         {prediction
           ? locale === 'zh'
             ? '更新预测'
