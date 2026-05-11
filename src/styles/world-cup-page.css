@@ -180,7 +180,9 @@
   gap: 14px;
 }
 
-.prediction-form label {
+.prediction-form label,
+.prediction-form__winner,
+.prediction-form__scoreline {
   display: grid;
   gap: 6px;
   color: var(--muted);
@@ -188,7 +190,6 @@
   font-weight: 700;
 }
 
-.prediction-form select,
 .prediction-form input {
   width: 100%;
   border: 1px solid var(--border);
@@ -198,13 +199,49 @@
   background: rgba(5, 14, 25, 0.82);
 }
 
+.prediction-form__winner-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(5, 14, 25, 0.82);
+}
+
+.prediction-form__winner-buttons button {
+  width: auto;
+  border: 0;
+  border-radius: 0;
+  padding: 10px 12px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.prediction-form__winner-buttons button + button {
+  border-left: 1px solid var(--border);
+}
+
+.prediction-form__winner-buttons button.is-selected {
+  color: #082018;
+  background: linear-gradient(135deg, #d7ff5d, #19d49d);
+}
+
 .prediction-form__scores {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-.prediction-form button {
+.prediction-form__scores label span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prediction-form__submit {
   width: fit-content;
   border: 0;
   border-radius: 999px;
@@ -217,6 +254,7 @@
 
 .prediction-card--compact {
   align-content: start;
+  gap: 8px;
   border-color: rgba(25, 212, 157, 0.32);
 }
 
@@ -226,29 +264,40 @@
 }
 
 .prediction-card--compact .prediction-form {
+  grid-template-columns: minmax(86px, 0.9fr) minmax(120px, 1fr) auto;
+  align-items: end;
   gap: 10px;
 }
 
-.prediction-card--compact .prediction-form label {
+.prediction-card--compact .prediction-form label,
+.prediction-card--compact .prediction-form__winner,
+.prediction-card--compact .prediction-form__scoreline {
   gap: 5px;
   font-size: 0.78rem;
 }
 
-.prediction-card--compact .prediction-form select,
 .prediction-card--compact .prediction-form input {
   border-radius: 12px;
-  padding: 8px 10px;
+  padding: 8px;
+}
+
+.prediction-card--compact .prediction-form__winner-buttons {
+  border-radius: 12px;
+}
+
+.prediction-card--compact .prediction-form__winner-buttons button {
+  padding: 8px 9px;
 }
 
 .prediction-card--compact .prediction-form__scores {
   gap: 8px;
 }
 
-.prediction-card--compact .prediction-form button {
+.prediction-card--compact .prediction-form__submit {
   padding: 9px 14px;
 }
 
-.prediction-form button:disabled {
+.prediction-form__submit:disabled {
   cursor: not-allowed;
   opacity: 0.58;
 }
@@ -3955,6 +4004,14 @@
   .match-info-card__facts,
   .opening-prediction-summary {
     grid-template-columns: 1fr;
+  }
+
+  .prediction-card--compact .prediction-form {
+    grid-template-columns: 1fr;
+  }
+
+  .prediction-card--compact .prediction-form__submit {
+    width: 100%;
   }
 
   .home-shell {
