@@ -86,6 +86,7 @@ export function useAuth(): AuthState {
   async function signOut(): Promise<void> {
     if (!supabase) return;
     await supabase.auth.signOut();
+    window.localStorage.removeItem('worldcup2026:is-admin');
     setUser(null);
   }
 
