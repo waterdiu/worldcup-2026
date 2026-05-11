@@ -179,9 +179,17 @@ function OpeningMatchCompleteDetail({
       </a>
 
       <article className="match-detail-card match-detail-card--span opening-match-section match-info-card" data-testid="match-info-card">
-        <div className="match-detail-hero-card__meta">
-          <span>{copy.locale === 'zh' ? '比赛 1 · 2026 世界杯揭幕战' : 'Match 1 · 2026 World Cup opener'}</span>
-          <span>{groupLabel}</span>
+        <div className="match-detail-hero-card__meta match-detail-hero-card__meta--with-action">
+          <div className="match-detail-hero-card__meta-items">
+            <span>{copy.locale === 'zh' ? '比赛 1 · 2026 世界杯揭幕战' : 'Match 1 · 2026 World Cup opener'}</span>
+            <span>{groupLabel}</span>
+          </div>
+          <FavoriteButton
+            targetType="match"
+            targetId={fixture.id}
+            locale={copy.locale}
+            label={copy.locale === 'zh' ? '比赛' : 'match'}
+          />
         </div>
         <h1>{copy.locale === 'zh' ? '比赛信息' : 'Match Information'}</h1>
         <div className="match-info-card__teams">
@@ -195,16 +203,13 @@ function OpeningMatchCompleteDetail({
         </div>
         <div className="match-info-card__facts">
           <div className="match-info-card__fact">
-            <span>{copy.locale === 'zh' ? '比赛时间' : 'Kickoff'}</span>
+            <span>{copy.locale === 'zh' ? '比赛时间 / 天气' : 'Kickoff / Weather'}</span>
             <strong>{getLocalizedText(detail.kickoffLocal, copy.locale)}</strong>
+            <small>{getLocalizedText(detail.weather, copy.locale)}</small>
           </div>
           <div className="match-info-card__fact">
             <span>{copy.locale === 'zh' ? '比赛地点' : 'Venue'}</span>
             <strong>{getLocalizedText(detail.venueDetail, copy.locale)}</strong>
-          </div>
-          <div className="match-info-card__fact">
-            <span>{copy.locale === 'zh' ? '天气' : 'Weather'}</span>
-            <strong>{getLocalizedText(detail.weather, copy.locale)}</strong>
           </div>
           <div className="match-info-card__fact">
             <span>{copy.locale === 'zh' ? '裁判组' : 'Officials'}</span>
@@ -216,14 +221,7 @@ function OpeningMatchCompleteDetail({
       </article>
 
       <div className="opening-match-layout">
-        <article className="match-detail-card opening-match-section user-match-actions-card">
-          <h3>{copy.locale === 'zh' ? '用户操作' : 'User Actions'}</h3>
-          <FavoriteButton
-            targetType="match"
-            targetId={fixture.id}
-            locale={copy.locale}
-            label={copy.locale === 'zh' ? '比赛' : 'match'}
-          />
+        <article className="match-detail-card opening-match-section match-user-prediction-card">
           <PredictionForm
             matchId={fixture.id}
             homeLabel={homeLabel}
@@ -396,11 +394,19 @@ export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
       </a>
 
       <article className="match-detail-hero-card" data-testid="match-detail-hero">
-        <div className="match-detail-hero-card__meta">
-          <span>{isKnockout ? (copy.locale === 'zh' ? `比赛 ${fixture.id}` : `Match ${fixture.id}`) : groupLabel}</span>
-          <span>{copy.locale === 'zh' ? `阶段：${stageLabel}` : `Stage: ${stageLabel}`}</span>
-          <span>{formatDetailDate(fixture.dateLabel, copy.locale)}</span>
-          <span>{formatVenueName(fixture.venue, copy.locale)}</span>
+        <div className="match-detail-hero-card__meta match-detail-hero-card__meta--with-action">
+          <div className="match-detail-hero-card__meta-items">
+            <span>{isKnockout ? (copy.locale === 'zh' ? `比赛 ${fixture.id}` : `Match ${fixture.id}`) : groupLabel}</span>
+            <span>{copy.locale === 'zh' ? `阶段：${stageLabel}` : `Stage: ${stageLabel}`}</span>
+            <span>{formatDetailDate(fixture.dateLabel, copy.locale)}</span>
+            <span>{formatVenueName(fixture.venue, copy.locale)}</span>
+          </div>
+          <FavoriteButton
+            targetType="match"
+            targetId={fixture.id}
+            locale={copy.locale}
+            label={copy.locale === 'zh' ? '比赛' : 'match'}
+          />
         </div>
         <div className="match-scoreboard">
           <div className="match-scoreboard__team">
@@ -452,14 +458,7 @@ export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
           </div>
         </article>
 
-        <article className="match-detail-card user-match-actions-card">
-          <h3>{copy.locale === 'zh' ? '用户操作' : 'User Actions'}</h3>
-          <FavoriteButton
-            targetType="match"
-            targetId={fixture.id}
-            locale={copy.locale}
-            label={copy.locale === 'zh' ? '比赛' : 'match'}
-          />
+        <article className="match-detail-card match-user-prediction-card">
           <PredictionForm
             matchId={fixture.id}
             homeLabel={homeLabel}
