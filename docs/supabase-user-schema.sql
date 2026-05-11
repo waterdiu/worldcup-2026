@@ -1,9 +1,13 @@
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
+  email text,
   display_name text,
   avatar_url text,
   created_at timestamptz not null default now()
 );
+
+alter table public.profiles
+  add column if not exists email text;
 
 create table if not exists public.favorites (
   id uuid primary key default gen_random_uuid(),
@@ -26,13 +30,52 @@ create table if not exists public.predictions (
   unique (user_id, match_id)
 );
 
+create table if not exists public.user_roles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  role text not null check (role in ('admin')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.page_permissions (
+  path text primary key,
+  label text not null,
+  require_login boolean not null default false,
+  admin_only boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+insert into public.page_permissions (path, label, require_login, admin_only)
+values
+  ('/', '首页', false, false),
+  ('/qualifiers', '预选赛', false, false),
+  ('/stats', '统计', false, false),
+  ('/me', '我的', true, false),
+  ('/admin', '管理后台', true, true)
+on conflict (path) do nothing;
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.user_roles
+    where user_id = auth.uid()
+      and role = 'admin'
+  );
+$$;
+
 alter table public.profiles enable row level security;
 alter table public.favorites enable row level security;
 alter table public.predictions enable row level security;
+alter table public.user_roles enable row level security;
+alter table public.page_permissions enable row level security;
 
 create policy "Profiles are readable by owner"
   on public.profiles for select
-  using (auth.uid() = id);
+  using (auth.uid() = id or public.is_admin());
 
 create policy "Users can insert own profile"
   on public.profiles for insert
@@ -45,7 +88,7 @@ create policy "Users can update own profile"
 
 create policy "Users can read own favorites"
   on public.favorites for select
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id or public.is_admin());
 
 create policy "Users can write own favorites"
   on public.favorites for insert
@@ -57,7 +100,7 @@ create policy "Users can delete own favorites"
 
 create policy "Users can read own predictions"
   on public.predictions for select
-  using (auth.uid() = user_id);
+  using (auth.uid() = user_id or public.is_admin());
 
 create policy "Users can write own predictions"
   on public.predictions for insert
@@ -71,3 +114,21 @@ create policy "Users can update own predictions"
 create policy "Users can delete own predictions"
   on public.predictions for delete
   using (auth.uid() = user_id);
+
+create policy "Users can read own role"
+  on public.user_roles for select
+  using (auth.uid() = user_id or public.is_admin());
+
+create policy "Page permissions are readable"
+  on public.page_permissions for select
+  using (true);
+
+create policy "Admins can write page permissions"
+  on public.page_permissions for all
+  using (public.is_admin())
+  with check (public.is_admin());
+
+-- After your own account has logged in once, run this with that user's UUID:
+-- insert into public.user_roles (user_id, role)
+-- values ('YOUR_USER_UUID', 'admin')
+-- on conflict (user_id) do update set role = excluded.role;
