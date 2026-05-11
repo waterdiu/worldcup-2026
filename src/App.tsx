@@ -14,6 +14,7 @@ import {
   tournamentMeta
 } from './data';
 import { contentByLocale, getLocaleFromPathname, stripAppBasePath, type Locale } from './i18n/content';
+import { AdminPage } from './pages/AdminPage';
 import { CitiesPage } from './pages/CitiesPage';
 import { GroupDetailPage } from './pages/GroupDetailPage';
 import { GroupsPage } from './pages/GroupsPage';
@@ -96,6 +97,10 @@ function renderPage(pathname: string, locale: Locale) {
 
   if (pathname === '/me') {
     return <UserCenterPage copy={copy} />;
+  }
+
+  if (pathname === '/admin') {
+    return <AdminPage copy={copy} />;
   }
 
   if (pathname === '/groups') {
