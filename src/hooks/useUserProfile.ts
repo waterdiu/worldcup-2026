@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase, type AuthUser } from '../lib/supabase';
 
 interface UserProfile {
+  email?: string | null;
   display_name: string | null;
   avatar_url: string | null;
 }
@@ -48,11 +49,21 @@ export function useUserProfile(user: AuthUser | null): UserProfileState {
     setSaving(true);
     const { error } = await supabase.from('profiles').upsert({
       id: user.id,
+      email: user.email ?? null,
       display_name: nextProfile.display_name?.trim() || null,
       avatar_url: nextProfile.avatar_url
     });
 
-    if (!error) {
+    if (error && error.message.includes('email')) {
+      const { error: fallbackError } = await supabase.from('profiles').upsert({
+        id: user.id,
+        display_name: nextProfile.display_name?.trim() || null,
+        avatar_url: nextProfile.avatar_url
+      });
+      if (!fallbackError) {
+        setProfile(nextProfile);
+      }
+    } else if (!error) {
       setProfile(nextProfile);
     }
 
