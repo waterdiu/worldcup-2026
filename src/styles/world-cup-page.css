@@ -171,6 +171,55 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+.prediction-card {
+  border-color: rgba(25, 212, 157, 0.32);
+}
+
+.prediction-form {
+  display: grid;
+  gap: 14px;
+}
+
+.prediction-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.prediction-form select,
+.prediction-form input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 11px 12px;
+  color: var(--text);
+  background: rgba(5, 14, 25, 0.82);
+}
+
+.prediction-form__scores {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.prediction-form button {
+  width: fit-content;
+  border: 0;
+  border-radius: 999px;
+  padding: 11px 18px;
+  color: #082018;
+  background: linear-gradient(135deg, #d7ff5d, #19d49d);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.prediction-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .hero {
   position: relative;
   overflow: hidden;
