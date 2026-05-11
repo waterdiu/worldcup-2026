@@ -49,7 +49,8 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
         {copy.locale === 'zh' ? '返回预选赛比赛记录' : 'Back to qualifier records'}
       </a>
 
-      <article className="match-detail-hero-card">
+      <article className="match-detail-hero-card qualifier-detail-hero">
+        <span className="qualifier-detail-hero__eyebrow">{copy.locale === 'zh' ? '预选赛详情' : 'Qualifier Detail'}</span>
         <div className="match-detail-hero-card__meta">
           <span>{match.confederationName}</span>
           <span>{match.stage}</span>
