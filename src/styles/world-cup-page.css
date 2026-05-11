@@ -473,6 +473,34 @@
   grid-template-columns: 156px minmax(0, 1fr);
 }
 
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(105, 134, 164, 0.18);
+  border-radius: 999px;
+  padding: 6px;
+  background: rgba(15, 24, 34, 0.72);
+  width: fit-content;
+}
+
+.admin-tabs button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 18px;
+  color: rgba(200, 216, 232, 0.62);
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-tabs button:hover,
+.admin-tabs button.is-active {
+  color: #082018;
+  background: linear-gradient(135deg, #d7ff5d, #19d49d);
+}
+
 .admin-side-nav button {
   border: 0;
   border-left: 2px solid transparent;
@@ -638,6 +666,7 @@
   background:
     linear-gradient(135deg, rgba(26, 35, 48, 0.76), rgba(15, 24, 34, 0.82)),
     rgba(26, 35, 48, 0.62);
+  font-size: 0.84rem;
 }
 
 .admin-data-row--users {
@@ -656,7 +685,7 @@
 }
 
 .admin-data-row--prediction-records {
-  grid-template-columns: minmax(160px, 0.8fr) minmax(280px, 1.5fr) minmax(120px, 0.6fr) minmax(110px, 0.5fr);
+  grid-template-columns: minmax(140px, 0.8fr) minmax(260px, 1.35fr) minmax(110px, 0.58fr) minmax(95px, 0.46fr) minmax(95px, 0.46fr);
 }
 
 .admin-data-row--permissions {
@@ -671,9 +700,9 @@
 }
 
 .admin-data-row--head {
-  color: rgba(200, 216, 232, 0.44);
+  color: rgba(225, 238, 248, 0.74);
   font-family: "IBM Plex Mono", "Space Grotesk", monospace;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4771,6 +4800,7 @@
   }
 
   .admin-shell,
+  .admin-tabs,
   .admin-data-row,
   .admin-data-row--users,
   .admin-data-row--records,
@@ -4783,6 +4813,12 @@
 
   .admin-data-row {
     min-width: 0;
+  }
+
+  .admin-tabs {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .home-shell {
