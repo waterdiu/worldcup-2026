@@ -27,8 +27,8 @@ export function FavoriteButton({ targetType, targetId, locale, label }: Favorite
     <button type="button" className="favorite-button" disabled={loading} onClick={toggleFavorite}>
       {favorite
         ? locale === 'zh'
-          ? `已收藏${targetLabel}`
-          : `Saved ${targetLabel}`
+          ? `取消收藏${targetLabel}`
+          : `Remove saved ${targetLabel}`
         : locale === 'zh'
           ? `收藏${targetLabel}`
           : `Save ${targetLabel}`}
