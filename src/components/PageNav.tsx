@@ -1,4 +1,6 @@
 import { localizePath, type Locale } from '../i18n/content';
+import { useAdminStatus } from '../hooks/useAdminStatus';
+import { useAuth } from '../hooks/useAuth';
 
 const links = [
   { href: '/', label: { en: 'Home', zh: '首页' } },
@@ -13,9 +15,15 @@ interface PageNavProps {
 }
 
 export function PageNav({ pathname, locale }: PageNavProps) {
+  const { user } = useAuth();
+  const { isAdmin } = useAdminStatus(user);
+  const visibleLinks = isAdmin
+    ? [...links, { href: '/admin', label: { en: 'Admin', zh: '管理' } }]
+    : links;
+
   return (
     <nav aria-label="Page navigation" className="page-nav">
-      {links.map((link) => {
+      {visibleLinks.map((link) => {
         const isActive = pathname === link.href;
         return (
           <a
