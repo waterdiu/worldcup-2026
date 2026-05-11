@@ -216,6 +216,22 @@ function OpeningMatchCompleteDetail({
       </article>
 
       <div className="opening-match-layout">
+        <article className="match-detail-card opening-match-section user-match-actions-card">
+          <h3>{copy.locale === 'zh' ? '用户操作' : 'User Actions'}</h3>
+          <FavoriteButton
+            targetType="match"
+            targetId={fixture.id}
+            locale={copy.locale}
+            label={copy.locale === 'zh' ? '比赛' : 'match'}
+          />
+          <PredictionForm
+            matchId={fixture.id}
+            homeLabel={homeLabel}
+            awayLabel={awayLabel}
+            locale={copy.locale}
+          />
+        </article>
+
         <article className="match-detail-card match-detail-card--span opening-match-section">
           <h3>{copy.locale === 'zh' ? '预计首发阵容' : 'Projected Lineups'}</h3>
           <div className="lineup-pitch" data-testid="lineup-pitch">
@@ -386,12 +402,6 @@ export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
           <span>{formatDetailDate(fixture.dateLabel, copy.locale)}</span>
           <span>{formatVenueName(fixture.venue, copy.locale)}</span>
         </div>
-        <FavoriteButton
-          targetType="match"
-          targetId={fixture.id}
-          locale={copy.locale}
-          label={copy.locale === 'zh' ? '比赛' : 'match'}
-        />
         <div className="match-scoreboard">
           <div className="match-scoreboard__team">
             <span>{homeLabel}</span>
@@ -442,12 +452,21 @@ export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
           </div>
         </article>
 
-        <PredictionForm
-          matchId={fixture.id}
-          homeLabel={homeLabel}
-          awayLabel={awayLabel}
-          locale={copy.locale}
-        />
+        <article className="match-detail-card user-match-actions-card">
+          <h3>{copy.locale === 'zh' ? '用户操作' : 'User Actions'}</h3>
+          <FavoriteButton
+            targetType="match"
+            targetId={fixture.id}
+            locale={copy.locale}
+            label={copy.locale === 'zh' ? '比赛' : 'match'}
+          />
+          <PredictionForm
+            matchId={fixture.id}
+            homeLabel={homeLabel}
+            awayLabel={awayLabel}
+            locale={copy.locale}
+          />
+        </article>
 
         <article className="match-detail-card">
           <h3>{copy.locale === 'zh' ? '技术统计' : 'Match Statistics'}</h3>
