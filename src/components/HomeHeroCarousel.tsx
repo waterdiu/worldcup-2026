@@ -9,11 +9,19 @@ interface HomeHeroCarouselProps {
   locale: Locale;
 }
 
-const TOURNAMENT_PROMO_VIDEO_URL =
-  publicAssetPath('/worldcup-assets/2026worldcup.mp4');
+const HOME_PROMO_ASSET_VERSION = '20260512-post';
+
+function versionedAssetPath(path: string): string {
+  return `${publicAssetPath(path)}?v=${HOME_PROMO_ASSET_VERSION}`;
+}
+
+const TOURNAMENT_PROMO_VIDEO_URL = versionedAssetPath('/worldcup-assets/2026worldcup.mp4');
+const TOURNAMENT_PROMO_POSTER_URL = versionedAssetPath(
+  '/worldcup-assets/optimized/home-promo-hero.webp'
+);
 
 const heroAssetStyles = {
-  '--home-promo-artwork': `image-set(url("${publicAssetPath('/worldcup-assets/optimized/home-promo-hero.webp')}") type("image/webp"), url("${publicAssetPath('/worldcup-assets/optimized/home-promo-hero-small.jpg')}") type("image/jpeg"))`,
+  '--home-promo-artwork': `image-set(url("${TOURNAMENT_PROMO_POSTER_URL}") type("image/webp"), url("${versionedAssetPath('/worldcup-assets/optimized/home-promo-hero-small.jpg')}") type("image/jpeg"))`,
   '--home-opening-artwork': `url("${publicAssetPath('/worldcup-assets/optimized/opening-match-poster-v2.jpg')}")`
 } as CSSProperties;
 
@@ -100,6 +108,7 @@ export function HomeHeroCarousel({ slides, locale }: HomeHeroCarouselProps) {
                     <video
                       className="home-hero__video home-hero__video--contain"
                       src={TOURNAMENT_PROMO_VIDEO_URL}
+                      poster={TOURNAMENT_PROMO_POSTER_URL}
                       aria-label={locale === 'zh' ? '官方宣传片播放器' : 'official trailer player'}
                       controls
                       autoPlay
