@@ -47,6 +47,14 @@ describe('App routes', () => {
     expect(screen.getByRole('button', { name: /登录后收藏比赛/i })).toBeInTheDocument();
   });
 
+  it('shows a signed-out prediction prompt on match detail pages', () => {
+    window.history.replaceState({}, '', '/matches/7');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: /我的预测/i })).toBeInTheDocument();
+    expect(screen.getByText(/登录后可以预测胜负和比分/i)).toBeInTheDocument();
+  });
+
   it('renders the chinese homepage at the root route with unprefixed navigation links', () => {
     window.history.replaceState({}, '', '/');
     render(<App />);
