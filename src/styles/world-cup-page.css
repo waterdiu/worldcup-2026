@@ -53,7 +53,7 @@
 .user-center-page {
   display: grid;
   gap: 24px;
-  max-width: 980px;
+  max-width: 1120px;
   margin: 0 auto;
 }
 
@@ -70,23 +70,29 @@
 .user-center-hero {
   display: grid;
   gap: 18px;
-  padding: clamp(20px, 3vw, 30px);
+  padding: clamp(20px, 3vw, 28px);
 }
 
 .user-center-hero__intro {
   display: grid;
-  grid-template-columns: minmax(220px, 0.82fr) minmax(320px, 1.18fr);
+  grid-template-columns: minmax(220px, 0.72fr) minmax(420px, 1.28fr);
   gap: 22px;
   align-items: center;
 }
 
+.user-center-hero__title {
+  display: grid;
+  gap: 10px;
+}
+
 .user-center-hero h1 {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: clamp(2rem, 4vw, 3.8rem);
   line-height: 0.96;
 }
 
 .user-center-hero p {
+  margin: 0;
   max-width: 760px;
   color: var(--muted);
 }
@@ -212,7 +218,13 @@
 
 .user-profile-card__body {
   display: grid;
-  gap: 14px;
+  grid-template-columns: minmax(220px, 0.78fr) minmax(360px, 1.22fr);
+  gap: 18px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  padding: 14px;
+  background: rgba(4, 13, 22, 0.34);
 }
 
 .user-profile-card__identity {
@@ -258,7 +270,7 @@
 
 .user-profile-form {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto auto;
+  grid-template-columns: minmax(180px, 1fr) auto auto;
   gap: 10px;
   align-items: end;
 }
@@ -274,8 +286,8 @@
 .user-profile-form input {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 10px 12px;
+  border-radius: 999px;
+  padding: 10px 14px;
   color: var(--text);
   background: rgba(5, 14, 25, 0.82);
 }
@@ -321,36 +333,127 @@
 
 .user-center-list {
   display: grid;
-  gap: 10px;
-  margin: 16px 0 0;
+  gap: 12px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .user-center-list li {
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.05);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025)),
+    rgba(4, 13, 22, 0.46);
   overflow: hidden;
 }
 
-.user-center-list a {
+.user-match-card {
   display: grid;
-  gap: 6px;
-  padding: 13px 14px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 16px 18px;
   color: inherit;
 }
 
-.user-center-list strong {
-  color: var(--text);
+.user-match-card:hover {
+  background: rgba(215, 255, 93, 0.05);
 }
 
-.user-center-list span {
+.user-match-card__main {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.user-center-list strong,
+.user-match-card__main strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.user-center-list span,
+.user-match-card__main span {
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+.user-match-card__status {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(215, 255, 93, 0.22);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: rgba(223, 235, 244, 0.72);
+  background: rgba(215, 255, 93, 0.08);
+  white-space: nowrap;
+}
+
+.user-match-card__status b {
+  color: #d7ff5d;
+}
+
+.user-prediction-result {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) minmax(90px, auto) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.user-prediction-result > span:not(.user-prediction-result__badge) {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 9px 11px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.user-prediction-result em {
+  color: rgba(200, 216, 232, 0.52);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.user-prediction-result b {
+  color: #f4fbff;
+  font-size: 0.9rem;
+}
+
+.user-prediction-result__badge {
+  border: 1px solid rgba(200, 216, 232, 0.2);
+  border-radius: 999px;
+  padding: 9px 12px;
+  color: rgba(200, 216, 232, 0.78);
+  background: rgba(200, 216, 232, 0.08);
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.user-prediction-result__badge.is-exact {
+  border-color: rgba(215, 255, 93, 0.42);
+  color: #d7ff5d;
+  background: rgba(215, 255, 93, 0.12);
+}
+
+.user-prediction-result__badge.is-hit {
+  border-color: rgba(25, 212, 157, 0.42);
+  color: #6ef2aa;
+  background: rgba(25, 212, 157, 0.12);
+}
+
+.user-prediction-result__badge.is-miss {
+  border-color: rgba(255, 124, 92, 0.4);
+  color: #ff9a7a;
+  background: rgba(255, 124, 92, 0.1);
 }
 
 .admin-page {
@@ -4244,6 +4347,8 @@
   .team-match-card--compact,
   .city-stadium-facts,
   .match-info-card__facts,
+  .user-match-card--prediction,
+  .user-profile-card__body,
   .opening-prediction-summary {
     grid-template-columns: 1fr;
   }
@@ -4490,6 +4595,18 @@
   }
 
   .user-profile-form {
+    grid-template-columns: 1fr;
+  }
+
+  .user-match-card {
+    grid-template-columns: 1fr;
+  }
+
+  .user-match-card__status {
+    justify-self: start;
+  }
+
+  .user-prediction-result {
     grid-template-columns: 1fr;
   }
 
