@@ -3,7 +3,8 @@ import { localizePath, type Locale } from '../i18n/content';
 const links = [
   { href: '/', label: { en: 'Home', zh: '首页' } },
   { href: '/qualifiers', label: { en: 'Qualifiers', zh: '预选赛' } },
-  { href: '/stats', label: { en: 'Stats', zh: '统计' } }
+  { href: '/stats', label: { en: 'Stats', zh: '统计' } },
+  { href: '/me', label: { en: 'Me', zh: '我的' } }
 ];
 
 interface PageNavProps {
