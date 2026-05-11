@@ -54,13 +54,14 @@ describe('App routes', () => {
     expect(screen.getByRole('button', { name: /登录后收藏比赛/i })).toBeInTheDocument();
     expect(screen.getByText(/登录后可以预测胜负和比分/i)).toBeInTheDocument();
     expect(screen.getByText(/比赛时间 \/ 天气/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /用户操作/i })).not.toBeInTheDocument();
   });
 
   it('shows a signed-out prediction prompt on match detail pages', () => {
     window.history.replaceState({}, '', '/matches/7');
     render(<App />);
 
-    expect(screen.getByRole('heading', { name: /我的预测/i })).toBeInTheDocument();
+    expect(screen.getByText(/我的预测/i)).toBeInTheDocument();
     expect(screen.getByText(/登录后可以预测胜负和比分/i)).toBeInTheDocument();
   });
 
