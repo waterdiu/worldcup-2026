@@ -5,6 +5,7 @@ interface UserProfile {
   email?: string | null;
   display_name: string | null;
   avatar_url: string | null;
+  status?: string | null;
 }
 
 interface UserProfileState {
@@ -30,19 +31,40 @@ export function useUserProfile(user: AuthUser | null): UserProfileState {
     setLoading(true);
     supabase
       .from('profiles')
-      .select('display_name,avatar_url')
+      .select('email,display_name,avatar_url,status')
       .eq('id', user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (!mounted) return;
-        setProfile((data as UserProfile | null) ?? null);
+        const existingProfile = (data as UserProfile | null) ?? null;
+        setProfile(existingProfile);
         setLoading(false);
+        if (!existingProfile) {
+          void saveDefaultProfile(user);
+        }
       });
 
     return () => {
       mounted = false;
     };
   }, [user]);
+
+  async function saveDefaultProfile(currentUser: AuthUser): Promise<void> {
+    if (!supabase) return;
+    const displayName = currentUser.user_metadata?.name ?? currentUser.user_metadata?.full_name;
+    await supabase.from('profiles').upsert({
+      id: currentUser.id,
+      email: currentUser.email ?? null,
+      display_name: typeof displayName === 'string' ? displayName : null,
+      avatar_url:
+        typeof currentUser.user_metadata?.avatar_url === 'string'
+          ? currentUser.user_metadata.avatar_url
+          : typeof currentUser.user_metadata?.picture === 'string'
+            ? currentUser.user_metadata.picture
+            : null,
+      status: 'pending'
+    });
+  }
 
   async function saveProfile(nextProfile: UserProfile): Promise<void> {
     if (!user || !supabase) return;
@@ -51,7 +73,8 @@ export function useUserProfile(user: AuthUser | null): UserProfileState {
       id: user.id,
       email: user.email ?? null,
       display_name: nextProfile.display_name?.trim() || null,
-      avatar_url: nextProfile.avatar_url
+      avatar_url: nextProfile.avatar_url,
+      status: profile?.status ?? 'pending'
     });
 
     if (error && error.message.includes('email')) {
