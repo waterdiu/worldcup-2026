@@ -2,6 +2,7 @@ import { localizePath, type AppCopy } from '../i18n/content';
 import { formatBracketLabel, formatTeamName, formatVenueName } from '../i18n/formatters';
 import { openingMatchDetail, type OpeningMatchDetailData } from '../data/openingMatchDetail';
 import type { BracketMatchData, GroupFixtureData, GroupStageMatchData } from '../types/tournament';
+import { FavoriteButton } from '../components/FavoriteButton';
 
 type KnockoutMatchDetailData = BracketMatchData & {
   roundLabel: string;
@@ -384,6 +385,12 @@ export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
           <span>{formatDetailDate(fixture.dateLabel, copy.locale)}</span>
           <span>{formatVenueName(fixture.venue, copy.locale)}</span>
         </div>
+        <FavoriteButton
+          targetType="match"
+          targetId={fixture.id}
+          locale={copy.locale}
+          label={copy.locale === 'zh' ? '比赛' : 'match'}
+        />
         <div className="match-scoreboard">
           <div className="match-scoreboard__team">
             <span>{homeLabel}</span>
