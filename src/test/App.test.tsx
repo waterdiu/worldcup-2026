@@ -47,6 +47,15 @@ describe('App routes', () => {
     expect(screen.getByRole('button', { name: /登录后收藏比赛/i })).toBeInTheDocument();
   });
 
+  it('shows favorite and prediction actions on the opening match detail page', () => {
+    window.history.replaceState({}, '', '/matches/1');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: /用户操作/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /登录后收藏比赛/i })).toBeInTheDocument();
+    expect(screen.getByText(/登录后可以预测胜负和比分/i)).toBeInTheDocument();
+  });
+
   it('shows a signed-out prediction prompt on match detail pages', () => {
     window.history.replaceState({}, '', '/matches/7');
     render(<App />);
