@@ -217,19 +217,17 @@ function OpeningMatchCompleteDetail({
               {detail.refereeCrew.map((crew) => `${getLocalizedText(crew.role, copy.locale)}: ${crew.name}`).join(' · ')}
             </strong>
           </div>
-        </div>
-      </article>
-
-      <div className="opening-match-layout">
-        <article className="match-detail-card opening-match-section match-user-prediction-card">
           <PredictionForm
             matchId={fixture.id}
             homeLabel={homeLabel}
             awayLabel={awayLabel}
             locale={copy.locale}
+            compact
           />
-        </article>
+        </div>
+      </article>
 
+      <div className="opening-match-layout">
         <article className="match-detail-card match-detail-card--span opening-match-section">
           <h3>{copy.locale === 'zh' ? '预计首发阵容' : 'Projected Lineups'}</h3>
           <div className="lineup-pitch" data-testid="lineup-pitch">
@@ -421,6 +419,27 @@ export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
           </div>
         </div>
         <h1>{fixture.id === '1' && copy.locale === 'zh' ? '揭幕战详情' : isKnockout ? (copy.locale === 'zh' ? '淘汰赛比赛详情' : 'Knockout Match Detail') : copy.locale === 'zh' ? '比赛详情' : 'Match Detail'}</h1>
+        <div className="match-info-card__facts match-detail-hero-card__facts">
+          <div className="match-info-card__fact">
+            <span>{copy.locale === 'zh' ? '比赛时间' : 'Kickoff'}</span>
+            <strong>{formatDetailDate(fixture.dateLabel, copy.locale)}</strong>
+          </div>
+          <div className="match-info-card__fact">
+            <span>{copy.locale === 'zh' ? '比赛地点' : 'Venue'}</span>
+            <strong>{formatVenueName(fixture.venue, copy.locale)}</strong>
+          </div>
+          <div className="match-info-card__fact">
+            <span>{copy.locale === 'zh' ? '阶段' : 'Stage'}</span>
+            <strong>{stageLabel}</strong>
+          </div>
+          <PredictionForm
+            matchId={fixture.id}
+            homeLabel={homeLabel}
+            awayLabel={awayLabel}
+            locale={copy.locale}
+            compact
+          />
+        </div>
       </article>
 
       <div className="match-detail-layout">
@@ -456,15 +475,6 @@ export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
               </div>
             ))}
           </div>
-        </article>
-
-        <article className="match-detail-card match-user-prediction-card">
-          <PredictionForm
-            matchId={fixture.id}
-            homeLabel={homeLabel}
-            awayLabel={awayLabel}
-            locale={copy.locale}
-          />
         </article>
 
         <article className="match-detail-card">
