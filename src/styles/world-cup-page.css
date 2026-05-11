@@ -175,16 +175,13 @@
   border-color: rgba(25, 212, 157, 0.32);
 }
 
-.user-match-actions-card {
+.match-user-prediction-card {
   display: grid;
   gap: 14px;
-  border-color: rgba(215, 255, 93, 0.4);
-  background:
-    radial-gradient(circle at 10% 0%, rgba(215, 255, 93, 0.14), transparent 32%),
-    linear-gradient(145deg, rgba(7, 24, 32, 0.94), rgba(8, 14, 27, 0.98));
+  border-color: rgba(25, 212, 157, 0.32);
 }
 
-.user-match-actions-card .prediction-card {
+.match-user-prediction-card .prediction-card {
   padding: 0;
   border: 0;
   background: transparent;
@@ -1503,11 +1500,17 @@
 }
 
 .match-detail-hero-card__meta,
+.match-detail-hero-card__meta-items,
 .match-probability-strip,
 .related-link-row {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.match-detail-hero-card__meta--with-action {
+  align-items: center;
+  justify-content: space-between;
 }
 
 .match-detail-hero-card__meta span,
@@ -1757,6 +1760,11 @@
   display: grid;
   gap: 8px;
   padding: 14px;
+}
+
+.match-info-card__fact small {
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .match-info-card__fact span,
