@@ -3,6 +3,7 @@ import { formatBracketLabel, formatTeamName, formatVenueName } from '../i18n/for
 import { openingMatchDetail, type OpeningMatchDetailData } from '../data/openingMatchDetail';
 import type { BracketMatchData, GroupFixtureData, GroupStageMatchData } from '../types/tournament';
 import { FavoriteButton } from '../components/FavoriteButton';
+import { PredictionForm } from '../components/PredictionForm';
 
 type KnockoutMatchDetailData = BracketMatchData & {
   roundLabel: string;
@@ -440,6 +441,13 @@ export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
             ))}
           </div>
         </article>
+
+        <PredictionForm
+          matchId={fixture.id}
+          homeLabel={homeLabel}
+          awayLabel={awayLabel}
+          locale={copy.locale}
+        />
 
         <article className="match-detail-card">
           <h3>{copy.locale === 'zh' ? '技术统计' : 'Match Statistics'}</h3>
