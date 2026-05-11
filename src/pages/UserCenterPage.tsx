@@ -1,4 +1,5 @@
 import { useAuth } from '../hooks/useAuth';
+import { useFavoritesList } from '../hooks/useFavoritesList';
 import { getAuthDisplayName, isSupabaseConfigured } from '../lib/supabase';
 import type { AppCopy } from '../i18n/content';
 
@@ -8,6 +9,7 @@ interface UserCenterPageProps {
 
 export function UserCenterPage({ copy }: UserCenterPageProps) {
   const { user, loading, signInWithGoogle, signOut } = useAuth();
+  const { favorites, loading: favoritesLoading } = useFavoritesList(user);
   const signedIn = Boolean(user);
 
   return (
@@ -46,11 +48,26 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
         <article className="user-center-card">
           <span>{copy.locale === 'zh' ? 'Favorites' : 'Favorites'}</span>
           <h2>{copy.locale === 'zh' ? '我的收藏' : 'My Favorites'}</h2>
-          <p>
-            {copy.locale === 'zh'
-              ? '这里会汇总你收藏的比赛、球队和城市。'
-              : 'This area will collect saved matches, teams, and cities.'}
-          </p>
+          {signedIn && favorites.length > 0 ? (
+            <ul className="user-center-list">
+              {favorites.map((favorite) => (
+                <li key={favorite.id}>
+                  <strong>{favorite.target_type}</strong>
+                  <span>{favorite.target_id}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>
+              {favoritesLoading
+                ? copy.locale === 'zh'
+                  ? '正在读取收藏...'
+                  : 'Loading favorites...'
+                : copy.locale === 'zh'
+                  ? '这里会汇总你收藏的比赛、球队和城市。'
+                  : 'This area will collect saved matches, teams, and cities.'}
+            </p>
+          )}
         </article>
         <article className="user-center-card">
           <span>{copy.locale === 'zh' ? 'Predictions' : 'Predictions'}</span>
