@@ -199,7 +199,7 @@ export function AdminPage({ copy }: AdminPageProps) {
                 <div className="admin-card__header">
                   <div>
                     <h3>{isZh ? '所有用户' : 'All Users'}</h3>
-                    <p>{isZh ? '新增/删除真实登录用户需要 Supabase Edge Function；当前前端提供审批、修改、禁用和角色管理。' : 'Creating/deleting real auth users requires a Supabase Edge Function; this frontend handles approval, edits, disabling, and roles.'}</p>
+                    <p>{isZh ? '新增/永久删除真实登录用户需要 Supabase Edge Function；当前前端提供审批、修改、置为不可用和角色管理。' : 'Creating/permanently deleting real auth users requires a Supabase Edge Function; this frontend handles approval, edits, disabling, and roles.'}</p>
                   </div>
                   <button type="button" disabled>{isZh ? '新增用户' : 'New user'}</button>
                 </div>
@@ -232,7 +232,7 @@ export function AdminPage({ copy }: AdminPageProps) {
                       <div className="admin-row-actions">
                         <button type="button" onClick={() => dashboard.saveProfile({ ...profile, status: 'active' })}>{isZh ? '通过' : 'Approve'}</button>
                         <button type="button" className="admin-button--secondary" onClick={() => dashboard.saveProfile({ ...profile, status: 'rejected' })}>{isZh ? '拒绝' : 'Reject'}</button>
-                        <button type="button" className="admin-button--secondary" onClick={() => dashboard.saveProfile({ ...profile, status: 'disabled' })}>{isZh ? '删除' : 'Delete'}</button>
+                        <button type="button" className="admin-button--secondary" onClick={() => dashboard.saveProfile({ ...profile, status: 'disabled' })}>{isZh ? '置为不可用' : 'Disable'}</button>
                       </div>
                     </div>
                   ))}
