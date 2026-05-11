@@ -6,8 +6,24 @@ interface AdminStatus {
   loading: boolean;
 }
 
+const ADMIN_STATUS_CACHE_KEY = 'worldcup2026:is-admin';
+
+function readCachedAdminStatus(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(ADMIN_STATUS_CACHE_KEY) === 'true';
+}
+
+function writeCachedAdminStatus(isAdmin: boolean): void {
+  if (typeof window === 'undefined') return;
+  if (isAdmin) {
+    window.localStorage.setItem(ADMIN_STATUS_CACHE_KEY, 'true');
+    return;
+  }
+  window.localStorage.removeItem(ADMIN_STATUS_CACHE_KEY);
+}
+
 export function useAdminStatus(user: AuthUser | null): AdminStatus {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(readCachedAdminStatus);
   const [loading, setLoading] = useState(Boolean(user && supabase));
 
   useEffect(() => {
@@ -27,7 +43,9 @@ export function useAdminStatus(user: AuthUser | null): AdminStatus {
       .maybeSingle()
       .then(({ data }) => {
         if (!mounted) return;
-        setIsAdmin(Boolean(data));
+        const nextIsAdmin = Boolean(data);
+        setIsAdmin(nextIsAdmin);
+        writeCachedAdminStatus(nextIsAdmin);
         setLoading(false);
       });
 
