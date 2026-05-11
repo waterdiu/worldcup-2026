@@ -15,9 +15,11 @@ interface PageNavProps {
 }
 
 export function PageNav({ pathname, locale }: PageNavProps) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { isAdmin } = useAdminStatus(user);
-  const visibleLinks = isAdmin
+  const hasCachedAdminStatus =
+    typeof window !== 'undefined' && window.localStorage.getItem('worldcup2026:is-admin') === 'true';
+  const visibleLinks = isAdmin || (authLoading && hasCachedAdminStatus)
     ? [...links, { href: '/admin', label: { en: 'Admin', zh: '管理' } }]
     : links;
 
