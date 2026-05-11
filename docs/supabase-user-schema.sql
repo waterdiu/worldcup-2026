@@ -73,6 +73,23 @@ alter table public.predictions enable row level security;
 alter table public.user_roles enable row level security;
 alter table public.page_permissions enable row level security;
 
+drop policy if exists "Profiles are readable by owner" on public.profiles;
+drop policy if exists "Users can insert own profile" on public.profiles;
+drop policy if exists "Users can update own profile" on public.profiles;
+
+drop policy if exists "Users can read own favorites" on public.favorites;
+drop policy if exists "Users can write own favorites" on public.favorites;
+drop policy if exists "Users can delete own favorites" on public.favorites;
+
+drop policy if exists "Users can read own predictions" on public.predictions;
+drop policy if exists "Users can write own predictions" on public.predictions;
+drop policy if exists "Users can update own predictions" on public.predictions;
+drop policy if exists "Users can delete own predictions" on public.predictions;
+
+drop policy if exists "Users can read own role" on public.user_roles;
+drop policy if exists "Page permissions are readable" on public.page_permissions;
+drop policy if exists "Admins can write page permissions" on public.page_permissions;
+
 create policy "Profiles are readable by owner"
   on public.profiles for select
   using (auth.uid() = id or public.is_admin());
