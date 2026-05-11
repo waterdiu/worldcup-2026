@@ -1,5 +1,6 @@
 import { useAuth } from '../hooks/useAuth';
 import { useFavoritesList } from '../hooks/useFavoritesList';
+import { usePredictionsList } from '../hooks/usePredictionsList';
 import { getAuthDisplayName, isSupabaseConfigured } from '../lib/supabase';
 import type { AppCopy } from '../i18n/content';
 
@@ -10,6 +11,7 @@ interface UserCenterPageProps {
 export function UserCenterPage({ copy }: UserCenterPageProps) {
   const { user, loading, signInWithGoogle, signOut } = useAuth();
   const { favorites, loading: favoritesLoading } = useFavoritesList(user);
+  const { predictions, loading: predictionsLoading } = usePredictionsList(user);
   const signedIn = Boolean(user);
 
   return (
@@ -72,11 +74,26 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
         <article className="user-center-card">
           <span>{copy.locale === 'zh' ? 'Predictions' : 'Predictions'}</span>
           <h2>{copy.locale === 'zh' ? '我的预测' : 'My Predictions'}</h2>
-          <p>
-            {copy.locale === 'zh'
-              ? '这里会展示你的胜负选择和比分预测。'
-              : 'This area will show your winner picks and score predictions.'}
-          </p>
+          {signedIn && predictions.length > 0 ? (
+            <ul className="user-center-list">
+              {predictions.map((prediction) => (
+                <li key={prediction.id}>
+                  <strong>{copy.locale === 'zh' ? `比赛 ${prediction.match_id}` : `Match ${prediction.match_id}`}</strong>
+                  <span>{`${prediction.home_score}-${prediction.away_score} · ${prediction.winner}`}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>
+              {predictionsLoading
+                ? copy.locale === 'zh'
+                  ? '正在读取预测...'
+                  : 'Loading predictions...'
+                : copy.locale === 'zh'
+                  ? '这里会展示你的胜负选择和比分预测。'
+                  : 'This area will show your winner picks and score predictions.'}
+            </p>
+          )}
         </article>
         <article className="user-center-card">
           <span>{copy.locale === 'zh' ? 'Next' : 'Next'}</span>
