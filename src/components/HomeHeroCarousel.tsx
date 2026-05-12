@@ -9,7 +9,7 @@ interface HomeHeroCarouselProps {
   locale: Locale;
 }
 
-const HOME_PROMO_ASSET_VERSION = '20260512-post';
+const HOME_PROMO_ASSET_VERSION = '20260512-jimeng-keling';
 
 function versionedAssetPath(path: string): string {
   return `${publicAssetPath(path)}?v=${HOME_PROMO_ASSET_VERSION}`;
