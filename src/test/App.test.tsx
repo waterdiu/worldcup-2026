@@ -150,11 +150,11 @@ describe('App routes', () => {
     await user.click(screen.getByLabelText(/打开官方宣传片/i));
     expect(screen.getByLabelText(/官方宣传片播放器/i)).toHaveAttribute(
       'src',
-      '/worldcup-assets/2026worldcup.mp4?v=20260512-post'
+      '/worldcup-assets/2026worldcup.mp4?v=20260512-jimeng-keling'
     );
     expect(screen.getByLabelText(/官方宣传片播放器/i)).toHaveAttribute(
       'poster',
-      '/worldcup-assets/optimized/home-promo-hero.webp?v=20260512-post'
+      '/worldcup-assets/optimized/home-promo-hero.webp?v=20260512-jimeng-keling'
     );
     expect(screen.getByLabelText(/官方宣传片播放器/i)).toHaveClass('home-hero__video--contain');
     expect(screen.getByLabelText(/进入揭幕战详情页/i)).toHaveAttribute('href', '/matches/1');
