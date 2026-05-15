@@ -1,16 +1,19 @@
 import { useMemo, useState } from 'react';
-import { bracket, finalsMatchResults, groupStageMatches } from '../data';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminDashboard, type AdminPagePermissionRecord, type AdminProfileRecord } from '../hooks/useAdminDashboard';
 import { useAdminStatus } from '../hooks/useAdminStatus';
 import { type AppCopy } from '../i18n/content';
 import { formatBracketLabel, formatTeamName } from '../i18n/formatters';
 import { getAuthDisplayName, isSupabaseConfigured } from '../lib/supabase';
+import type { BracketRoundData, FinalsMatchResultData, GroupStageMatchData } from '../types/tournament';
 
 type AdminTab = 'users' | 'stats' | 'permissions';
 
 interface AdminPageProps {
+  bracket: BracketRoundData[];
   copy: AppCopy;
+  finalsMatchResults: FinalsMatchResultData[];
+  groupStageMatches: GroupStageMatchData[];
 }
 
 interface MatchSummary {
@@ -44,7 +47,12 @@ function formatResultLabel(match: MatchSummary, isZh: boolean) {
   return match.resultLabel;
 }
 
-function buildMatchLookup(locale: AppCopy['locale']) {
+function buildMatchLookup(
+  locale: AppCopy['locale'],
+  groupStageMatches: GroupStageMatchData[],
+  bracket: BracketRoundData[],
+  finalsMatchResults: FinalsMatchResultData[]
+) {
   const resultById = new Map(finalsMatchResults.map((result) => [result.id, result]));
   const groupMatches = groupStageMatches.map((match) => ({
     id: match.id,
@@ -103,7 +111,7 @@ function toPermissionLevel(permission: AdminPagePermissionRecord, level: string)
   };
 }
 
-export function AdminPage({ copy }: AdminPageProps) {
+export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches }: AdminPageProps) {
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminStatus(user);
   const dashboard = useAdminDashboard(Boolean(user && isAdmin));
@@ -117,7 +125,10 @@ export function AdminPage({ copy }: AdminPageProps) {
     () => new Map(dashboard.profiles.map((profile) => [profile.id, profile])),
     [dashboard.profiles]
   );
-  const matchLookup = useMemo(() => buildMatchLookup(copy.locale), [copy.locale]);
+  const matchLookup = useMemo(
+    () => buildMatchLookup(copy.locale, groupStageMatches, bracket, finalsMatchResults),
+    [bracket, copy.locale, finalsMatchResults, groupStageMatches]
+  );
   const predictionUserCount = new Set(dashboard.predictions.map((prediction) => prediction.user_id)).size;
   const avgPredictions = dashboard.profiles.length ? (dashboard.predictions.length / dashboard.profiles.length).toFixed(1) : '0';
   const favoriteCountByMatch = dashboard.favorites.reduce<Record<string, number>>((counts, favorite) => {
@@ -207,7 +218,23 @@ export function AdminPage({ copy }: AdminPageProps) {
 
   return (
     <section className="section admin-page stats-page">
+      <div className="admin-console-topbar">
+        <div className="admin-console-brand">
+          <strong>WC 2026</strong>
+          <span>{isZh ? '管理后台' : 'Admin'}</span>
+        </div>
+        <label className="admin-console-search">
+          <span>{isZh ? '搜索' : 'Search'}</span>
+          <input type="search" placeholder={isZh ? '搜索用户、比赛、页面...' : 'Search users, matches, pages...'} />
+        </label>
+        <div className="admin-console-user">
+          <span>{getAuthDisplayName(user)}</span>
+          <b>ADMIN</b>
+        </div>
+      </div>
+
       <article className="admin-hero">
+        <span>{isZh ? '后台控制台' : 'Control console'}</span>
         <h1>{isZh ? '管理后台' : 'Admin Console'}</h1>
       </article>
 

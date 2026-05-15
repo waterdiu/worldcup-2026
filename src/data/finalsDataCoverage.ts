@@ -1,9 +1,9 @@
 import type { FinalsDataCoverageData } from '../types/tournament';
 
 export const finalsDataCoverage: FinalsDataCoverageData = {
-  updatedAt: '2026-05-10',
-  sourceLabel: 'Generated schedule scaffold',
-  scoreCoveragePct: 0,
-  goalEventCoveragePct: 0,
-  issueCount: 0
+  "updatedAt": "2026-05-15",
+  "sourceLabel": "football-data-platform shared coverage",
+  "scoreCoveragePct": 100,
+  "goalEventCoveragePct": 0,
+  "issueCount": 104
 };

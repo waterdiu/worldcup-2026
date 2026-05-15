@@ -1,10 +1,10 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import App from '../App';
 import { bracket, finalsMatchResults, groups, tournamentMeta } from '../data';
+import { buildOAuthRedirectUrl } from '../hooks/useAuth';
 import { contentByLocale } from '../i18n/content';
-import { StatsPage } from '../pages/StatsPage';
 
 describe('App routes', () => {
   beforeEach(() => {
@@ -15,16 +15,30 @@ describe('App routes', () => {
     vi.stubEnv('BASE_URL', '/worldcup-2026/');
 
     try {
-      window.history.replaceState({}, '', '/worldcup-2026/stats');
+      // Use a route that renders the global PageNav (the /stats page intentionally hides it).
+      window.history.replaceState({}, '', '/worldcup-2026/');
       render(<App />);
 
-      expect(screen.getByRole('heading', { name: '统计' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: '首页' })).toHaveAttribute('href', '/worldcup-2026/');
       expect(screen.getByRole('link', { name: '预选赛' })).toHaveAttribute('href', '/worldcup-2026/qualifiers');
       expect(screen.getByRole('link', { name: '统计' })).toHaveAttribute('href', '/worldcup-2026/stats');
       expect(screen.getByRole('link', { name: '我的' })).toHaveAttribute('href', '/worldcup-2026/me');
     } finally {
       cleanup();
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('builds OAuth redirect URLs with the GitHub Pages base path', () => {
+    vi.stubEnv('BASE_URL', '/worldcup-2026/');
+
+    try {
+      window.history.replaceState({}, '', '/worldcup-2026/me');
+      expect(buildOAuthRedirectUrl()).toBe('http://localhost:3000/worldcup-2026/me');
+
+      window.history.replaceState({}, '', '/me');
+      expect(buildOAuthRedirectUrl()).toBe('http://localhost:3000/worldcup-2026/me');
+    } finally {
       vi.unstubAllEnvs();
     }
   });
@@ -69,22 +83,20 @@ describe('App routes', () => {
     window.history.replaceState({}, '', '/');
     render(<App />);
 
-    expect(
-      screen.getByRole('heading', { name: /2026 世界杯/i })
-    ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '12 小组详情' })).toHaveAttribute(
+    expect(screen.getByRole('img', { name: /2026 世界杯宣传海报/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '12 个小组详情' })).toHaveAttribute(
       'href',
       '/groups'
     );
-    expect(screen.getByRole('link', { name: '48 支参赛队详情' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '48 支球队详情' })).toHaveAttribute(
       'href',
       '/teams'
     );
-    expect(screen.getByRole('link', { name: '104 场比赛详情' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '104 场赛程详情' })).toHaveAttribute(
       'href',
       '/matches'
     );
-    expect(screen.getByRole('link', { name: '16 个主办城市详情' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '16 个城市详情' })).toHaveAttribute(
       'href',
       '/cities'
     );
@@ -94,9 +106,7 @@ describe('App routes', () => {
     window.history.replaceState({}, '', '/en');
     render(<App />);
 
-    expect(
-      screen.getByRole('heading', { name: /World Cup 2026/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /World Cup 2026 poster/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '12 groups details' })).toHaveAttribute(
       'href',
       '/en/groups'
@@ -119,128 +129,56 @@ describe('App routes', () => {
     window.history.replaceState({}, '', '/zh');
     render(<App />);
 
-    expect(
-      screen.getByRole('heading', { name: /2026 世界杯/i })
-    ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '12 小组详情' })).toHaveAttribute(
+    expect(screen.getByRole('img', { name: /2026 世界杯宣传海报/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '12 个小组详情' })).toHaveAttribute(
       'href',
       '/groups'
     );
-    expect(screen.getByRole('link', { name: '48 支参赛队详情' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '48 支球队详情' })).toHaveAttribute(
       'href',
       '/teams'
     );
   });
 
-  it('shows promo and opening-match hero slides on the homepage', async () => {
-    const user = userEvent.setup();
-    const { container } = render(<App />);
-
-    expect(screen.getByRole('heading', { name: /2026 世界杯/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /官方宣传片/i })).toBeInTheDocument();
-    expect(screen.queryByText(/观看官方宣传片/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/进入揭幕战详情/)).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /揭幕战/i })).not.toBeInTheDocument();
-    expect(screen.queryByText(/🇲🇽 墨西哥 vs 🇿🇦 南非/)).not.toBeInTheDocument();
-    expect(container.querySelector('.home-hero__poster--opening')).not.toBeInTheDocument();
-    expect(container.querySelector('.home-hero__cutout--home')).not.toBeInTheDocument();
-    expect(container.querySelector('.home-hero__cutout--away')).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/进入揭幕战详情页/i)).toHaveAttribute('href', '/matches/1');
-
-    await user.click(screen.getByLabelText(/打开官方宣传片/i));
-    expect(screen.getByLabelText(/官方宣传片播放器/i)).toHaveAttribute(
-      'src',
-      '/worldcup-assets/2026worldcup.mp4?v=20260512-jimeng-keling'
-    );
-    expect(screen.getByLabelText(/官方宣传片播放器/i)).toHaveAttribute(
-      'poster',
-      '/worldcup-assets/optimized/home-promo-hero.webp?v=20260512-jimeng-keling'
-    );
-    expect(screen.getByLabelText(/官方宣传片播放器/i)).toHaveClass('home-hero__video--contain');
-    expect(screen.getByLabelText(/进入揭幕战详情页/i)).toHaveAttribute('href', '/matches/1');
-  });
-
-  it('pauses hero auto-advance while the promo video is playing and lets progress bars switch slides', async () => {
-    vi.useFakeTimers();
+  it('renders the homepage media carousel with promo poster and opening match slide', () => {
     render(<App />);
 
-    const firstMarker = screen.getByRole('button', { name: '切换到第 1 页' });
-    const secondMarker = screen.getByRole('button', { name: '切换到第 2 页' });
-    expect(firstMarker).toHaveAttribute('aria-pressed', 'true');
-
-    fireEvent.click(screen.getByLabelText(/打开官方宣传片/i));
-    act(() => {
-      vi.advanceTimersByTime(12000);
-    });
-
-    expect(screen.getByLabelText(/官方宣传片播放器/i)).toBeInTheDocument();
-    expect(firstMarker).toHaveAttribute('aria-pressed', 'true');
-
-    fireEvent.click(secondMarker);
-    expect(secondMarker).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByLabelText(/进入揭幕战详情页/i)).toHaveAttribute('href', '/matches/1');
-
-    vi.useRealTimers();
+    expect(screen.getByRole('img', { name: /2026 世界杯宣传海报/i })).toHaveAttribute(
+      'src',
+      '/worldcup-assets/optimized/home-promo-hero-wide.webp'
+    );
+    expect(screen.getByRole('img', { name: /揭幕战海报/i })).toHaveAttribute(
+      'src',
+      '/worldcup-assets/optimized/opening-match-poster-wide.jpg'
+    );
+    expect(screen.getByLabelText(/播放世界杯宣传视频/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/进入揭幕战详细页/i)).toHaveAttribute('href', '/matches/1');
+    expect(screen.queryByLabelText(/官方宣传片播放器/i)).not.toBeInTheDocument();
   });
 
   it('renders dense metric cards on the homepage', () => {
     render(<App />);
 
     expect(screen.getAllByText(/A 组/).length).toBeGreaterThan(0);
-    expect(screen.queryByText(/L 组/)).not.toBeInTheDocument();
-    expect(screen.getByText('胜')).toBeInTheDocument();
-    expect(screen.getByText('平')).toBeInTheDocument();
-    expect(screen.getByText('负')).toBeInTheDocument();
-    expect(screen.getByText('进')).toBeInTheDocument();
-    expect(screen.getByText('失')).toBeInTheDocument();
-    expect(screen.getByText('分')).toBeInTheDocument();
-    expect(screen.getAllByLabelText(/进入球队详情:/).length).toBeGreaterThan(10);
-    expect(screen.getAllByText(/6月11日/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/L 组/).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: '小组' })).toHaveAttribute('href', '/groups');
+    expect(screen.getByRole('link', { name: '赛程' })).toHaveAttribute('href', '/matches');
+    expect(screen.getByRole('button', { name: /6月12日/i })).toBeInTheDocument();
     expect(screen.getAllByText(/待定/).length).toBeGreaterThan(1);
     expect(screen.getByLabelText(/进入球队详情: Mexico/)).toHaveAttribute('data-team-name', '墨西哥');
     expect(screen.getAllByText(/球队/).length).toBeGreaterThan(0);
-    expect(screen.getAllByLabelText(/进入城市详情:/).length).toBeGreaterThan(4);
-    expect(screen.getByTitle(/美国 \/ 亚特兰大 \/ 亚特兰大球场/)).toBeInTheDocument();
-    expect(screen.getAllByRole('img', { name: /球场图片$/ }).length).toBe(16);
+    expect(screen.getAllByText(/美国/).length).toBeGreaterThan(5);
+    expect(screen.getAllByLabelText(/进入球队详情:/).length).toBe(48);
+    expect(screen.getAllByRole('link', { name: /A 组/i })[0]).toHaveAttribute('href', '/groups/A');
   });
 
-  it('keeps long team names on one line by shrinking font in the home groups card', () => {
-    vi.useFakeTimers();
-    render(<App />);
-
-    act(() => {
-      vi.advanceTimersByTime(3600 * 10);
-    });
-
-    const longName = screen.getByText(/刚果（金）/);
-    expect(longName).toHaveClass('group-carousel__team-name', 'is-xlong');
-
-    vi.useRealTimers();
-  });
-
-  it('uses only the custom team tooltip and lets group markers switch slides', async () => {
-    const user = userEvent.setup();
+  it('renders team chips without native title tooltips', () => {
     render(<App />);
 
     const scotlandChip = screen.getByLabelText(/进入球队详情: Scotland/);
     expect(scotlandChip).toHaveAttribute('data-team-name', '苏格兰');
     expect(scotlandChip).not.toHaveAttribute('title');
-
-    const marker = screen.getByRole('button', { name: '切换到 B 组' });
-    await user.click(marker);
-
-    expect(screen.getByText(/B 组/)).toBeInTheDocument();
-    expect(window.location.pathname).toBe('/');
-  });
-
-  it('shows a single elevated tooltip for hovered team flags', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    const moroccoChip = screen.getByLabelText(/进入球队详情: Morocco/);
-    await user.hover(moroccoChip);
-
-    expect(screen.getByText('摩洛哥')).toBeInTheDocument();
+    expect(screen.getByLabelText(/进入球队详情: Morocco/)).toHaveTextContent('摩洛哥');
   });
 
   it('renders the qualifiers overview page', () => {
@@ -248,18 +186,32 @@ describe('App routes', () => {
     render(<App />);
 
     expect(
-      screen.getByRole('heading', { name: /世界杯预选赛比赛记录/i })
+      screen.getByRole('heading', { name: /^世界杯预选赛$/i })
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /亚足联/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/阿联酋/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/伊拉克/).length).toBeGreaterThan(0);
-    expect(
-      screen.getByRole('link', { name: /打开预选赛详情: .*阿联酋 对 .*伊拉克/i })
-    ).toHaveAttribute('href', '/qualifiers/matches/afc-uae-iraq-2025-11-13');
+    expect(screen.getByText(/球队总数/i)).toBeInTheDocument();
+    expect(screen.getByText(/出线球队数/i)).toBeInTheDocument();
+    expect(screen.getByText(/比赛场数/i)).toBeInTheDocument();
+    expect(screen.getByText(/进球总数/i)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /世界杯预选赛洲际地图/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /亚洲/i })).toHaveAttribute('href', '/qualifiers/afc');
     expect(screen.getByText(/数据缺失统计/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /缺失数据报告/i })).toBeInTheDocument();
-    expect(screen.getByText(/United Arab Emirates 1-1 Iraq/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/球员赛后评分/i).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: /打开预选赛详情:/i })).not.toBeInTheDocument();
+  });
+
+  it('filters confederation matches by qualified team', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, '', '/qualifiers/uefa');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: /欧足联预选赛/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /返回预选赛总览/i })).toHaveAttribute('href', '/qualifiers');
+
+    await user.click(screen.getByRole('button', { name: /挪威/i }));
+
+    expect(screen.getByRole('link', { name: /打开预选赛详情: Italy 对 .*挪威/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /打开预选赛详情: .*阿联酋 对 .*伊拉克/i })
+    ).not.toBeInTheDocument();
   });
 
   it('renders a qualifier match detail page with stats, events, lineups, ratings, and missing data', () => {
@@ -267,7 +219,7 @@ describe('App routes', () => {
     render(<App />);
 
     expect(
-      screen.getByRole('heading', { name: /预选赛比赛详情/i })
+      screen.getByRole('heading', { name: /阿联酋.*1-1.*伊拉克/i })
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /比赛统计/i })).toBeInTheDocument();
     expect(screen.getByText(/控球率/i)).toBeInTheDocument();
@@ -290,7 +242,7 @@ describe('App routes', () => {
 
     expect(screen.queryByRole('heading', { name: /正赛中心/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '正赛' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /2026 世界杯 · 官方宣传片/i })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /2026 世界杯宣传海报/i })).toBeInTheDocument();
   });
 
   it('renders the stats page from the primary navigation', () => {
@@ -298,69 +250,21 @@ describe('App routes', () => {
     render(<App />);
 
     expect(screen.getByRole('link', { name: '统计' })).toHaveAttribute('href', '/stats');
-    expect(screen.queryByRole('link', { name: '正赛' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /统计/i })).toBeInTheDocument();
-    expect(screen.getByText(/免费公开数据/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /总览 KPI/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/104/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/待开赛/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('heading', { name: /比分分布/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/开赛后根据免费比分数据自动生成/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('heading', { name: /球队攻防指数/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /数据源状态/i })).toBeInTheDocument();
-    expect(screen.getAllByText(/Generated schedule scaffold/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/openfootball/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/football-data.org/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/API-Football 免费档/i).length).toBeGreaterThan(0);
+
+    expect(screen.getByText(/WC 2026/i)).toBeInTheDocument();
+    expect(screen.getByText(/World Cup/i)).toBeInTheDocument();
+    expect(screen.getAllByText('104').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/2026 模拟/).length).toBeGreaterThan(0);
+
+    expect(screen.getByRole('button', { name: '进球' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '阶段' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '时间' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '球队' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '射手' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '矩阵' })).toBeInTheDocument();
   });
 
-  it('derives stats page metrics from completed finals results', () => {
-    const completedResults = finalsMatchResults.map((match) =>
-      match.id === '1'
-        ? {
-            ...match,
-            status: 'completed' as const,
-            homeScore: 2,
-            awayScore: 1,
-            goals: [
-              { minute: '12', team: 'Mexico', player: 'Example scorer' },
-              { minute: '54', team: 'South Africa', player: 'Example equalizer' },
-              { minute: '88', team: 'Mexico', player: 'Example winner' }
-            ],
-            sourceLabel: 'Local test result',
-            updatedAt: '2026-06-11'
-          }
-        : match
-    );
-
-    render(
-      <StatsPage
-        meta={tournamentMeta}
-        groups={groups}
-        results={completedResults}
-        rounds={bracket}
-        dataCoverage={{
-          updatedAt: '2026-06-11',
-          sourceLabel: 'Local test result',
-          scoreCoveragePct: 1,
-          goalEventCoveragePct: 100,
-          issueCount: 0
-        }}
-        copy={contentByLocale.zh}
-      />
-    );
-
-    expect(screen.getByText(/1 场已完赛/)).toBeInTheDocument();
-    expect(screen.getAllByText(/^3$/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/场均 3.00/)).toBeInTheDocument();
-    expect(screen.getAllByText(/2-1/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/1 次/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/🇲🇽 墨西哥/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/🇿🇦 南非/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Example scorer/)).toBeInTheDocument();
-    expect(screen.getByText(/数据更新 2026-06-11/)).toBeInTheDocument();
-    expect(screen.getByText(/进球事件覆盖 100%/)).toBeInTheDocument();
-  });
+  // The old experimental StatsPage derived metrics from a finals scaffold; it has been replaced by StatsPageV4 (Claude v4 template port).
 
   it('renders larger group tables on the groups page', () => {
     window.history.replaceState({}, '', '/groups');
@@ -480,9 +384,9 @@ describe('App routes', () => {
     expect(screen.getAllByTestId('team-match-card')).toHaveLength(3);
     expect(screen.getByText(/🇲🇽 墨西哥 对 🇿🇦 南非/)).toBeInTheDocument();
     expect(screen.getByText(/🇲🇽 墨西哥 对 🇰🇷 韩国/)).toBeInTheDocument();
-    expect(screen.getByText(/🇲🇽 墨西哥 对 🇨🇿 捷克/)).toBeInTheDocument();
+    expect(screen.getByText(/🇨🇿 捷克 对 🇲🇽 墨西哥/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /打开比赛详情: 墨西哥 对 南非/ })).toHaveAttribute('href', '/matches/1');
-    expect(screen.getByRole('link', { name: /打开比赛详情: 墨西哥 对 捷克/ })).toHaveAttribute('href', '/matches/A-5');
+    expect(screen.getByRole('link', { name: /打开比赛详情: 捷克 对 墨西哥/ })).toHaveAttribute('href', '/matches/5');
     expect(screen.queryByText(/进入比赛详情/)).not.toBeInTheDocument();
     expect(screen.queryByText(/胜平负展示位/)).not.toBeInTheDocument();
     expect(screen.getAllByText(/墨西哥城球场/).length).toBeGreaterThan(0);
@@ -499,7 +403,7 @@ describe('App routes', () => {
     expect(screen.getByRole('heading', { name: '小组赛' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '淘汰赛' })).toBeInTheDocument();
     expect(screen.getAllByTestId('match-overview-group-card')).toHaveLength(72);
-    expect(screen.getByRole('link', { name: /打开比赛详情: 墨西哥 对 捷克/ })).toHaveAttribute('href', '/matches/A-5');
+    expect(screen.getByRole('link', { name: /打开比赛详情: 捷克 对 墨西哥/ })).toHaveAttribute('href', '/matches/5');
     expect(screen.getByTestId('knockout-bracket-map')).toBeInTheDocument();
     expect(screen.getByTestId('knockout-left-path')).toBeInTheDocument();
     expect(screen.getByTestId('knockout-right-path')).toBeInTheDocument();
@@ -567,11 +471,11 @@ describe('App routes', () => {
   });
 
   it('renders generated group-stage match detail routes from team fixture cards', () => {
-    window.history.replaceState({}, '', '/matches/A-5');
+    window.history.replaceState({}, '', '/matches/5');
     render(<App />);
 
     expect(screen.getByRole('heading', { name: /比赛详情/ })).toBeInTheDocument();
-    expect(screen.getByText(/🇲🇽 墨西哥 对 🇨🇿 捷克/)).toBeInTheDocument();
+    expect(screen.getByText(/🇨🇿 捷克 对 🇲🇽 墨西哥/)).toBeInTheDocument();
     expect(screen.getAllByText(/A 组/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/第 3 轮/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/后续/)).not.toBeInTheDocument();

@@ -81,7 +81,7 @@ describe('tournament data', () => {
       homeTeam: 'Mexico',
       awayTeam: 'South Africa',
       status: 'scheduled',
-      sourceLabel: 'Generated schedule scaffold'
+      sourceLabel: 'football-data-platform shared finals results'
     });
     expect(finalsMatchResults.some((match) => match.id === '104' && match.stageType === 'knockout')).toBe(true);
   });

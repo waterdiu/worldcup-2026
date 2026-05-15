@@ -1,4 +1,3 @@
-import { SectionHeader } from '../components/SectionHeader';
 import { formatTeamName } from '../i18n/formatters';
 import type { AppCopy } from '../i18n/content';
 import type { BracketRoundData, FinalsDataCoverageData, FinalsMatchResultData, GroupCardData, TournamentMeta } from '../types/tournament';
@@ -210,6 +209,10 @@ export function StatsPage({ meta, groups, results, rounds, dataCoverage: importe
   const completedMatches = results.filter(isCompleted);
   const totalGoals = completedMatches.reduce((sum, match) => sum + match.homeScore! + match.awayScore!, 0);
   const averageGoals = completedMatches.length ? totalGoals / completedMatches.length : 0;
+  const drawMatches = completedMatches.filter((match) => match.homeScore === match.awayScore).length;
+  const cleanSheetMatches = completedMatches.filter((match) => match.homeScore === 0 || match.awayScore === 0).length;
+  const bothTeamsScoreMatches = completedMatches.filter((match) => (match.homeScore ?? 0) > 0 && (match.awayScore ?? 0) > 0).length;
+  const bigScoreMatches = completedMatches.filter((match) => (match.homeScore ?? 0) + (match.awayScore ?? 0) >= 4).length;
   const scoreDistribution = buildScoreDistribution(results);
   const mostCommonScore = scoreDistribution[0]?.[0] ?? '待开赛';
   const goalsPerMatchBuckets = buildGoalsPerMatchBuckets(results);
@@ -219,11 +222,11 @@ export function StatsPage({ meta, groups, results, rounds, dataCoverage: importe
   const scorerStats = buildScorerStats(results);
   const teamStats = buildTeamStats(groups, results);
   const displayedTeams = teamStats.slice(0, 12);
-  const dataCoverage = Math.round((completedMatches.length / meta.matchCount) * 100);
+  const scoreCoveragePct = Math.round((completedMatches.length / meta.matchCount) * 100);
   const coverage = importedCoverage ?? {
     updatedAt: completedMatches[0]?.updatedAt ?? '待开赛',
     sourceLabel: completedMatches[0]?.sourceLabel ?? 'Generated schedule scaffold',
-    scoreCoveragePct: dataCoverage,
+    scoreCoveragePct,
     goalEventCoveragePct: completedMatches.length
       ? Math.round((completedMatches.filter((match) => match.goals.length > 0).length / completedMatches.length) * 100)
       : 0,
@@ -233,212 +236,190 @@ export function StatsPage({ meta, groups, results, rounds, dataCoverage: importe
   const stageData = stageRows(rounds, groupMatchCount);
 
   return (
-    <section className="section stats-page">
-      <SectionHeader
-        eyebrow={copy.locale === 'zh' ? 'DATA ANALYSIS' : 'Data Analysis'}
-        title={copy.locale === 'zh' ? '统计' : 'Stats'}
-        description={
-          copy.locale === 'zh'
-            ? '基于免费公开数据构建的 2026 世界杯正赛数据统计。赛前展示结构和空态，开赛后会随着比分与进球事件自动生成分析。'
-            : 'A free-public-data dashboard for the 2026 World Cup finals. It shows the pre-tournament structure now and will populate from scores and goal events after kick-off.'
-        }
-      />
+    <section className="claude-stats" aria-label={copy.locale === 'zh' ? '统计' : 'Stats'}>
+      <div className="claude-page">
+        <div className="claude-source-line mono">
+          {copy.locale === 'zh'
+            ? `数据更新 ${coverage.updatedAt} · 来源 ${coverage.sourceLabel} · 比分覆盖 ${coverage.scoreCoveragePct}% · 进球事件覆盖 ${coverage.goalEventCoveragePct}% · 待复核 ${coverage.issueCount}`
+            : `Updated ${coverage.updatedAt} · Source ${coverage.sourceLabel} · Score coverage ${coverage.scoreCoveragePct}% · Goal events ${coverage.goalEventCoveragePct}% · Issues ${coverage.issueCount}`}
+        </div>
 
-      <div className="stats-shell">
-        <aside className="stats-side-nav" aria-label={copy.locale === 'zh' ? '统计页面导航' : 'Stats page navigation'}>
-          <span>SECTIONS</span>
-          <a href="#overview">总览 KPI</a>
-          <a href="#goals">进球分析</a>
-          <a href="#teams">球队排名</a>
-          <a href="#scores">比分分布</a>
-          <a href="#stages">阶段对比</a>
-          <a href="#index">攻防指数</a>
-        </aside>
+        <h1 className="claude-title">{copy.locale === 'zh' ? '统计' : 'Stats'}</h1>
+        <p className="claude-deck mono">{copy.locale === 'zh' ? '正赛数据分析' : 'Finals data analysis'}</p>
+        <h2 className="claude-subtitle mono">{copy.locale === 'zh' ? '总览 KPI' : 'KPI'}</h2>
 
-        <div className="stats-content">
-          <section className="stats-section" id="overview">
-            <h2>总览 KPI</h2>
-            <div className="stats-data-status" aria-label="正赛数据更新状态">
-              <span>数据更新 {coverage.updatedAt}</span>
-              <span>来源 {coverage.sourceLabel}</span>
-              <span>比分覆盖 {coverage.scoreCoveragePct}%</span>
-              <span>进球事件覆盖 {coverage.goalEventCoveragePct}%</span>
-              <span>待复核 {coverage.issueCount}</span>
-            </div>
-            <div className="stats-kpi-grid">
-              <article>
-                <strong>{meta.matchCount}</strong>
-                <span>总比赛场数</span>
-                <small>{completedMatches.length} 场已完赛</small>
-              </article>
-              <article>
-                <strong>{totalGoals}</strong>
-                <span>总进球数</span>
-                <small>场均 {formatDecimal(averageGoals)}</small>
-              </article>
-              <article>
-                <strong>{meta.teamCount}</strong>
-                <span>参赛队伍</span>
-                <small>{meta.groupCount} 组各 4 队</small>
-              </article>
-              <article>
-                <strong>{mostCommonScore}</strong>
-                <span>最常见比分</span>
-                <small>{completedMatches.length ? `${scoreDistribution[0][1]} 次` : '待开赛'}</small>
-              </article>
-              <article>
-                <strong>{dataCoverage}%</strong>
-                <span>比分覆盖率</span>
-                <small>免费比分数据</small>
-              </article>
-            </div>
-          </section>
+        <div className="kpi-row" aria-label={copy.locale === 'zh' ? '总览 KPI' : 'KPI'}>
+          <div className="kpi">
+            <div className="kv">{meta.matchCount}</div>
+            <div className="kl">比赛总场次</div>
+            <div className="ks">{completedMatches.length} 场已完赛</div>
+          </div>
+          <div className="kpi">
+            <div className="kv">{totalGoals}</div>
+            <div className="kl">总进球数</div>
+            <div className="ks">场均 {formatDecimal(averageGoals)}</div>
+          </div>
+          <div className="kpi">
+            <div className="kv">{meta.teamCount}</div>
+            <div className="kl">参赛队伍</div>
+            <div className="ks">{meta.groupCount} 组</div>
+          </div>
+          <div className="kpi">
+            <div className="kv">{mostCommonScore}</div>
+            <div className="kl">最常见比分</div>
+            <div className="ks">{completedMatches.length ? `${scoreDistribution[0]?.[1] ?? 0} 次` : '待开赛'}</div>
+          </div>
+          <div className="kpi">
+            <div className="kv">{cleanSheetMatches}</div>
+            <div className="kl">零封场次</div>
+            <div className="ks">{completedMatches.length ? `占比 ${formatDecimal((cleanSheetMatches / completedMatches.length) * 100)}%` : '待开赛'}</div>
+          </div>
+          <div className="kpi">
+            <div className="kv">{drawMatches}</div>
+            <div className="kl">平局场次</div>
+            <div className="ks">{completedMatches.length ? `占比 ${formatDecimal((drawMatches / completedMatches.length) * 100)}%` : '待开赛'}</div>
+          </div>
+          <div className="kpi">
+            <div className="kv">{bigScoreMatches}</div>
+            <div className="kl">大比分场次</div>
+            <div className="ks">总进球 ≥ 4</div>
+          </div>
+          <div className="kpi">
+            <div className="kv">{bothTeamsScoreMatches}</div>
+            <div className="kl">互进球场次</div>
+            <div className="ks">{completedMatches.length ? `占比 ${formatDecimal((bothTeamsScoreMatches / completedMatches.length) * 100)}%` : '待开赛'}</div>
+          </div>
+        </div>
 
-          <section className="stats-section" id="goals">
-            <h2>进球分析</h2>
-            <div className="stats-panel-grid">
-              <article className="stats-panel">
-                <h3>每场进球数分布</h3>
-                {completedMatches.length ? (
-                  <div className="stats-mini-bars">
-                    {goalsPerMatchBuckets.map((bucket) => (
-                      <div key={bucket.label}>
-                        <span>{bucket.label}</span>
-                        <strong>{bucket.count}</strong>
-                        <i style={{ width: barWidth(bucket.count, maxGoalsPerMatchBucket) }} />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyPanel>开赛后根据免费比分数据自动生成 0 球、1 球、2 球、3 球、4+ 球分布。</EmptyPanel>
-                )}
-              </article>
-              <article className="stats-panel">
-                <h3>各小组总进球</h3>
+        <div className="sec" id="s-goals">
+          <div className="sec-head">
+            <h2 className="sec-title">比分与进球分布</h2>
+            <div className="sec-note mono">{completedMatches.length} matches · {totalGoals} goals</div>
+          </div>
+          <div className="g2 mb1">
+            <div className="panel">
+              <div className="ptitle">每场进球数分布</div>
+              {completedMatches.length ? (
                 <div className="stats-mini-bars">
-                  {groupGoalRows.map((group) => (
-                    <div key={group.id}>
-                      <span>组 {group.id}</span>
-                      <strong>{group.goals}</strong>
-                      <i style={{ width: barWidth(group.goals, maxGroupGoals) }} />
+                  {goalsPerMatchBuckets.map((bucket) => (
+                    <div key={bucket.label}>
+                      <span>{bucket.label}</span>
+                      <strong>{bucket.count}</strong>
+                      <i style={{ width: barWidth(bucket.count, maxGoalsPerMatchBucket) }} />
                     </div>
                   ))}
                 </div>
-              </article>
+              ) : (
+                <EmptyPanel>开赛后自动生成。</EmptyPanel>
+              )}
             </div>
-          </section>
-
-          <section className="stats-section" id="teams">
-            <h2>球队排名</h2>
-            <div className="stats-panel-grid">
-              <article className="stats-panel">
-                <h3>进球最多 Top 12</h3>
-                {scorerStats.length ? (
-                  <div className="stats-scorer-list">
-                    {scorerStats.slice(0, 12).map((scorer, index) => (
-                      <div key={`${scorer.team}-${scorer.player}`}>
-                        <span>{String(index + 1).padStart(2, '0')}</span>
-                        <strong>{scorer.player}</strong>
-                        <small>{formatTeamName(scorer.team, copy.locale)} · {scorer.firstMinute}'</small>
-                        <em>{scorer.goals} 球</em>
-                      </div>
-                    ))}
+            <div className="panel">
+              <div className="ptitle">各小组总进球</div>
+              <div className="stats-mini-bars">
+                {groupGoalRows.map((group) => (
+                  <div key={group.id}>
+                    <span>组 {group.id}</span>
+                    <strong>{group.goals}</strong>
+                    <i style={{ width: barWidth(group.goals, maxGroupGoals) }} />
                   </div>
-                ) : (
-                  <EmptyPanel>当前正赛待开赛，球队进球榜会在比分数据接入后更新。</EmptyPanel>
-                )}
-              </article>
-              <article className="stats-panel">
-                <h3>进球数 vs 失球数</h3>
-                <div className="stats-scatter-placeholder" aria-label="进球数 vs 失球数散点图占位">
-                  {displayedTeams.slice(0, 10).map((team, index) => (
-                    <span
-                      key={team.team}
-                      style={{
-                        left: `${12 + (index % 5) * 18}%`,
-                        top: `${18 + Math.floor(index / 5) * 38}%`
-                      }}
-                      title={formatTeamName(team.team, copy.locale)}
-                    />
-                  ))}
-                </div>
-              </article>
+                ))}
+              </div>
             </div>
-          </section>
+          </div>
+        </div>
 
-          <section className="stats-section" id="scores">
-            <h2>比分分布</h2>
-            <div className="stats-panel-grid">
-              <article className="stats-panel">
-                <h3>最常见比分</h3>
-                {scoreDistribution.length ? (
-                  <div className="stats-score-list">
+        <div className="sec" id="s-scores">
+          <div className="sec-head">
+            <h2 className="sec-title">比分分布</h2>
+            <div className="sec-note mono">Top scores · heat matrix</div>
+          </div>
+          <div className="g2">
+            <div className="panel">
+              <div className="ptitle">最常见比分 Top 10</div>
+              {scoreDistribution.length ? (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>比分</th>
+                      <th className="n">次数</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {scoreDistribution.slice(0, 10).map(([score, count], index) => (
-                      <div key={score}>
-                        <span>{String(index + 1).padStart(2, '0')}</span>
-                        <strong>{score}</strong>
-                        <em>{count} 次</em>
-                      </div>
+                      <tr key={score}>
+                        <td className="rk">{String(index + 1).padStart(2, '0')}</td>
+                        <td>{score}</td>
+                        <td className="ng">{count}</td>
+                      </tr>
                     ))}
-                  </div>
-                ) : (
-                  <EmptyPanel>开赛后根据免费比分数据自动生成 Top 10 比分。</EmptyPanel>
+                  </tbody>
+                </table>
+              ) : (
+                <EmptyPanel>开赛后自动生成。</EmptyPanel>
+              )}
+            </div>
+            <div className="panel">
+              <div className="ptitle">比分热力矩阵</div>
+              <div className="stats-score-grid" aria-label="比分热力矩阵">
+                {['0', '1', '2', '3', '4+'].flatMap((home) =>
+                  ['0', '1', '2', '3', '4+'].map((away) => {
+                    const count = completedMatches.filter((match) => {
+                      const homeBucket = match.homeScore! >= 4 ? '4+' : String(match.homeScore);
+                      const awayBucket = match.awayScore! >= 4 ? '4+' : String(match.awayScore);
+                      return homeBucket === home && awayBucket === away;
+                    }).length;
+
+                    return (
+                      <span key={`${home}-${away}`} data-active={count > 0 ? 'true' : undefined}>
+                        <small>{home}-{away}</small>
+                        <strong>{count}</strong>
+                      </span>
+                    );
+                  })
                 )}
-              </article>
-              <article className="stats-panel">
-                <h3>比分热力矩阵</h3>
-                <div className="stats-score-grid" aria-label="比分热力矩阵">
-                  {['0', '1', '2', '3', '4+'].flatMap((home) =>
-                    ['0', '1', '2', '3', '4+'].map((away) => {
-                      const count = completedMatches.filter((match) => {
-                        const homeBucket = match.homeScore! >= 4 ? '4+' : String(match.homeScore);
-                        const awayBucket = match.awayScore! >= 4 ? '4+' : String(match.awayScore);
-                        return homeBucket === home && awayBucket === away;
-                      }).length;
-
-                      return (
-                        <span key={`${home}-${away}`} data-active={count > 0 ? 'true' : undefined}>
-                          <small>{home}-{away}</small>
-                          <strong>{count}</strong>
-                        </span>
-                      );
-                    })
-                  )}
-                </div>
-              </article>
+              </div>
             </div>
-          </section>
+          </div>
+        </div>
 
-          <section className="stats-section" id="stages">
-            <h2>阶段对比</h2>
-            <div className="stats-stage-grid">
-              {stageData.map((stage) => (
-                <article key={stage.stage}>
-                  <span>{stage.label}</span>
-                  <strong>{stage.matches}</strong>
-                  <small>场比赛 · 进球数据待开赛</small>
-                </article>
-              ))}
-            </div>
-          </section>
+        <div className="sec" id="s-stage">
+          <div className="sec-head">
+            <h2 className="sec-title">阶段对比</h2>
+            <div className="sec-note mono">Group → Knockout</div>
+          </div>
+          <div className="stats-stage-grid">
+            {stageData.map((stage) => (
+              <article key={stage.stage}>
+                <span>{stage.label}</span>
+                <strong>{stage.matches}</strong>
+                <small>matches</small>
+              </article>
+            ))}
+          </div>
+        </div>
 
-          <section className="stats-section" id="index">
-            <h2>球队攻防指数</h2>
+        <div className="sec" id="s-teams">
+          <div className="sec-head">
+            <h2 className="sec-title">球队攻防</h2>
+            <div className="sec-note mono">{meta.teamCount} teams</div>
+          </div>
+          <div className="panel">
+            <h3 className="claude-panel-title">球队攻防指数</h3>
+            <div className="ptitle">Top 12</div>
             <div className="stats-table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>排名</th>
-                    <th>球队</th>
-                    <th>赛</th>
-                    <th>胜</th>
-                    <th>平</th>
-                    <th>负</th>
-                    <th>进</th>
-                    <th>失</th>
-                    <th>净</th>
-                    <th>场均进</th>
-                    <th>场均失</th>
+                    <th>rk</th>
+                    <th>team</th>
+                    <th className="n">mp</th>
+                    <th className="n">w</th>
+                    <th className="n">d</th>
+                    <th className="n">l</th>
+                    <th className="n">gf</th>
+                    <th className="n">ga</th>
+                    <th className="n">gd</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -446,45 +427,80 @@ export function StatsPage({ meta, groups, results, rounds, dataCoverage: importe
                     const goalDifference = team.goalsFor - team.goalsAgainst;
                     return (
                       <tr key={team.team}>
-                        <td>{String(index + 1).padStart(2, '0')}</td>
+                        <td className="rk">{String(index + 1).padStart(2, '0')}</td>
                         <td>{formatTeamName(team.team, copy.locale)}</td>
-                        <td>{team.played}</td>
-                        <td>{team.won}</td>
-                        <td>{team.drawn}</td>
-                        <td>{team.lost}</td>
-                        <td>{team.goalsFor}</td>
-                        <td>{team.goalsAgainst}</td>
-                        <td>{goalDifference > 0 ? `+${goalDifference}` : goalDifference}</td>
-                        <td>{team.played ? formatDecimal(team.goalsFor / team.played) : '0.00'}</td>
-                        <td>{team.played ? formatDecimal(team.goalsAgainst / team.played) : '0.00'}</td>
+                        <td className="n">{team.played}</td>
+                        <td className="n">{team.won}</td>
+                        <td className="n">{team.drawn}</td>
+                        <td className="n">{team.lost}</td>
+                        <td className="ng">{team.goalsFor}</td>
+                        <td className="nr">{team.goalsAgainst}</td>
+                        <td className="nb">{goalDifference > 0 ? `+${goalDifference}` : goalDifference}</td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
-            <p className="stats-footnote">数据源计划：openfootball / football-data.org 免费比分数据优先，API-Football 免费档只作为赛后技术统计增强。</p>
-          </section>
+          </div>
 
-          <section className="stats-section" id="sources">
-            <h2>数据源状态</h2>
-            <div className="stats-source-grid">
-              {sourceStatusItems.map((source) => (
-                <article key={source.name}>
-                  <div>
-                    <strong>{source.name}</strong>
-                    <span>{source.status}</span>
-                  </div>
-                  <p>{source.note}</p>
-                  <ul>
-                    {source.fields.map((field) => (
-                      <li key={field}>{field}</li>
+          <div className="g2" style={{ marginTop: '16px' }}>
+            <div className="panel">
+              <div className="ptitle">射手榜 Top 12</div>
+              {scorerStats.length ? (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>player</th>
+                      <th>team</th>
+                      <th className="n">g</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scorerStats.slice(0, 12).map((scorer, index) => (
+                      <tr key={`${scorer.team}-${scorer.player}`}>
+                        <td className="rk">{String(index + 1).padStart(2, '0')}</td>
+                        <td>{scorer.player}</td>
+                        <td>{formatTeamName(scorer.team, copy.locale)}</td>
+                        <td className="ng">{scorer.goals}</td>
+                      </tr>
                     ))}
-                  </ul>
-                </article>
-              ))}
+                  </tbody>
+                </table>
+              ) : (
+                <EmptyPanel>开赛后自动生成。</EmptyPanel>
+              )}
             </div>
-          </section>
+            <div className="panel">
+              <div className="ptitle">数据覆盖</div>
+              <div className="claude-chip-row">
+                <span className="claude-chip">score {coverage.scoreCoveragePct}%</span>
+                <span className="claude-chip">goals {coverage.goalEventCoveragePct}%</span>
+                <span className="claude-chip">updated {coverage.updatedAt}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="sec" id="s-sources">
+          <div className="sec-head">
+            <h2 className="sec-title">数据源状态</h2>
+            <div className="sec-note mono">free-tier only</div>
+          </div>
+          <div className="claude-source-grid">
+            {sourceStatusItems.map((source) => (
+              <div className="panel" key={source.name}>
+                <div className="ptitle">{source.name}</div>
+                <div className="sec-note mono">{source.status}</div>
+                <div className="claude-chip-row">
+                  {source.fields.map((field) => (
+                    <span className="claude-chip" key={field}>{field}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

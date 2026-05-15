@@ -2,6 +2,7 @@ export { bracket } from './bracket';
 export { confederations } from './confederations';
 export { finalsDataCoverage } from './finalsDataCoverage';
 export { finalsMatchResults } from './finalsMatchResults';
+export { fullSchedule } from './fullSchedule';
 export { groupFixtures } from './groupFixtures';
 export { groupStageMatches } from './groupStageMatches';
 export { groups } from './groups';

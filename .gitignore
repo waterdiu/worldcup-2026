@@ -14,3 +14,5 @@ vite.config.d.ts
 
 # API import cache
 data/api-football-cache/
+worktrees/
+.gstack/

@@ -32,17 +32,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Fetch finals results
-        env:
-          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
-        run: npm run fetch:finals-results -- --allow-empty
-
       - name: Run tests
         run: npm test
 
       - name: Build
         env:
           VITE_GITHUB_PAGES: "true"
+          VITE_WORLDCUP_DATA_API_BASE: ${{ vars.VITE_WORLDCUP_DATA_API_BASE }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { bracket, finalsMatchResults, groupStageMatches } from '../data';
 import { useAuth } from '../hooks/useAuth';
 import { useFavoritesList } from '../hooks/useFavoritesList';
 import { usePredictionsList } from '../hooks/usePredictionsList';
@@ -8,9 +7,13 @@ import { useUserProfile } from '../hooks/useUserProfile';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatBracketLabel, formatTeamName, formatVenueName } from '../i18n/formatters';
 import { getAuthDisplayName, isSupabaseConfigured } from '../lib/supabase';
+import type { BracketRoundData, FinalsMatchResultData, GroupStageMatchData } from '../types/tournament';
 
 interface UserCenterPageProps {
+  bracket: BracketRoundData[];
   copy: AppCopy;
+  finalsMatchResults: FinalsMatchResultData[];
+  groupStageMatches: GroupStageMatchData[];
 }
 
 interface MatchSummary {
@@ -24,7 +27,12 @@ interface MatchSummary {
   awayScore?: number;
 }
 
-function buildMatchLookup(locale: AppCopy['locale']) {
+function buildMatchLookup(
+  locale: AppCopy['locale'],
+  groupStageMatches: GroupStageMatchData[],
+  bracket: BracketRoundData[],
+  finalsMatchResults: FinalsMatchResultData[]
+) {
   const resultById = new Map(finalsMatchResults.map((result) => [result.id, result]));
   const groupMatches = groupStageMatches.map((match) => ({
     id: match.id,
@@ -119,7 +127,18 @@ function getPredictionCompareClass(
   return 'is-miss';
 }
 
-export function UserCenterPage({ copy }: UserCenterPageProps) {
+function getPredictionScore(
+  prediction: { winner: string; home_score: number; away_score: number },
+  match: MatchSummary
+) {
+  const actualWinner = getActualWinner(match);
+  if (!actualWinner) return null;
+  if (prediction.home_score === match.homeScore && prediction.away_score === match.awayScore) return 3;
+  if (prediction.winner === actualWinner) return 1;
+  return 0;
+}
+
+export function UserCenterPage({ bracket, copy, finalsMatchResults, groupStageMatches }: UserCenterPageProps) {
   const { user, loading, authMessage, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuth();
   const { favorites, loading: favoritesLoading } = useFavoritesList(user);
   const { predictions, loading: predictionsLoading } = usePredictionsList(user);
@@ -130,11 +149,21 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
   const [authPassword, setAuthPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
   const signedIn = Boolean(user);
-  const matchLookup = useMemo(() => buildMatchLookup(copy.locale), [copy.locale]);
+  const matchLookup = useMemo(
+    () => buildMatchLookup(copy.locale, groupStageMatches, bracket, finalsMatchResults),
+    [bracket, copy.locale, finalsMatchResults, groupStageMatches]
+  );
   const avatarUrl =
     profile?.avatar_url ??
     (typeof user?.user_metadata?.avatar_url === 'string' ? user.user_metadata.avatar_url : undefined) ??
     (typeof user?.user_metadata?.picture === 'string' ? user.user_metadata.picture : undefined);
+  const predictionScores = predictions.map((prediction) =>
+    getPredictionScore(prediction, matchLookup.get(prediction.match_id) ?? getFallbackMatch(prediction.match_id, copy.locale))
+  );
+  const resolvedPredictions = predictionScores.filter((score) => score !== null);
+  const exactPredictionCount = predictionScores.filter((score) => score === 3).length;
+  const winnerHitCount = predictionScores.filter((score) => score !== null && score > 0).length;
+  const predictionPoints = predictionScores.reduce<number>((total, score) => total + (score ?? 0), 0);
 
   useEffect(() => {
     if (!user) {
@@ -256,6 +285,33 @@ export function UserCenterPage({ copy }: UserCenterPageProps) {
           </div>
         ) : null}
       </div>
+
+      {signedIn ? (
+        <div className="user-score-strip" aria-label={copy.locale === 'zh' ? '我的世界杯数据' : 'My World Cup metrics'}>
+          <article>
+            <strong className="is-lime">{favorites.length}</strong>
+            <span>{copy.locale === 'zh' ? '收藏比赛' : 'Saved'}</span>
+          </article>
+          <article>
+            <strong>{predictions.length}</strong>
+            <span>{copy.locale === 'zh' ? '预测场次' : 'Predictions'}</span>
+          </article>
+          <article>
+            <strong>{winnerHitCount}</strong>
+            <span>{copy.locale === 'zh' ? '胜负命中' : 'Pick hits'}</span>
+            <small>{resolvedPredictions.length ? `${Math.round((winnerHitCount / resolvedPredictions.length) * 100)}%` : '0%'}</small>
+          </article>
+          <article>
+            <strong className="is-gold">{exactPredictionCount}</strong>
+            <span>{copy.locale === 'zh' ? '精准比分' : 'Exact score'}</span>
+            <small>{copy.locale === 'zh' ? '+3分/个' : '+3 each'}</small>
+          </article>
+          <article>
+            <strong>{predictionPoints}</strong>
+            <span>{copy.locale === 'zh' ? '预测积分' : 'Points'}</span>
+          </article>
+        </div>
+      ) : null}
 
       <div className="user-center-grid">
         <article className="user-center-card">

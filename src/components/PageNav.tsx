@@ -25,18 +25,27 @@ export function PageNav({ pathname, locale }: PageNavProps) {
 
   return (
     <nav aria-label="Page navigation" className="page-nav">
-      {visibleLinks.map((link) => {
-        const isActive = pathname === link.href;
-        return (
-          <a
-            key={link.href}
-            href={localizePath(link.href, locale)}
-            aria-current={isActive ? 'page' : undefined}
-          >
-            {link.label[locale]}
-          </a>
-        );
-      })}
+      <a className="page-nav__brand" href={localizePath('/', locale)} aria-label={locale === 'zh' ? '返回首页' : 'Back home'}>
+        WC 2026<span>DATA</span>
+      </a>
+      <div className="page-nav__links">
+        {visibleLinks.map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <a
+              key={link.href}
+              href={localizePath(link.href, locale)}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              {link.label[locale]}
+            </a>
+          );
+        })}
+      </div>
+      <div className="page-nav__meta">
+        <span className="page-nav__dot" />
+        <span>{locale === 'zh' ? '世界杯数据站' : 'World Cup Data'}</span>
+      </div>
     </nav>
   );
 }

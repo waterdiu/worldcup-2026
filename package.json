@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host --port 5174",
     "build": "tsc -b && vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "fetch:qualifiers": "node scripts/fetch_api_football_qualifiers.mjs",
     "fetch:finals-results": "node scripts/fetch_finals_results.mjs",
+    "sync:shared-data": "node scripts/sync_shared_data.mjs",
     "generate:daily-hero": "python3 scripts/generate_daily_home_hero.py",
     "generate:finals-results": "node scripts/generate_finals_results.mjs",
     "import:finals-results": "node scripts/import_finals_results.mjs",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.4",
+    "chart.js": "^4.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -24,6 +26,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^25.8.0",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.4.1",

@@ -1,5 +1,4 @@
 import { SectionHeader } from '../components/SectionHeader';
-import { bracket as allBracket } from '../data/bracket';
 import { hostCityDetails } from '../data/hostCityDetails';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatBracketLabel, formatHostCityName, formatMatchupLabel, formatVenueName } from '../i18n/formatters';
@@ -88,7 +87,7 @@ export function CityDetailPage({
   const groupMatches = fixtures
     .filter((fixture) => venueCityMap[fixture.venue] === city)
     .sort((first, second) => Date.parse(first.dateLabel) - Date.parse(second.dateLabel));
-  const knockoutMatches = (rounds.length > 0 ? rounds : allBracket).flatMap((round) =>
+  const knockoutMatches = rounds.flatMap((round) =>
     round.matches
       .filter((match) => venueCityMap[match.venue] === city)
       .map((match) => ({ ...match, round: round.round }))

@@ -1,18 +1,12 @@
 import { PageNav } from './components/PageNav';
 import {
-  bracket,
   confederations,
-  finalsDataCoverage,
-  finalsMatchResults,
   getHomepageHeroSlides,
-  groupFixtures,
-  groupStageMatches,
-  groups,
-  apiFootballQualifierSourceReports,
-  qualifierMatches,
   qualifierDetails,
   tournamentMeta
 } from './data';
+import type { WorldCupSiteData } from './data/siteData';
+import { useWorldCupSiteData } from './hooks/useWorldCupSiteData';
 import { contentByLocale, getLocaleFromPathname, stripAppBasePath, type Locale } from './i18n/content';
 import { AdminPage } from './pages/AdminPage';
 import { CitiesPage } from './pages/CitiesPage';
@@ -24,13 +18,14 @@ import { MatchesPage } from './pages/MatchesPage';
 import { QualifierConfederationPage } from './pages/QualifierConfederationPage';
 import { QualifierMatchDetailPage } from './pages/QualifierMatchDetailPage';
 import { QualifiersOverviewPage } from './pages/QualifiersOverviewPage';
-import { StatsPage } from './pages/StatsPage';
+import { StatsPageV4 } from './pages/StatsPageV4';
 import { TeamDetailPage } from './pages/TeamDetailPage';
 import { TeamsPage } from './pages/TeamsPage';
 import { CityDetailPage } from './pages/CityDetailPage';
 import { UserCenterPage } from './pages/UserCenterPage';
 import './styles/theme.css';
 import './styles/world-cup-page.css';
+import './styles/stats-v4.css';
 
 function normalizePathname(pathname: string): string {
   if (pathname === '/en') return '/';
@@ -44,8 +39,19 @@ function normalizePathname(pathname: string): string {
   return pathname;
 }
 
-function renderPage(pathname: string, locale: Locale) {
+function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData) {
   const copy = contentByLocale[locale];
+  const {
+    apiFootballQualifierSourceReports,
+    bracket,
+    finalsDataCoverage,
+    finalsMatchResults,
+    fullSchedule,
+    groupFixtures,
+    groupStageMatches,
+    groups,
+    qualifierMatches
+  } = siteData;
 
   if (pathname === '/qualifiers') {
     return (
@@ -76,7 +82,8 @@ function renderPage(pathname: string, locale: Locale) {
       return (
         <QualifierConfederationPage
           confederation={confederation}
-          detail={detail}
+          matches={qualifierMatches}
+          copy={copy}
         />
       );
     }
@@ -84,23 +91,33 @@ function renderPage(pathname: string, locale: Locale) {
 
   if (pathname === '/stats') {
     return (
-      <StatsPage
-        meta={tournamentMeta}
-        groups={groups}
-        results={finalsMatchResults}
-        rounds={bracket}
-        dataCoverage={finalsDataCoverage}
-        copy={copy}
+      <StatsPageV4
+        bracket={bracket}
+        groupStageMatches={groupStageMatches}
       />
     );
   }
 
   if (pathname === '/me') {
-    return <UserCenterPage copy={copy} />;
+    return (
+      <UserCenterPage
+        bracket={bracket}
+        copy={copy}
+        finalsMatchResults={finalsMatchResults}
+        groupStageMatches={groupStageMatches}
+      />
+    );
   }
 
   if (pathname === '/admin') {
-    return <AdminPage copy={copy} />;
+    return (
+      <AdminPage
+        bracket={bracket}
+        copy={copy}
+        finalsMatchResults={finalsMatchResults}
+        groupStageMatches={groupStageMatches}
+      />
+    );
   }
 
   if (pathname === '/groups') {
@@ -179,6 +196,7 @@ function renderPage(pathname: string, locale: Locale) {
   return (
     <HomePage
       slides={getHomepageHeroSlides(new Date(), locale)}
+      fullSchedule={fullSchedule}
       groups={groups}
       teams={teams}
       fixtures={groupFixtures}
@@ -189,15 +207,32 @@ function renderPage(pathname: string, locale: Locale) {
 }
 
 export default function App() {
+  const { runtimeError, siteData } = useWorldCupSiteData();
   const appPathname = stripAppBasePath(window.location.pathname);
   const locale = getLocaleFromPathname(window.location.pathname);
   const normalizedPathname = normalizePathname(appPathname);
-  const copy = contentByLocale[locale];
+  const isStats = normalizedPathname === '/stats';
+  const isQualifiers = normalizedPathname === '/qualifiers' || normalizedPathname.startsWith('/qualifiers/');
+  const isFinalsPage =
+    normalizedPathname === '/' ||
+    normalizedPathname === '/groups' ||
+    normalizedPathname.startsWith('/groups/') ||
+    normalizedPathname === '/matches' ||
+    normalizedPathname.startsWith('/matches/') ||
+    normalizedPathname === '/cities' ||
+    normalizedPathname.startsWith('/cities/') ||
+    normalizedPathname === '/teams' ||
+    normalizedPathname.startsWith('/teams/');
 
   return (
-    <main className="world-cup-page">
+    <main
+      className={`world-cup-page ${isStats ? 'world-cup-page--stats' : ''} ${isQualifiers ? 'world-cup-page--qualifiers' : ''} ${isFinalsPage ? 'world-cup-page--finals' : ''}`}
+      data-data-generated-at={siteData.generatedAt}
+      data-data-source={siteData.source}
+      data-data-warning={runtimeError ?? undefined}
+    >
       <PageNav pathname={normalizedPathname} locale={locale} />
-      {renderPage(normalizedPathname, locale)}
+      {renderPage(normalizedPathname, locale, siteData)}
     </main>
   );
 }

@@ -104,8 +104,8 @@ describe('finals result fetch transform', () => {
     const matchMap = await buildDefaultMatchIdByTeamPair();
 
     expect(matchMap['Mexico::South Africa']).toBe('1');
-    expect(matchMap['Mexico::Czechia']).toBe('A-5');
-    expect(matchMap['Czechia::Mexico']).toBe('A-5');
+    expect(matchMap['Mexico::Czechia']).toBe('5');
+    expect(matchMap['Czechia::Mexico']).toBe('5');
   });
 
   it('converts football-data matches when they can be mapped to local match ids', async () => {

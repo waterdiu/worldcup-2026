@@ -44,39 +44,27 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
   ];
 
   return (
-    <section className="section match-detail-page qualifier-match-detail-page">
-      <a className="back-link" href={localizePath('/qualifiers', copy.locale)}>
-        {copy.locale === 'zh' ? '返回预选赛比赛记录' : 'Back to qualifier records'}
+    <section className="qualifier-subpage qualifier-match-detail-page">
+      <a className="qualifier-back-link" href={localizePath(`/qualifiers/${match.confederationId}`, copy.locale)}>
+        {copy.locale === 'zh' ? '返回上级页面' : 'Back to previous level'}
       </a>
 
-      <article className="match-detail-hero-card qualifier-detail-hero">
-        <span className="qualifier-detail-hero__eyebrow">{copy.locale === 'zh' ? '预选赛详情' : 'Qualifier Detail'}</span>
-        <div className="match-detail-hero-card__meta">
+      <header className="qualifier-subpage__masthead">
+        <h1>{homeLabel} <em>{match.homeScore}-{match.awayScore}</em> {awayLabel}</h1>
+        <div className="qualifier-subpage__meta">
           <span>{match.confederationName}</span>
           <span>{match.stage}</span>
           <span>{formatDate(match.dateLabel, copy.locale)}</span>
           {match.venue ? <span>{match.venue}</span> : null}
+          <span>{copy.locale === 'zh' ? '全场结束' : 'Full time'}</span>
         </div>
-        <div className="match-scoreboard">
-          <div className="match-scoreboard__team">
-            <span>{homeLabel}</span>
-          </div>
-          <div className="match-scoreboard__score">
-            <strong>{match.homeScore} - {match.awayScore}</strong>
-            <span>{copy.locale === 'zh' ? '全场结束' : 'Full time'}</span>
-          </div>
-          <div className="match-scoreboard__team match-scoreboard__team--away">
-            <span>{awayLabel}</span>
-          </div>
-        </div>
-        <h1>{copy.locale === 'zh' ? '预选赛比赛详情' : 'Qualifier Match Detail'}</h1>
-        {match.resultNote ? <p>{match.resultNote}</p> : null}
-      </article>
+      </header>
 
-      <div className="match-detail-layout">
-        <article className="match-detail-card match-detail-card--span qualifier-detail-coverage">
-          <div className="qualifier-detail-coverage__header">
-            <h3>{copy.locale === 'zh' ? '数据覆盖' : 'Data Coverage'}</h3>
+      <div className="qualifier-detail-grid">
+        <section className="qualifier-panel qualifier-panel--span">
+          <div className="qualifier-sec-rule">
+            <span>01</span>
+            <h2>{copy.locale === 'zh' ? '数据覆盖' : 'Data Coverage'}</h2>
             <span>
               {copy.locale === 'zh'
                 ? `${coverageItems.filter((item) => item.hasData).length}/${coverageItems.length} 类已导入`
@@ -91,10 +79,14 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
               </div>
             ))}
           </div>
-        </article>
+          {match.resultNote ? <p className="qualifier-muted-line">{match.resultNote}</p> : null}
+        </section>
 
-        <article className="match-detail-card">
-          <h3>{copy.locale === 'zh' ? '比赛统计' : 'Match Statistics'}</h3>
+        <section className="qualifier-panel">
+          <div className="qualifier-sec-rule">
+            <span>02</span>
+            <h2>{copy.locale === 'zh' ? '比赛统计' : 'Match Statistics'}</h2>
+          </div>
           {match.stats?.length ? (
             <div className="match-stat-table">
               {match.stats.map((stat) => (
@@ -108,10 +100,13 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
           ) : (
             <p>{copy.locale === 'zh' ? '暂无公开技术统计。' : 'No public match statistics available.'}</p>
           )}
-        </article>
+        </section>
 
-        <article className="match-detail-card">
-          <h3>{copy.locale === 'zh' ? '阵容' : 'Lineups'}</h3>
+        <section className="qualifier-panel">
+          <div className="qualifier-sec-rule">
+            <span>03</span>
+            <h2>{copy.locale === 'zh' ? '阵容' : 'Lineups'}</h2>
+          </div>
           {match.lineups?.length ? (
             <div className="lineup-shell">
               {match.lineups.map((lineup) => (
@@ -130,10 +125,13 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
           ) : (
             <p>{copy.locale === 'zh' ? '暂无完整阵容数据。' : 'No complete lineup data available.'}</p>
           )}
-        </article>
+        </section>
 
-        <article className="match-detail-card match-detail-card--span">
-          <h3>{copy.locale === 'zh' ? '进球、红黄牌和换人' : 'Goals, Cards, and Substitutions'}</h3>
+        <section className="qualifier-panel qualifier-panel--span">
+          <div className="qualifier-sec-rule">
+            <span>04</span>
+            <h2>{copy.locale === 'zh' ? '进球、红黄牌和换人' : 'Goals, Cards, and Substitutions'}</h2>
+          </div>
           {match.events?.length ? (
             <div className="match-timeline">
               {match.events.map((event) => (
@@ -151,10 +149,13 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
           ) : (
             <p>{copy.locale === 'zh' ? '暂无事件流数据。' : 'No event log available.'}</p>
           )}
-        </article>
+        </section>
 
-        <article className="match-detail-card">
-          <h3>{copy.locale === 'zh' ? '球员赛后评分' : 'Player Ratings'}</h3>
+        <section className="qualifier-panel">
+          <div className="qualifier-sec-rule">
+            <span>05</span>
+            <h2>{copy.locale === 'zh' ? '球员赛后评分' : 'Player Ratings'}</h2>
+          </div>
           {hasRatings ? (
             <div className="match-stat-table">
               {match.playerRatings!.map((rating) => (
@@ -168,10 +169,13 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
           ) : (
             <p>{copy.locale === 'zh' ? '暂无球员评分数据。' : 'No player rating data available.'}</p>
           )}
-        </article>
+        </section>
 
-        <article className="match-detail-card">
-          <h3>{copy.locale === 'zh' ? '缺失数据' : 'Missing Data'}</h3>
+        <section className="qualifier-panel">
+          <div className="qualifier-sec-rule">
+            <span>06</span>
+            <h2>{copy.locale === 'zh' ? '缺失数据' : 'Missing Data'}</h2>
+          </div>
           {match.missingData.length ? (
             <ul className="detail-list">
               {match.missingData.map((item) => (
@@ -182,7 +186,7 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
             <p>{copy.locale === 'zh' ? '当前导入字段完整。' : 'Imported fields are complete.'}</p>
           )}
           <p>{copy.locale === 'zh' ? `来源：${match.sourceLabel}` : `Source: ${match.sourceLabel}`}</p>
-        </article>
+        </section>
       </div>
     </section>
   );

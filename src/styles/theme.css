@@ -1,14 +1,32 @@
 :root {
-  --bg: #07111e;
-  --bg-elevated: rgba(12, 25, 42, 0.82);
-  --bg-soft: rgba(12, 25, 42, 0.62);
-  --surface: rgba(10, 19, 33, 0.9);
-  --surface-strong: rgba(18, 35, 58, 0.98);
-  --border: rgba(167, 194, 217, 0.18);
-  --text: #f4f7fb;
-  --muted: #a8b6c9;
-  --green: #6ef2aa;
-  --lime: #d6ff5d;
-  --orange: #ff7a45;
-  --shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+  --font-display: 'Space Grotesk', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-body: 'Space Grotesk', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --bg: #08090c;
+  --bg-elevated: #0d1117;
+  --bg-soft: #161b22;
+  --surface: #0d1117;
+  --surface-strong: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #3fb950;
+  --accent-2: #f85149;
+  --accent-3: #58a6ff;
+  --green: var(--accent);
+  --lime: #e3b341;
+  --orange: #f0883e;
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.46);
+  --panel-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+
+  /* Claude stats palette extras */
+  --claude-s1: #0d1117;
+  --claude-s2: #161b22;
+  --claude-s3: #21262d;
+  --claude-b2: #444c56;
+  --claude-t2: #8b949e;
+  --claude-t3: #484f58;
+  --claude-green2: #238636;
+  --claude-yellow: #e3b341;
+  --claude-purple: #bc8cff;
 }

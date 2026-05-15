@@ -97,7 +97,57 @@ function addTeamPairMatch(map, homeTeam, awayTeam, id) {
   map[teamPairKey(awayTeam, homeTeam)] = id;
 }
 
+function parseExportedArray(source, exportName) {
+  const startPattern = new RegExp(`export\\s+const\\s+${exportName}\\s*(?::[^=]+)?=\\s*\\[`);
+  const startMatch = startPattern.exec(source);
+  if (!startMatch) return undefined;
+
+  const arrayStart = startMatch.index + startMatch[0].length - 1;
+  let depth = 0;
+  let quote = '';
+  let escaped = false;
+
+  for (let index = arrayStart; index < source.length; index += 1) {
+    const char = source[index];
+
+    if (quote) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === '\\') {
+        escaped = true;
+      } else if (char === quote) {
+        quote = '';
+      }
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      quote = char;
+      continue;
+    }
+
+    if (char === '[') {
+      depth += 1;
+    } else if (char === ']') {
+      depth -= 1;
+      if (depth === 0) {
+        return Function(`return ${source.slice(arrayStart, index + 1)};`)();
+      }
+    }
+  }
+
+  return undefined;
+}
+
 function parseGroupsSource(source) {
+  const generatedGroups = parseExportedArray(source, 'groups');
+  if (Array.isArray(generatedGroups)) {
+    return generatedGroups.map((group) => ({
+      id: group.id,
+      teams: Array.isArray(group.teams) ? group.teams.map((team) => team.name) : []
+    }));
+  }
+
   const groups = [];
   const groupPattern = /id: '([^']+)'[\s\S]*?teams: standingsShell\((\[[^\n]+\])\)/g;
   let match;
@@ -113,6 +163,16 @@ function parseGroupsSource(source) {
 }
 
 function parseFixtureSource(source) {
+  const generatedFixtures = parseExportedArray(source, 'groupFixtures');
+  if (Array.isArray(generatedFixtures)) {
+    return generatedFixtures.map((fixture) => ({
+      id: fixture.id,
+      groupId: fixture.groupId,
+      homeTeam: fixture.homeTeam,
+      awayTeam: fixture.awayTeam
+    }));
+  }
+
   const fixtures = [];
   const fixturePattern = /\{ id: '([^']+)', groupId: '([^']+)'[\s\S]*?homeTeam: (['"])(.*?)\3, awayTeam: (['"])(.*?)\5,/g;
   let match;
@@ -129,11 +189,25 @@ function parseFixtureSource(source) {
   return fixtures;
 }
 
+function parseGroupStageMatchesSource(source) {
+  const generatedMatches = parseExportedArray(source, 'groupStageMatches');
+  if (!Array.isArray(generatedMatches)) return [];
+
+  return generatedMatches.map((match) => ({
+    id: match.id,
+    groupId: match.groupId,
+    homeTeam: match.homeTeam,
+    awayTeam: match.awayTeam
+  }));
+}
+
 export async function buildDefaultMatchIdByTeamPair() {
   const groupsSource = await fs.readFile(path.join(rootDir, 'src', 'data', 'groups.ts'), 'utf8');
   const fixturesSource = await fs.readFile(path.join(rootDir, 'src', 'data', 'groupFixtures.ts'), 'utf8');
+  const groupStageMatchesSource = await fs.readFile(path.join(rootDir, 'src', 'data', 'groupStageMatches.ts'), 'utf8');
   const groups = parseGroupsSource(groupsSource);
   const fixtures = parseFixtureSource(fixturesSource);
+  const groupStageMatches = parseGroupStageMatchesSource(groupStageMatchesSource);
   const map = {};
   const existingPairKeys = new Set();
   const pairingPlan = [
@@ -142,9 +216,11 @@ export async function buildDefaultMatchIdByTeamPair() {
     [[0, 1], [3, 2]]
   ];
 
-  fixtures.forEach((fixture) => {
-    addTeamPairMatch(map, fixture.homeTeam, fixture.awayTeam, fixture.id);
-    existingPairKeys.add(`${fixture.groupId}:${teamPairKey(...[fixture.homeTeam, fixture.awayTeam].sort())}`);
+  const explicitMatches = groupStageMatches.length > 0 ? groupStageMatches : fixtures;
+
+  explicitMatches.forEach((match) => {
+    addTeamPairMatch(map, match.homeTeam, match.awayTeam, match.id);
+    existingPairKeys.add(`${match.groupId}:${teamPairKey(...[match.homeTeam, match.awayTeam].sort())}`);
   });
 
   groups.forEach((group) => {

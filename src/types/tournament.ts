@@ -90,6 +90,20 @@ export interface GroupFixtureData {
   predictionStatus: string;
 }
 
+export interface FullScheduleMatchData {
+  id: string;
+  stageLabel: string;
+  groupId?: string;
+  dateLabel: string;
+  beijingTimeLabel: string;
+  city: string;
+  venue: string;
+  homeTeam: string;
+  awayTeam: string;
+  title: string;
+  predictionStatus: string;
+}
+
 export interface DailyHeroData {
   generatedAt: string;
   referenceDate: string;
