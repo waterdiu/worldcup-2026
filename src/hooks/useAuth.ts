@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { stripAppBasePath } from '../i18n/content';
 import { supabase, type AuthUser } from '../lib/supabase';
 
 export interface AuthState {
@@ -9,6 +10,17 @@ export interface AuthState {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (input: { email: string; password: string; displayName: string }) => Promise<void>;
   signOut: () => Promise<void>;
+}
+
+export function buildOAuthRedirectUrl(): string {
+  const base = import.meta.env.BASE_URL || '/';
+  const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const appPath = stripAppBasePath(window.location.pathname);
+  const path = normalizedBase && normalizedBase !== '/'
+    ? `${normalizedBase}${appPath === '/' ? '/' : appPath}`
+    : appPath;
+
+  return new URL(path, window.location.origin).toString();
 }
 
 export function useAuth(): AuthState {
@@ -43,7 +55,7 @@ export function useAuth(): AuthState {
   async function signInWithGoogle(): Promise<void> {
     if (!supabase) return;
     setAuthMessage(null);
-    const redirectTo = window.location.href;
+    const redirectTo = buildOAuthRedirectUrl();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo }
