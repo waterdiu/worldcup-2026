@@ -164,6 +164,13 @@ export function UserCenterPage({ bracket, copy, finalsMatchResults, groupStageMa
   const exactPredictionCount = predictionScores.filter((score) => score === 3).length;
   const winnerHitCount = predictionScores.filter((score) => score !== null && score > 0).length;
   const predictionPoints = predictionScores.reduce<number>((total, score) => total + (score ?? 0), 0);
+  const followedTeams = useMemo(
+    () =>
+      Array.from(new Set(groupStageMatches.flatMap((match) => [match.homeTeam, match.awayTeam])))
+        .slice(0, 10)
+        .map((team) => formatTeamName(team, copy.locale)),
+    [copy.locale, groupStageMatches]
+  );
 
   useEffect(() => {
     if (!user) {
@@ -190,130 +197,131 @@ export function UserCenterPage({ bracket, copy, finalsMatchResults, groupStageMa
     await signInWithEmail(authEmail, authPassword);
   }
 
-  return (
-    <section className="section user-center-page">
-      <div className="user-center-hero">
-          <div className="user-center-hero__intro">
-          <div className="user-center-hero__title">
-            <h1>{copy.locale === 'zh' ? '我的世界杯' : 'My World Cup'}</h1>
-            {!signedIn ? <p>{copy.locale === 'zh' ? '登录后可以同步收藏和预测。' : 'Sign in to sync favorites and predictions.'}</p> : null}
-          </div>
-          {signedIn && user ? (
-            <div className="user-profile-card__body">
-              <div className="user-profile-card__identity">
-                {avatarUrl ? <img src={avatarUrl} alt="" /> : <div className="user-profile-card__avatar">{getAuthDisplayName(user).slice(0, 1).toUpperCase()}</div>}
-                <div>
-                  <strong>{profile?.display_name || getAuthDisplayName(user)}</strong>
-                  <span>{user.email}</span>
-                </div>
-              </div>
-              <form className="user-profile-form" onSubmit={handleProfileSubmit}>
-                <label>
-                  {copy.locale === 'zh' ? '显示昵称' : 'Display name'}
-                  <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} disabled={profileLoading} />
-                </label>
-                <button type="submit" disabled={profileSaving || profileLoading}>
-                  {profileSaving ? (copy.locale === 'zh' ? '保存中...' : 'Saving...') : copy.locale === 'zh' ? '保存资料' : 'Save profile'}
-                </button>
-                <button type="button" className="user-profile-form__secondary" onClick={signOut}>
-                  {copy.locale === 'zh' ? '退出登录' : 'Sign out'}
-                </button>
-              </form>
-            </div>
-          ) : (
-            null
-          )}
-        </div>
-        {!signedIn ? (
-          <div className="user-auth-panel">
-            <div className="user-auth-tabs">
-              <button
-                type="button"
-                className={authMode === 'login' ? 'is-active' : undefined}
-                onClick={() => setAuthMode('login')}
-              >
-                {copy.locale === 'zh' ? '邮箱登录' : 'Email login'}
-              </button>
-              <button
-                type="button"
-                className={authMode === 'register' ? 'is-active' : undefined}
-                onClick={() => setAuthMode('register')}
-              >
-                {copy.locale === 'zh' ? '邮箱注册' : 'Email sign up'}
-              </button>
-            </div>
-            <form className="user-auth-form" onSubmit={handleEmailAuth}>
-              {authMode === 'register' ? (
-                <label>
-                  {copy.locale === 'zh' ? '昵称' : 'Display name'}
-                  <input value={registerName} onChange={(event) => setRegisterName(event.target.value)} required />
-                </label>
-              ) : null}
-              <label>
-                Email
-                <input type="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required />
-              </label>
-              <label>
-                {copy.locale === 'zh' ? '密码' : 'Password'}
-                <input
-                  minLength={6}
-                  type="password"
-                  value={authPassword}
-                  onChange={(event) => setAuthPassword(event.target.value)}
-                  required
-                />
-              </label>
-              <button type="submit" disabled={loading || !isSupabaseConfigured}>
-                {authMode === 'register'
-                  ? copy.locale === 'zh'
-                    ? '注册账号'
-                    : 'Create account'
-                  : copy.locale === 'zh'
-                    ? '登录'
-                    : 'Sign in'}
-              </button>
-            </form>
-            <div className="user-auth-actions">
-              <button type="button" onClick={signInWithGoogle} disabled={loading || !isSupabaseConfigured}>
-                {copy.locale === 'zh' ? '使用 Google 登录' : 'Sign in with Google'}
-              </button>
-            </div>
-            {authMessage ? <p className="user-auth-message">{authMessage}</p> : null}
-            {!isSupabaseConfigured ? (
-              <span>{copy.locale === 'zh' ? 'Supabase 尚未配置' : 'Supabase is not configured'}</span>
-            ) : null}
-          </div>
-        ) : null}
+  const authPanel = (
+    <div className="user-auth-panel">
+      <div className="user-auth-tabs">
+        <button type="button" className={authMode === 'login' ? 'is-active' : undefined} onClick={() => setAuthMode('login')}>
+          {copy.locale === 'zh' ? '登录' : 'Login'}
+        </button>
+        <button type="button" className={authMode === 'register' ? 'is-active' : undefined} onClick={() => setAuthMode('register')}>
+          {copy.locale === 'zh' ? '注册' : 'Register'}
+        </button>
       </div>
+      <p className="user-auth-intro">
+        {copy.locale === 'zh' ? '登录后可以同步收藏和预测。' : 'Sign in to sync favorites and predictions.'}
+      </p>
+      <form className="user-auth-form" onSubmit={handleEmailAuth}>
+        {authMode === 'register' ? (
+          <label>
+            {copy.locale === 'zh' ? '昵称' : 'Display name'}
+            <input value={registerName} onChange={(event) => setRegisterName(event.target.value)} required />
+          </label>
+        ) : null}
+        <label>
+          Email
+          <input type="email" value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} required />
+        </label>
+        <label>
+          {copy.locale === 'zh' ? '密码' : 'Password'}
+          <input minLength={6} type="password" value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} required />
+        </label>
+        <button type="submit" disabled={loading || !isSupabaseConfigured}>
+          {authMode === 'register'
+            ? copy.locale === 'zh'
+              ? '注册账号'
+              : 'Create account'
+            : copy.locale === 'zh'
+              ? '登录'
+              : 'Sign in'}
+        </button>
+      </form>
+      <div className="user-auth-divider">{copy.locale === 'zh' ? '或' : 'OR'}</div>
+      <div className="user-auth-actions">
+        <button type="button" onClick={signInWithGoogle} disabled={loading || !isSupabaseConfigured}>
+          {copy.locale === 'zh' ? '使用 Google 登录' : 'Sign in with Google'}
+        </button>
+      </div>
+      {authMessage ? <p className="user-auth-message">{authMessage}</p> : null}
+      {!isSupabaseConfigured ? <span>{copy.locale === 'zh' ? 'Supabase 尚未配置' : 'Supabase is not configured'}</span> : null}
+    </div>
+  );
 
-      {signedIn ? (
-        <div className="user-score-strip" aria-label={copy.locale === 'zh' ? '我的世界杯数据' : 'My World Cup metrics'}>
-          <article>
-            <strong className="is-lime">{favorites.length}</strong>
-            <span>{copy.locale === 'zh' ? '收藏比赛' : 'Saved'}</span>
-          </article>
-          <article>
-            <strong>{predictions.length}</strong>
-            <span>{copy.locale === 'zh' ? '预测场次' : 'Predictions'}</span>
-          </article>
-          <article>
-            <strong>{winnerHitCount}</strong>
-            <span>{copy.locale === 'zh' ? '胜负命中' : 'Pick hits'}</span>
-            <small>{resolvedPredictions.length ? `${Math.round((winnerHitCount / resolvedPredictions.length) * 100)}%` : '0%'}</small>
-          </article>
-          <article>
-            <strong className="is-gold">{exactPredictionCount}</strong>
-            <span>{copy.locale === 'zh' ? '精准比分' : 'Exact score'}</span>
-            <small>{copy.locale === 'zh' ? '+3分/个' : '+3 each'}</small>
-          </article>
-          <article>
-            <strong>{predictionPoints}</strong>
-            <span>{copy.locale === 'zh' ? '预测积分' : 'Points'}</span>
-          </article>
+  if (!signedIn || !user) {
+    return (
+      <section className="section user-center-page user-center-page--auth">
+        <div className="user-auth-layout">
+          <aside className="user-auth-atmos">
+            <h1 aria-label={copy.locale === 'zh' ? '我的世界杯' : 'My World Cup'}>
+              {copy.locale === 'zh' ? '我的' : 'My'}
+              <br />
+              <em>{copy.locale === 'zh' ? '世界杯' : 'World Cup'}</em>
+            </h1>
+            <div className="user-auth-features">
+              {(copy.locale === 'zh'
+                ? ['收藏感兴趣的比赛，随时追踪赛果', '关注支持的球队，赛前集中查看', '预测比赛胜负与比分，赛后自动核对', '预测积分榜，和其他球迷同场竞技']
+                : ['Save matches and track results', 'Follow teams before matchday', 'Predict winners and exact scores', 'Compete on the prediction leaderboard']
+              ).map((item, index) => (
+                <div className="user-auth-feature" key={item}>
+                  <span>{['★', '◎', '?', '↑'][index]}</span>
+                  <p>{item}</p>
+                </div>
+              ))}
+            </div>
+          </aside>
+          <div className="user-auth-form-wrap">{authPanel}</div>
         </div>
-      ) : null}
+      </section>
+    );
+  }
 
-      <div className="user-center-grid">
+  return (
+    <section className="section user-center-page user-center-page--signed-in">
+      <div className="user-page-shell">
+        <div className="user-profile-hero" data-num="2026">
+          {avatarUrl ? <img className="user-profile-avatar" src={avatarUrl} alt="" /> : <div className="user-profile-avatar">{getAuthDisplayName(user).slice(0, 1).toUpperCase()}</div>}
+          <div>
+            <strong>{profile?.display_name || getAuthDisplayName(user)}</strong>
+            <span>{user?.email}</span>
+          </div>
+          <form className="user-profile-form user-profile-form--inline" onSubmit={handleProfileSubmit}>
+            <label>
+              {copy.locale === 'zh' ? '显示昵称' : 'Display name'}
+              <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} disabled={profileLoading} />
+            </label>
+            <button type="submit" disabled={profileSaving || profileLoading}>
+              {profileSaving ? (copy.locale === 'zh' ? '保存中...' : 'Saving...') : copy.locale === 'zh' ? '保存资料' : 'Save profile'}
+            </button>
+            <button type="button" className="user-profile-form__secondary" onClick={signOut}>
+              {copy.locale === 'zh' ? '退出登录' : 'Sign out'}
+            </button>
+          </form>
+        </div>
+
+        <div className="user-score-strip" aria-label={copy.locale === 'zh' ? '我的世界杯数据' : 'My World Cup metrics'}>
+          <article><strong className="is-lime">{favorites.length}</strong><span>{copy.locale === 'zh' ? '收藏比赛' : 'Saved'}</span></article>
+          <article><strong>{predictions.length}</strong><span>{copy.locale === 'zh' ? '预测场次' : 'Predictions'}</span></article>
+          <article><strong>{winnerHitCount}</strong><span>{copy.locale === 'zh' ? '胜负命中' : 'Pick hits'}</span><small>{resolvedPredictions.length ? `${Math.round((winnerHitCount / resolvedPredictions.length) * 100)}%` : '0%'}</small></article>
+          <article><strong className="is-gold">{exactPredictionCount}</strong><span>{copy.locale === 'zh' ? '精准比分' : 'Exact score'}</span><small>{copy.locale === 'zh' ? '+3分/个' : '+3 each'}</small></article>
+          <article><strong>{predictionPoints}</strong><span>{copy.locale === 'zh' ? '预测积分' : 'Points'}</span></article>
+        </div>
+
+        <div className="user-section-rule">
+          <span>{copy.locale === 'zh' ? '我关注的球队' : 'Followed Teams'}</span>
+          <small>{copy.locale === 'zh' ? '当前为推荐球队，后续可接入真实关注表' : 'Recommended teams, ready for follow records'}</small>
+        </div>
+        <div className="user-fav-teams">
+          <span>{copy.locale === 'zh' ? '已关注' : 'Following'}</span>
+          <div>
+            {followedTeams.map((team, index) => (
+              <button className={index < 3 ? 'is-on' : undefined} type="button" key={team}>{team}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="user-section-rule">
+          <span>{copy.locale === 'zh' ? '我的收藏 & 预测' : 'Favorites & Predictions'}</span>
+        </div>
+        <div className="user-center-grid">
         <article className="user-center-card">
           <div className="user-center-card__heading">
             <h2>{copy.locale === 'zh' ? '我的收藏' : 'My Favorites'}</h2>
@@ -398,6 +406,18 @@ export function UserCenterPage({ bracket, copy, finalsMatchResults, groupStageMa
             </p>
           )}
         </article>
+      </div>
+      <div className="user-leaderboard">
+        <div className="user-leaderboard__head">
+          <span>{copy.locale === 'zh' ? '预测积分榜' : 'Prediction Leaderboard'}</span>
+          <small>{copy.locale === 'zh' ? '胜负 +1 · 精准比分 +3' : 'Winner +1 · exact score +3'}</small>
+        </div>
+        <div className="user-leaderboard__row is-me">
+          <b>{copy.locale === 'zh' ? '我的积分' : 'My points'}</b>
+          <span>{predictionPoints}</span>
+          <small>{copy.locale === 'zh' ? `${predictions.length} 场预测` : `${predictions.length} predictions`}</small>
+        </div>
+      </div>
       </div>
     </section>
   );
