@@ -50,8 +50,8 @@ describe('App routes', () => {
     expect(screen.getByRole('heading', { name: /我的世界杯/i })).toBeInTheDocument();
     expect(screen.getByText(/登录后可以同步收藏和预测/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /使用 Google 登录/i })).toBeInTheDocument();
-    expect(screen.getByText(/我的收藏/i)).toBeInTheDocument();
-    expect(screen.getByText(/我的预测/i)).toBeInTheDocument();
+    expect(screen.getByText(/收藏感兴趣的比赛/i)).toBeInTheDocument();
+    expect(screen.getByText(/预测比赛胜负与比分/i)).toBeInTheDocument();
   });
 
   it('shows a match favorite action on match detail pages', () => {
