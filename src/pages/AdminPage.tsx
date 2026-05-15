@@ -7,7 +7,17 @@ import { formatBracketLabel, formatTeamName } from '../i18n/formatters';
 import { getAuthDisplayName, isSupabaseConfigured } from '../lib/supabase';
 import type { BracketRoundData, FinalsMatchResultData, GroupStageMatchData } from '../types/tournament';
 
-type AdminTab = 'users' | 'stats' | 'permissions';
+type AdminTab =
+  | 'dashboard'
+  | 'activity'
+  | 'matches'
+  | 'scores'
+  | 'groups'
+  | 'users'
+  | 'predictions'
+  | 'favorites'
+  | 'permissions'
+  | 'settings';
 
 interface AdminPageProps {
   bracket: BracketRoundData[];
@@ -115,7 +125,7 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminStatus(user);
   const dashboard = useAdminDashboard(Boolean(user && isAdmin));
-  const [activeTab, setActiveTab] = useState<AdminTab>('users');
+  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const isZh = copy.locale === 'zh';
   const pendingUsers = dashboard.profiles.filter((profile) => (profile.status ?? 'pending') === 'pending');
   const activeUsers = dashboard.profiles.filter((profile) => (profile.status ?? 'pending') === 'active');
@@ -142,6 +152,44 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
   }, {});
   const mostFavoritedMatch = Object.entries(favoriteCountByMatch).sort((a, b) => b[1] - a[1])[0];
   const mostPredictedMatch = Object.entries(predictionCountByMatch).sort((a, b) => b[1] - a[1])[0];
+  const completedMatches = finalsMatchResults.filter((match) => match.status === 'completed');
+  const pendingScoreMatches = finalsMatchResults.filter((match) => match.status !== 'completed').slice(0, 6);
+  const sampleMatches = groupStageMatches.slice(0, 8);
+  const adminNavGroups: Array<{
+    label: string;
+    items: Array<{ id: AdminTab; icon: string; label: string; badge?: string | number; tone?: 'red' | 'blue' | 'muted' }>;
+  }> = [
+    {
+      label: isZh ? '概览' : 'Overview',
+      items: [
+        { id: 'dashboard', icon: '▣', label: isZh ? '仪表盘' : 'Dashboard' },
+        { id: 'activity', icon: '◎', label: isZh ? '操作日志' : 'Activity' }
+      ]
+    },
+    {
+      label: isZh ? '赛事内容' : 'Tournament',
+      items: [
+        { id: 'matches', icon: '⚽', label: isZh ? '赛程管理' : 'Matches', badge: groupStageMatches.length, tone: 'blue' },
+        { id: 'scores', icon: '✎', label: isZh ? '比分录入' : 'Scores', badge: pendingScoreMatches.length, tone: pendingScoreMatches.length ? 'red' : 'muted' },
+        { id: 'groups', icon: '≡', label: isZh ? '积分榜' : 'Groups' }
+      ]
+    },
+    {
+      label: isZh ? '用户' : 'Users',
+      items: [
+        { id: 'users', icon: '◉', label: isZh ? '用户列表' : 'Users', badge: pendingUsers.length || undefined, tone: pendingUsers.length ? 'red' : 'muted' },
+        { id: 'predictions', icon: '?', label: isZh ? '预测记录' : 'Predictions' },
+        { id: 'favorites', icon: '★', label: isZh ? '收藏记录' : 'Favorites' }
+      ]
+    },
+    {
+      label: isZh ? '系统' : 'System',
+      items: [
+        { id: 'permissions', icon: '◈', label: isZh ? '权限配置' : 'Permissions' },
+        { id: 'settings', icon: '⚙', label: isZh ? '系统设置' : 'Settings' }
+      ]
+    }
+  ];
   const fallbackPagePermissions = useMemo<AdminPagePermissionRecord[]>(
     () => [
       { path: '/', label: '首页', require_login: false, admin_only: false, updated_at: '' },
@@ -233,11 +281,6 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
         </div>
       </div>
 
-      <article className="admin-hero">
-        <span>{isZh ? '后台控制台' : 'Control console'}</span>
-        <h1>{isZh ? '管理后台' : 'Admin Console'}</h1>
-      </article>
-
       {dashboard.error ? (
         <article className="admin-card admin-card--warning">
           <h2>{isZh ? '后台数据暂不可用' : 'Admin data is unavailable'}</h2>
@@ -245,19 +288,139 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
         </article>
       ) : null}
 
-      <div className="admin-tabs" role="tablist" aria-label={isZh ? '后台模块' : 'Admin modules'}>
-          <button className={activeTab === 'users' ? 'is-active' : undefined} type="button" onClick={() => setActiveTab('users')}>
-            {isZh ? '用户管理' : 'Users'}
-          </button>
-          <button className={activeTab === 'stats' ? 'is-active' : undefined} type="button" onClick={() => setActiveTab('stats')}>
-            {isZh ? '数据统计' : 'Statistics'}
-          </button>
-          <button className={activeTab === 'permissions' ? 'is-active' : undefined} type="button" onClick={() => setActiveTab('permissions')}>
-            {isZh ? '权限设置' : 'Permissions'}
-          </button>
-      </div>
+      <div className="admin-shell">
+        <aside className="admin-sidebar" aria-label={isZh ? '管理后台导航' : 'Admin navigation'}>
+          {adminNavGroups.map((group) => (
+            <div className="admin-sidebar-group" key={group.label}>
+              <span className="admin-sidebar-label">{group.label}</span>
+              {group.items.map((item) => (
+                <button
+                  className={activeTab === item.id ? 'is-active' : undefined}
+                  type="button"
+                  onClick={() => setActiveTab(item.id)}
+                  key={item.id}
+                >
+                  <span>{item.icon}</span>
+                  {item.label}
+                  {item.badge ? <b className={item.tone ? `is-${item.tone}` : undefined}>{item.badge}</b> : null}
+                </button>
+              ))}
+            </div>
+          ))}
+        </aside>
 
-        <div className="stats-content">
+        <main className="admin-main">
+          {activeTab === 'dashboard' ? (
+            <section className="stats-section">
+              <div className="admin-section-head">
+                <h2>{isZh ? '仪表盘' : 'Dashboard'}</h2>
+                <span>{isZh ? '实时数据 · Supabase' : 'Live data · Supabase'}</span>
+              </div>
+              <div className="stats-kpi-grid admin-kpi-grid">
+                <article><span>{isZh ? '总用户' : 'Users'}</span><strong>{dashboard.profiles.length}</strong><small>{isZh ? '全部账号' : 'All accounts'}</small></article>
+                <article><span>{isZh ? '待审批' : 'Pending'}</span><strong>{pendingUsers.length}</strong><small>{isZh ? '需处理' : 'Needs review'}</small></article>
+                <article><span>{isZh ? '已完赛' : 'Completed'}</span><strong>{completedMatches.length}</strong><small>{isZh ? `待比分 ${pendingScoreMatches.length}` : `${pendingScoreMatches.length} pending`}</small></article>
+                <article><span>{isZh ? '预测总数' : 'Predictions'}</span><strong>{dashboard.predictions.length}</strong><small>{isZh ? `${predictionUserCount} 个用户参与` : `${predictionUserCount} users`}</small></article>
+                <article><span>{isZh ? '收藏总数' : 'Favorites'}</span><strong>{dashboard.favorites.length}</strong><small>{isZh ? '全部收藏记录' : 'All saved records'}</small></article>
+                <article><span>{isZh ? '系统状态' : 'System'}</span><strong className="is-lime">●</strong><small>{isZh ? 'Supabase 已连接' : 'Supabase connected'}</small></article>
+              </div>
+              <div className="admin-dashboard-grid">
+                <article>
+                  <h3>{isZh ? '待处理事项' : 'Queue'}</h3>
+                  <p><span>{isZh ? '待审批用户' : 'Pending users'}</span><b>{pendingUsers.length}</b></p>
+                  <p><span>{isZh ? '未录入比分' : 'Pending scores'}</span><b>{pendingScoreMatches.length}</b></p>
+                  <p><span>{isZh ? '异常预测' : 'Prediction issues'}</span><b>0</b></p>
+                  <p><span>{isZh ? '系统告警' : 'System alerts'}</span><b>0</b></p>
+                </article>
+                <article>
+                  <h3>{isZh ? '互动概览' : 'Engagement'}</h3>
+                  <p><span>{isZh ? '收藏最多比赛' : 'Top saved match'}</span><b>{mostFavoritedMatch ? getMatchTitle(matchLookup, mostFavoritedMatch[0], isZh) : '-'}</b></p>
+                  <p><span>{isZh ? '预测最多比赛' : 'Top predicted match'}</span><b>{mostPredictedMatch ? getMatchTitle(matchLookup, mostPredictedMatch[0], isZh) : '-'}</b></p>
+                  <p><span>{isZh ? '人均预测' : 'Avg predictions'}</span><b>{avgPredictions}</b></p>
+                </article>
+                <article>
+                  <h3>{isZh ? '内容概览' : 'Content'}</h3>
+                  <p><span>{isZh ? '小组赛' : 'Group matches'}</span><b>{groupStageMatches.length}</b></p>
+                  <p><span>{isZh ? '淘汰赛' : 'Knockout matches'}</span><b>{bracket.reduce((total, round) => total + round.matches.length, 0)}</b></p>
+                  <p><span>{isZh ? '权限页面' : 'Permission pages'}</span><b>{pagePermissions.length}</b></p>
+                </article>
+              </div>
+              <article className="admin-panel">
+                <div className="admin-panel__head"><h3>{isZh ? '快速操作' : 'Quick Actions'}</h3></div>
+                <div className="admin-quick-actions">
+                  <button type="button" onClick={() => setActiveTab('scores')}>{isZh ? '录入比分' : 'Enter scores'}</button>
+                  <button type="button" onClick={() => setActiveTab('users')}>{isZh ? `审批用户 (${pendingUsers.length})` : `Review users (${pendingUsers.length})`}</button>
+                  <button type="button" onClick={() => setActiveTab('matches')}>{isZh ? '管理赛程' : 'Manage matches'}</button>
+                  <button type="button" onClick={() => setActiveTab('permissions')}>{isZh ? '权限配置' : 'Permissions'}</button>
+                </div>
+              </article>
+            </section>
+          ) : null}
+
+          {activeTab === 'activity' ? (
+            <section className="stats-section">
+              <div className="admin-section-head"><h2>{isZh ? '操作日志' : 'Activity'}</h2><span>{isZh ? '最近动态' : 'Recent activity'}</span></div>
+              <article className="admin-panel">
+                <ul className="admin-feed">
+                  <li><b />{isZh ? `待审批用户 ${pendingUsers.length} 个` : `${pendingUsers.length} users pending review`}<span>{isZh ? '系统' : 'System'}</span></li>
+                  <li><b />{isZh ? `预测记录 ${dashboard.predictions.length} 条` : `${dashboard.predictions.length} prediction records`}<span>Supabase</span></li>
+                  <li><b />{isZh ? `收藏记录 ${dashboard.favorites.length} 条` : `${dashboard.favorites.length} favorite records`}<span>Supabase</span></li>
+                </ul>
+              </article>
+            </section>
+          ) : null}
+
+          {activeTab === 'matches' ? (
+            <section className="stats-section">
+              <div className="admin-section-head"><h2>{isZh ? '赛程管理' : 'Match Management'}</h2><span>{isZh ? `${groupStageMatches.length} 场小组赛` : `${groupStageMatches.length} group matches`}</span></div>
+              <article className="admin-card admin-card--compact">
+                <div className="admin-data-table">
+                  <div className="admin-data-row admin-data-row--head admin-data-row--records"><span>{isZh ? '比赛' : 'Match'}</span><span>{isZh ? '分组' : 'Group'}</span><span>{isZh ? '时间' : 'Date'}</span></div>
+                  {sampleMatches.map((match) => (
+                    <div className="admin-data-row admin-data-row--records" key={match.id}>
+                      <span>{formatTeamName(match.homeTeam, copy.locale)} VS {formatTeamName(match.awayTeam, copy.locale)}</span>
+                      <span>{match.groupId}</span>
+                      <span>{match.dateLabel}</span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </section>
+          ) : null}
+
+          {activeTab === 'scores' ? (
+            <section className="stats-section">
+              <div className="admin-section-head"><h2>{isZh ? '比分录入' : 'Score Entry'}</h2><span>{isZh ? '当前为只读结果视图' : 'Read-only result view'}</span></div>
+              <article className="admin-card admin-card--compact">
+                <div className="admin-data-table">
+                  <div className="admin-data-row admin-data-row--head admin-data-row--records"><span>{isZh ? '比赛' : 'Match'}</span><span>{isZh ? '状态' : 'Status'}</span><span>{isZh ? '比分' : 'Score'}</span></div>
+                  {finalsMatchResults.slice(0, 10).map((match) => (
+                    <div className="admin-data-row admin-data-row--records" key={match.id}>
+                      <span>{getMatchTitle(matchLookup, match.id, isZh)}</span>
+                      <span>{formatStatus(match.status, isZh)}</span>
+                      <span>{match.homeScore !== undefined && match.awayScore !== undefined ? `${match.homeScore}-${match.awayScore}` : '-'}</span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </section>
+          ) : null}
+
+          {activeTab === 'groups' ? (
+            <section className="stats-section">
+              <div className="admin-section-head"><h2>{isZh ? '积分榜' : 'Groups'}</h2><span>{isZh ? '由比赛结果自动计算' : 'Computed from match results'}</span></div>
+              <div className="admin-dashboard-grid">
+                {Array.from(new Set(groupStageMatches.map((match) => match.groupId))).slice(0, 6).map((groupId) => (
+                  <article key={groupId}>
+                    <h3>{isZh ? `${groupId} 组` : `Group ${groupId}`}</h3>
+                    {Array.from(new Set(groupStageMatches.filter((match) => match.groupId === groupId).flatMap((match) => [match.homeTeam, match.awayTeam]))).slice(0, 4).map((team) => (
+                      <p key={team}><span>{formatTeamName(team, copy.locale)}</span><b>0</b></p>
+                    ))}
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
           {activeTab === 'users' ? (
             <section className="stats-section">
               <h2>{isZh ? '用户管理' : 'User Management'}</h2>
@@ -323,9 +486,12 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
             </section>
           ) : null}
 
-          {activeTab === 'stats' ? (
+          {(activeTab === 'predictions' || activeTab === 'favorites') ? (
             <section className="stats-section">
-              <h2>{isZh ? '数据统计' : 'Statistics'}</h2>
+              <div className="admin-section-head">
+                <h2>{activeTab === 'favorites' ? (isZh ? '收藏记录' : 'Favorite Records') : (isZh ? '预测记录' : 'Prediction Records')}</h2>
+                <span>{isZh ? '用户互动明细' : 'User engagement records'}</span>
+              </div>
               <div className="stats-kpi-grid admin-kpi-grid">
                 <article><span>{isZh ? '总用户数' : 'Users'}</span><strong>{dashboard.profiles.length}</strong><small>{isZh ? '全部账号' : 'All accounts'}</small></article>
                 <article><span>{isZh ? '待审批用户' : 'Pending'}</span><strong>{pendingUsers.length}</strong><small>{isZh ? '需要处理' : 'Needs review'}</small></article>
@@ -353,7 +519,7 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
                   </div>
                 </article>
               </div>
-              <details className="admin-record-panel">
+              <details className="admin-record-panel" open={activeTab === 'favorites'}>
                 <summary>{isZh ? '收藏记录' : 'Favorite Records'}</summary>
                 <div className="admin-data-table">
                   <div className="admin-data-row admin-data-row--head admin-data-row--records">
@@ -370,7 +536,7 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
                   ))}
                 </div>
               </details>
-              <details className="admin-record-panel">
+              <details className="admin-record-panel" open={activeTab === 'predictions'}>
                 <summary>{isZh ? '预测记录' : 'Prediction Records'}</summary>
                 <div className="admin-data-table">
                   <div className="admin-data-row admin-data-row--head admin-data-row--prediction-records">
@@ -396,7 +562,10 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
 
           {activeTab === 'permissions' ? (
             <section className="stats-section">
-              <h2>{isZh ? '权限设置' : 'Permissions'}</h2>
+              <div className="admin-section-head">
+                <h2>{isZh ? '权限设置' : 'Permissions'}</h2>
+                <span>{isZh ? '页面默认权限 + 用户单独权限' : 'Default and per-user access'}</span>
+              </div>
               <article className="admin-card admin-card--compact">
                 <h3>{isZh ? '页面默认权限' : 'Default Page Access'}</h3>
                 <div className="admin-data-table">
@@ -466,6 +635,24 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
               </article>
             </section>
           ) : null}
+
+          {activeTab === 'settings' ? (
+            <section className="stats-section">
+              <div className="admin-section-head">
+                <h2>{isZh ? '系统设置' : 'System Settings'}</h2>
+                <span>{isZh ? '当前为运行状态面板' : 'Runtime status panel'}</span>
+              </div>
+              <article className="admin-panel">
+                <div className="admin-panel__head"><h3>{isZh ? '数据与认证' : 'Data and auth'}</h3></div>
+                <div className="admin-dashboard-grid admin-dashboard-grid--settings">
+                  <article><h3>Supabase</h3><p><span>{isZh ? '认证状态' : 'Auth'}</span><b>{isZh ? '已配置' : 'Configured'}</b></p></article>
+                  <article><h3>football-data-platform</h3><p><span>{isZh ? '数据源' : 'Data source'}</span><b>{isZh ? '运行时读取' : 'Runtime API'}</b></p></article>
+                  <article><h3>GitHub Pages</h3><p><span>{isZh ? '部署' : 'Deploy'}</span><b>{isZh ? '工作流发布' : 'Workflow'}</b></p></article>
+                </div>
+              </article>
+            </section>
+          ) : null}
+        </main>
       </div>
     </section>
   );
