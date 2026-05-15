@@ -163,7 +163,7 @@ describe('App routes', () => {
     expect(screen.getAllByText(/L 组/).length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: '小组' })).toHaveAttribute('href', '/groups');
     expect(screen.getByRole('link', { name: '赛程' })).toHaveAttribute('href', '/matches');
-    expect(screen.getByRole('button', { name: /6月12日/i })).toBeInTheDocument();
+    expect(screen.getByText(/所选日期赛程/i)).toBeInTheDocument();
     expect(screen.getAllByText(/待定/).length).toBeGreaterThan(1);
     expect(screen.getByLabelText(/进入球队详情: Mexico/)).toHaveAttribute('data-team-name', '墨西哥');
     expect(screen.getAllByText(/球队/).length).toBeGreaterThan(0);
