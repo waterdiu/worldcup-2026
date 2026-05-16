@@ -11035,3 +11035,223 @@
     border-bottom-color: var(--account-lime);
   }
 }
+
+/* Site-wide UI consistency guardrail.
+   Keep every linked page aligned with the homepage/stats editorial data-board language. */
+.world-cup-page {
+  --site-title-size: clamp(28px, 3.2vw, 44px);
+  --site-section-title-size: clamp(18px, 2vw, 24px);
+  --site-card-title-size: clamp(12px, 1.15vw, 16px);
+  --site-body-size: 12px;
+  --site-meta-size: 10px;
+  --site-line-height: 1.45;
+}
+
+.world-cup-page :where(
+  .page-title,
+  .page-intro .section-header h2,
+  .hero h1,
+  .team-detail-hero h1,
+  .match-detail-hero-card h1,
+  .opening-match-detail h1,
+  .admin-hero h1,
+  .qualifier-hero h1,
+  .user-auth-atmos h1
+) {
+  font-family: 'Barlow Condensed', sans-serif !important;
+  font-size: var(--site-title-size) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
+  line-height: 0.95 !important;
+  margin-block: 0.2rem 0.85rem !important;
+}
+
+.world-cup-page :where(
+  .section:not(.page-intro) .section-header h2,
+  .section-title,
+  .city-match-section h3,
+  .stats-section > h2,
+  .admin-section-head h2,
+  .user-section-rule span
+) {
+  font-family: 'Barlow Condensed', sans-serif !important;
+  font-size: var(--site-section-title-size) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+.world-cup-page :where(
+  .feature-card h3,
+  .fixture-card h3,
+  .route-card h3,
+  .group-card h3,
+  .team-card__name-link strong,
+  .team-profile-card h3,
+  .team-people-card h3,
+  .match-detail-card h2,
+  .match-detail-card h3,
+  .match-detail-panel h3,
+  .city-stadium-info-card h3,
+  .qualifier-card h3,
+  .qualifier-coverage-card h3,
+  .qualifier-detail-card h3,
+  .user-center-card h2,
+  .admin-card h2,
+  .admin-card h3,
+  .admin-dashboard-grid h3,
+  .admin-panel__head h3
+) {
+  font-family: 'Barlow Condensed', sans-serif !important;
+  font-size: var(--site-card-title-size) !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  line-height: 1.05 !important;
+  text-transform: uppercase !important;
+}
+
+.world-cup-page :where(
+  p,
+  li,
+  td,
+  .section-header__description,
+  .feature-card p,
+  .fixture-card__venue,
+  .group-card__note,
+  .team-card > small,
+  .team-profile-facts strong,
+  .match-detail-list,
+  .detail-list,
+  .city-stadium-facts__item strong,
+  .qualifier-card p,
+  .qualifier-detail-card p,
+  .user-center-card p,
+  .admin-card p
+) {
+  font-size: var(--site-body-size) !important;
+  line-height: var(--site-line-height) !important;
+}
+
+.world-cup-page :where(
+  small,
+  .section-header__eyebrow,
+  .fixture-card__meta,
+  .fixture-card__odds,
+  .fixture-card__prediction,
+  .team-card__rank,
+  .team-card__meta span,
+  .group-match-card__note,
+  .match-detail-facts span,
+  .match-info-card__fact span,
+  .match-info-card__fact small,
+  .city-stadium-facts__item span,
+  .admin-data-row,
+  .admin-status-chip,
+  .admin-role-chip,
+  .user-match-card__main span,
+  .user-match-card__status,
+  .user-prediction-result em,
+  .qualifier-metadata,
+  .qualifier-map-note
+) {
+  font-family: 'DM Mono', monospace !important;
+  font-size: var(--site-meta-size) !important;
+  line-height: 1.35 !important;
+}
+
+.world-cup-page :where(
+  [class*='card'],
+  [class*='panel'],
+  [class*='chip'],
+  [class*='badge'],
+  [class*='pill'],
+  [class*='avatar'],
+  [class*='button'],
+  button,
+  input,
+  select,
+  textarea,
+  details,
+  summary
+) {
+  border-radius: 0 !important;
+}
+
+.world-cup-page :where(
+  .feature-card,
+  .fixture-card,
+  .route-card,
+  .group-card,
+  .team-card,
+  .match-overview-card,
+  .match-detail-card,
+  .match-detail-panel,
+  .city-stadium-info-card,
+  .city-stadium-hero,
+  .city-detail-card,
+  .team-profile-card,
+  .team-people-card,
+  .world-cup-history-card,
+  .recent-results-card,
+  .qualifier-card,
+  .qualifier-detail-card,
+  .qualifier-map-panel,
+  .confederation-detail-card,
+  .user-center-card,
+  .admin-card,
+  .stats-panel,
+  .stats-section,
+  .admin-record-panel
+) {
+  box-shadow: none !important;
+}
+
+.world-cup-page--finals :where(.page-title, .section-header h2, .team-detail-hero h1) {
+  font-size: var(--site-title-size) !important;
+}
+
+.world-cup-page.world-cup-page .section:not(.page-intro) .section-header h2 {
+  font-size: var(--site-section-title-size) !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1 !important;
+}
+
+.world-cup-page.world-cup-page .page-intro .section-header h2 {
+  font-size: var(--site-title-size) !important;
+  letter-spacing: -0.035em !important;
+  line-height: 0.95 !important;
+}
+
+.world-cup-page.world-cup-page .match-detail-card h1 {
+  font-size: var(--site-section-title-size) !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1 !important;
+}
+
+.world-cup-page.world-cup-page .qualifier-hero h1 {
+  font-size: var(--site-title-size) !important;
+  letter-spacing: -0.035em !important;
+  line-height: 0.95 !important;
+}
+
+.world-cup-page.world-cup-page .qualifier-subpage__masthead h1 {
+  font-size: var(--site-title-size) !important;
+  letter-spacing: -0.035em !important;
+  line-height: 0.95 !important;
+}
+
+.world-cup-page.world-cup-page .qualifier-sec-rule h2 {
+  font-size: var(--site-section-title-size) !important;
+  letter-spacing: 0.02em !important;
+  line-height: 1 !important;
+}
+
+@media (max-width: 640px) {
+  .world-cup-page {
+    --site-title-size: clamp(28px, 9vw, 42px);
+    --site-section-title-size: clamp(18px, 6vw, 26px);
+    --site-card-title-size: 14px;
+    --site-body-size: 12px;
+  }
+}
