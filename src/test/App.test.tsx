@@ -398,11 +398,16 @@ describe('App routes', () => {
     window.history.replaceState({}, '', '/matches');
     const { container } = render(<App />);
 
+    expect(container.querySelector('.world-cup-page--matches-overview')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '赛程总览' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /赛程中心/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/页面按赛事阶段/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/每场比赛一张紧凑卡片/)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '小组赛' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '淘汰赛' })).toBeInTheDocument();
+    expect(screen.queryByText(/左右两侧从 32 强开始/)).not.toBeInTheDocument();
     expect(screen.getAllByTestId('match-overview-group-card')).toHaveLength(72);
+    expect(container.querySelector('[data-nearest-upcoming="true"]')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /打开比赛详情: 捷克 对 墨西哥/ })).toHaveAttribute('href', '/matches/5');
     expect(screen.getByTestId('knockout-bracket-map')).toBeInTheDocument();
     expect(screen.getByTestId('knockout-left-path')).toBeInTheDocument();
