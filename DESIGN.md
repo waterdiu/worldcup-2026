@@ -1,70 +1,918 @@
-# DESIGN.md
+# World Cup 2026 Site Design
 
-## Product Context
-- Product: 2026 World Cup editorial and data site.
-- Audience: Chinese-speaking football fans who want fixtures, host cities, stats, favorites, predictions, and admin tools in one place.
-- Core goal: Make the site feel like a publishable tournament product, not a prototype or generic dashboard.
+## 1. Project Context
 
-## Data Integration
-- 基础世界杯数据不再长期由本仓库单独维护。
-- 当前展示站通过 `scripts/sync_shared_data.mjs` 从共享层 `/Users/chamcham/Documents/AI/CODEX/soccer/football-data-platform` 同步这些模块：
-  - 该脚本已经挂入 `prebuild` 和 `pretest`，默认构建与测试前都会同步一次。
-  - `src/data/finalsMatchResults.ts`
-  - `src/data/finalsDataCoverage.ts`
-  - `src/data/qualifierMatches.ts`
-- 这样页面层仍保持现有 TypeScript import 方式，但数据真相源已经收敛到共享层。
-- 后续如果继续迁移，会优先把更多展示站数据改成“共享层生成 -> 本地 TS 同步”或直接读取共享层产物，而不是继续分叉抓取逻辑。
+### Product
 
-## Style Prompt
+This project is a 2026 FIFA World Cup editorial and data website. It combines:
+
+- Tournament homepage
+- Finals schedule, groups, teams, cities, and match detail pages
+- Qualifier overview, confederation pages, and qualifier match detail pages
+- Finals-only statistics dashboard
+- User center for login, favorites, followed teams, and predictions
+- Admin backend for user, permission, and activity management
+
+The project is a frontend presentation site. It should not become the source of truth for football data. Shared football data belongs in:
+
+```text
+/Users/chamcham/Documents/AI/CODEX/soccer/football-data-platform
+```
+
+### Audience
+
+- Chinese-speaking football fans
+- Users who want to browse World Cup fixtures, groups, teams, host cities, and statistics
+- Logged-in users who want to save favorites, follow teams, and submit match predictions
+- Admin users who need basic account, permission, and activity management
+
+### Core Goal
+
+Make the site feel like a publishable tournament product, not a prototype, generic dashboard, or temporary data demo.
+
+## 2. Scope And Non-Goals
+
+### In Scope
+
+- Display 2026 World Cup finals structure, schedule, groups, teams, cities, and match detail pages.
+- Display World Cup qualifier data by confederation and match.
+- Display finals-only statistical analysis.
+- Load shared runtime data from `football-data-platform`.
+- Fallback to local TypeScript data modules when runtime data cannot be loaded.
+- Support Chinese as the primary interface and English via `/en` route prefix.
+- Support user login through Supabase.
+- Support favorites for teams, matches, and cities.
+- Support user predictions for finals matches.
+- Support admin reads/writes for profiles, roles, page permissions, user-page permissions, favorites, and predictions.
+- Deploy as a static GitHub Pages site.
+
+### Out Of Scope
+
+- Owning raw football data scraping, provider-specific normalization, or canonical schema evolution.
+- Running a backend server for the website.
+- Directly creating Supabase Auth users from the frontend admin page.
+- Paid data-provider ingestion inside this repository.
+- Real-time live match tracking unless the shared data platform provides updated runtime data.
+- Complex betting, odds, xG, tracking, or player-rating calculations in the frontend.
+
+## 3. Current High-Level Architecture
+
+```mermaid
+flowchart TD
+  FDP["football-data-platform\nshared data source"] --> API["Published static runtime API\n/api/worldcup/2026"]
+  FDP --> Sync["scripts/sync_shared_data.mjs\nlocal TS fallback sync"]
+
+  API --> Hook["useWorldCupSiteData()"]
+  Sync --> LocalTS["src/data/*.ts fallback modules"]
+  LocalTS --> Hook
+
+  Hook --> App["src/App.tsx route dispatcher"]
+  App --> Pages["React page components"]
+
+  Supabase["Supabase Auth + Postgres"] --> UserHooks["useAuth / favorites / predictions / admin hooks"]
+  UserHooks --> Pages
+
+  Assets["public/worldcup-assets"] --> Pages
+  Styles["theme.css\nworld-cup-page.css\nstats-v4.css"] --> Pages
+
+  Pages --> Vite["Vite static build"]
+  Vite --> PagesDeploy["GitHub Pages"]
+```
+
+## 4. Runtime Model
+
+The site is a Vite React SPA. It does not use React Router. Route handling is centralized in:
+
+```text
+src/App.tsx
+```
+
+`App.tsx` reads `window.location.pathname`, normalizes locale prefixes, and manually selects the correct page component.
+
+### Runtime Data Priority
+
+The frontend uses this priority:
+
+1. Runtime static JSON API from `football-data-platform`
+2. Local TypeScript fallback modules in `src/data/*.ts`
+
+Runtime load is handled by:
+
+```text
+src/hooks/useWorldCupSiteData.ts
+src/data/siteData.ts
+```
+
+At startup:
+
+1. `useWorldCupSiteData()` initializes with `fallbackWorldCupSiteData`.
+2. It fetches runtime `manifest.json`.
+3. It reads `runtime_contract.preferred_site_url` or `preferred_site_entrypoint`.
+4. It fetches `site/bundle.json`.
+5. It converts runtime JSON into `WorldCupSiteData`.
+6. If runtime fetch fails, the page continues using fallback data and exposes the error on the root element as `data-data-warning`.
+
+## 5. Data Sources And Contracts
+
+### Primary Runtime API
+
+Production default:
+
+```text
+https://waterdiu.github.io/football-data-platform/api/worldcup/2026
+```
+
+Development default:
+
+```text
+/api/worldcup/2026
+```
+
+The local Vite dev server maps `/api` to:
+
+```text
+/Users/chamcham/Documents/AI/CODEX/soccer/football-data-platform/data/public/api
+```
+
+This is implemented in:
+
+```text
+vite.config.ts
+```
+
+### Runtime Entry Points
+
+Expected runtime files:
+
+```text
+manifest.json
+site/bundle.json
+core/bundle.json
+```
+
+The 2026 site currently consumes the page-compatible `site/bundle.json`, not the lower-level `core/bundle.json`.
+
+### Runtime Site Bundle Shape
+
+`src/data/siteData.ts` expects:
+
+```ts
+type RuntimeSiteBundle = {
+  generated_at?: string;
+  datasets?: {
+    groups?: GroupCardData[];
+    group_fixtures?: GroupFixtureData[];
+    group_stage_matches?: GroupStageMatchData[];
+    bracket?: BracketRoundData[];
+    full_schedule?: FullScheduleMatchData[];
+    finals_results?: FinalsMatchResultData[];
+    finals_coverage?: FinalsDataCoverageData;
+    qualifier_matches?: QualifierMatchData[];
+    qualifier_missing_data?: QualifierMissingDataReport;
+    qualifier_source_reports?: QualifierSourceReport[];
+  };
+};
+```
+
+Missing required runtime datasets cause runtime loading to fail and the frontend falls back to local TypeScript data.
+
+### Local Fallback Data
+
+Fallback modules are imported by `src/data/siteData.ts`:
+
+```text
+src/data/groups.ts
+src/data/groupFixtures.ts
+src/data/groupStageMatches.ts
+src/data/bracket.ts
+src/data/fullSchedule.ts
+src/data/finalsMatchResults.ts
+src/data/finalsDataCoverage.ts
+src/data/qualifierMatches.ts
+```
+
+These files should be treated as fallback/generated data, not long-term manual truth.
+
+### Shared Data Sync
+
+The script:
+
+```text
+scripts/sync_shared_data.mjs
+```
+
+reads these files from `football-data-platform/data/public`:
+
+```text
+worldcup-site-groups.json
+worldcup-site-group-fixtures.json
+worldcup-site-group-stage-matches.json
+worldcup-site-bracket.json
+worldcup-site-full-schedule.json
+worldcup-site-finals-results.json
+worldcup-site-finals-coverage.json
+worldcup-site-qualifier-matches.json
+```
+
+and writes the fallback TypeScript modules above.
+
+Important: the current `package.json` does not run this script in `pretest` or `prebuild`. If freshness is required before tests/builds, run:
+
+```bash
+npm run sync:shared-data
+npm test
+npm run build
+```
+
+Runtime data freshness is controlled by the published `football-data-platform` API, not by this local sync script.
+
+## 6. Core Domain Entities
+
+The main TypeScript contracts live in:
+
+```text
+src/types/tournament.ts
+```
+
+### Tournament Metadata
+
+`TournamentMeta` stores high-level finals metadata:
+
+- name
+- year
+- hosts
+- host city names
+- start/final dates
+- team/group/match counts
+- opening match label
+- draw date label
+
+### Groups
+
+`GroupCardData`:
+
+- group id
+- draw status
+- draw note
+- teams
+
+`GroupTeamData`:
+
+- team name
+- played/won/drawn/lost
+- goals for/against
+- points
+
+### Fixtures
+
+`GroupFixtureData`:
+
+- match id
+- group id
+- round/date/venue
+- home/away teams
+- optional score
+- prediction display fields
+
+`GroupStageMatchData` extends group fixture with:
+
+- matchday label
+
+`FullScheduleMatchData`:
+
+- full 104-match schedule row
+- Beijing time label
+- city
+- venue
+- title
+
+### Knockout Bracket
+
+`BracketRoundData`:
+
+- round label
+- bracket matches
+
+`BracketMatchData`:
+
+- id
+- date
+- home/away placeholders
+- venue
+- prediction status
+
+### Finals Results And Statistics
+
+`FinalsMatchResultData`:
+
+- match id
+- group or knockout stage type
+- status
+- score fields
+- extra-time / penalty flags
+- goal events
+- source and update label
+
+`FinalsDataCoverageData`:
+
+- coverage timestamp
+- score coverage percent
+- goal-event coverage percent
+- issue count
+
+### Qualifier Matches
+
+`QualifierMatchData`:
+
+- confederation
+- stage
+- date
+- teams and score
+- optional venue
+- optional stats
+- optional events
+- optional lineups
+- optional player ratings
+- missing-data list
+
+Qualifier data is intentionally tolerant of missing fields because free and partial sources often do not provide full stats, lineups, substitutions, cards, or player ratings.
+
+## 7. Routing And Page Relationship
+
+Routes are manually resolved in `src/App.tsx`.
+
+```mermaid
+flowchart TD
+  Nav["PageNav"] --> Home["/"]
+  Nav --> Qualifiers["/qualifiers"]
+  Nav --> Stats["/stats"]
+  Nav --> Me["/me"]
+  Nav --> Admin["/admin"]
+
+  Home --> Groups["/groups"]
+  Home --> Matches["/matches"]
+  Home --> Cities["/cities"]
+  Home --> Teams["/teams"]
+
+  Groups --> GroupDetail["/groups/:groupId"]
+  GroupDetail --> TeamDetail["/teams/:teamId"]
+  GroupDetail --> MatchDetail["/matches/:matchId"]
+
+  Teams --> TeamDetail
+  TeamDetail --> MatchDetail
+
+  Matches --> MatchDetail
+  Matches --> KnockoutDetail["/matches/:knockoutId"]
+  KnockoutDetail --> Matches
+
+  Cities --> CityDetail["/cities/:cityId"]
+  CityDetail --> MatchDetail
+
+  Qualifiers --> Confederation["/qualifiers/:confederationId"]
+  Confederation --> QualifierMatch["/qualifiers/matches/:matchId"]
+  QualifierMatch --> Confederation
+
+  Me --> MatchDetail
+  Me --> TeamDetail
+  Me --> CityDetail
+```
+
+### Current Page Components
+
+| Route | Component | Purpose |
+|---|---|---|
+| `/` | `HomePage` | Main landing page, hero, KPIs, groups, schedule, cities, teams |
+| `/groups` | `GroupsPage` | Group list and standings shell |
+| `/groups/:groupId` | `GroupDetailPage` | One group, teams, group fixtures |
+| `/teams` | `TeamsPage` | 48-team overview |
+| `/teams/:teamId` | `TeamDetailPage` | Team profile, fixtures, squad/history content |
+| `/matches` | `MatchesPage` | Group fixtures and knockout bracket |
+| `/matches/:matchId` | `MatchDetailPage` | Group or knockout match detail |
+| `/cities` | `CitiesPage` | Host city map and city list |
+| `/cities/:cityId` | `CityDetailPage` | City/stadium detail and hosted matches |
+| `/qualifiers` | `QualifiersOverviewPage` | Qualifier dashboard by confederation |
+| `/qualifiers/:confederationId` | `QualifierConfederationPage` | Confederation detail, qualified teams, match list |
+| `/qualifiers/matches/:matchId` | `QualifierMatchDetailPage` | Qualifier match stats/events/missing data |
+| `/stats` | `StatsPageV4` | Finals-only stats dashboard |
+| `/me` | `UserCenterPage` | Auth, profile, favorites, followed teams, predictions |
+| `/admin` | `AdminPage` | Admin dashboard, users, records, permissions |
+
+### Locale Routing
+
+Locale support is implemented in:
+
+```text
+src/i18n/content.ts
+```
+
+Rules:
+
+- Chinese is the default route namespace.
+- English routes use `/en`.
+- `/zh` is normalized back to the default Chinese route.
+- `localizePath()` prefixes links when locale is English.
+- `stripAppBasePath()` supports GitHub Pages base path.
+
+## 8. Page Responsibilities
+
+### Home Page
+
+`HomePage` is the product entry.
+
+Responsibilities:
+
+- Show rotating hero slides.
+- Link promo poster/video and opening match.
+- Show four KPI cards: teams, matches, cities, groups.
+- Show group cards with standings columns.
+- Show schedule controls and fixtures.
+- Show city cards with city posters.
+- Show team grid.
+
+Data:
+
+- `getHomepageHeroSlides()`
+- `fullSchedule`
+- `groups`
+- `groupFixtures`
+- `tournamentMeta`
+
+### Finals Pages
+
+Finals pages include:
+
+- groups
+- teams
+- matches
+- cities
+- match detail
+
+They should share the `.world-cup-page--finals` visual system.
+
+### Qualifier Pages
+
+Qualifier pages include:
+
+- overview map/dashboard
+- confederation detail
+- qualifier match detail
+
+They use `qualifierMatches`, `confederations`, and source/missing-data reports. These pages must expose missing-data status clearly because qualifier data coverage is uneven.
+
+### Statistics Page
+
+`StatsPageV4` is finals-only.
+
+It must not include city/stadium/travel content. It should focus on:
+
+- match counts
+- goals
+- score distribution
+- team attack/defense
+- phase comparison
+- goal timing when data exists
+- coverage status
+
+Current page can use simulated or placeholder finals results before 2026 matches complete, but the data source and coverage state must be clear.
+
+### User Center
+
+`UserCenterPage` handles:
+
+- Supabase login
+- Google login
+- email/password login
+- email signup
+- profile display/update
+- favorites
+- followed teams
+- predictions
+- leaderboard-style user summary UI
+
+Favorites can target:
+
+- `team`
+- `match`
+- `city`
+
+Predictions target finals match ids.
+
+### Admin Page
+
+`AdminPage` handles:
+
+- admin login gate
+- user profile table
+- role management
+- page permission management
+- user-page permission management
+- favorites and prediction records
+- summary statistics
+
+The frontend cannot directly create real Supabase Auth users. Creating users requires Supabase Auth admin APIs, an Edge Function, or another trusted backend.
+
+## 9. User And Permission Architecture
+
+### Supabase Client
+
+Client setup:
+
+```text
+src/lib/supabase.ts
+```
+
+Required environment variables:
+
+```text
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
+
+The frontend uses Supabase public anon key with Row Level Security.
+
+### Auth Hook
+
+`src/hooks/useAuth.ts` provides:
+
+- current user
+- loading state
+- auth message
+- Google OAuth
+- email/password sign-in
+- email signup
+- sign-out
+
+OAuth redirect URL is generated from current path and Vite base path so GitHub Pages subpath deployments keep users on the expected page.
+
+### Database Tables
+
+Schema baseline:
+
+```text
+docs/supabase-user-schema.sql
+```
+
+Tables:
+
+| Table | Purpose |
+|---|---|
+| `profiles` | User profile, email, display name, avatar, status |
+| `favorites` | User favorites for teams, matches, cities |
+| `predictions` | User match predictions |
+| `user_roles` | Admin role assignment |
+| `page_permissions` | Page-level permission configuration |
+| `user_page_permissions` | User-specific page overrides |
+| `user_activity_events` | Optional user/admin activity logging |
+
+### Security Model
+
+- RLS must remain enabled.
+- Users can read/write their own favorites and predictions.
+- Users can read/update their own profile.
+- Admins can read broader profile/favorites/prediction/permission data.
+- Admin detection uses `user_roles.role = 'admin'`.
+- `useAdminStatus()` caches admin status in `localStorage` only as a UI optimization. Real access control must still rely on Supabase RLS.
+
+### Page Permissions
+
+The current schema supports page permissions, but route enforcement is not yet a full frontend guard for every route. Treat `page_permissions` and `user_page_permissions` as management data until explicit route guards are implemented.
+
+Default page permissions inserted by SQL:
+
+- public: `/`, `/qualifiers`, `/stats`, `/groups`, `/matches`, `/teams`, `/cities`
+- logged-in: `/me`
+- admin-only: `/admin`
+
+## 10. Assets And Media
+
+Assets live under:
+
+```text
+public/worldcup-assets
+```
+
+Important asset groups:
+
+| Path | Purpose |
+|---|---|
+| `2026worldcup.jpg` | homepage promo poster source |
+| `2026worldcup.mp4` | homepage promo video |
+| `optimized/` | optimized homepage and opening-match images |
+| `matchpost/` | manually generated match posters |
+| `cities/` | city card images |
+| `cities-normalized/` | normalized city images |
+| `stadiums/` | stadium external photos |
+| `maps/` | map reference assets |
+| `cities-map-stage.png` | rendered North America host city map |
+| `home/daily-hero.json` | generated daily hero metadata |
+
+### Daily Hero Workflow
+
+Documented in:
+
+```text
+docs/daily-home-hero.md
+```
+
+Manual generated posters are placed in:
+
+```text
+public/worldcup-assets/home/manual/
+```
+
+Then run:
+
+```bash
+npm run generate:daily-hero -- --date 2026-06-12
+```
+
+The script chooses the next day's spotlight match, writes optimized outputs, and updates:
+
+```text
+public/worldcup-assets/home/daily-hero.json
+src/data/dailyHero.json
+```
+
+## 11. Visual System
+
+### Style Prompt
+
 2026 host-nations tournament poster on a dark stage: deep midnight field, saturated Canada red / Mexico green / USA navy shards, paper-cut geometry, sweeping motion ribbons, and monumental event typography.
 
-## Visual Direction
-- Overall mood: celebratory, sharp, graphic, official, high-energy, night-stage.
-- Design keywords: paper-cut, host nation tricolor, stadium icon, motion ribbon, confetti shard, giant scoreboard type.
-- Memorable element: a dark stage canvas with red/green/blue paper-cut fragments and data panels that feel like official tournament boards.
-- Avoid: generic dark corporate dashboards, glassmorphism, purple SaaS gradients, muted corporate colors, overly soft rounded-card systems.
+### Visual Direction
 
-## Colors
-- `--bg`: deep midnight stage.
-- `--surface`: dark panel with subtle grain.
-- `--surface-strong`: slightly brighter board panel for contrast.
-- `--text`: near-white with a cool cast.
-- `--muted`: steel-gray supporting copy.
-- `--accent`: Mexico green (primary).
-- `--accent-2`: Canada red (secondary).
-- `--accent-3`: warm sun orange (tertiary).
-- `--border`: cool, low-contrast stroke.
+- Mood: celebratory, sharp, graphic, official, high-energy, night-stage.
+- Keywords: paper-cut, host nation tricolor, stadium icon, motion ribbon, confetti shard, giant scoreboard type.
+- Memorable element: dark stage canvas with red/green/blue fragments and data panels like official tournament boards.
+- Avoid: generic dark corporate dashboards, glassmorphism, purple SaaS gradients, muted corporate colors, soft rounded-card systems.
 
-## Typography
-- Display font: `Archivo Black` for hero titles, page headings, and decisive labels.
-- Body font: `Noto Sans SC` for Chinese readability and UI copy.
-- Mono font: `JetBrains Mono` for stats, IDs, schedule metadata, and admin labels.
-- Heading style: huge, poster-like, navy, tight line-height, high contrast.
-- Body style: calm, readable, not over-decorated.
+### CSS Files
 
-## Layout
-- Use strong poster sections, large paper panels, and angular accent strips.
-- Keep navigation compact and persistent.
-- Data pages should feel like official printed tournament statistic boards, not spreadsheets.
-- Admin pages should be dense but polished, with rows that scan cleanly inside the same poster system.
-- Linked pages must keep the same editorial data-board scale: page titles around the shared `--site-title-size`, section titles around `--site-section-title-size`, and card titles around `--site-card-title-size`.
-- Avoid returning to rounded SaaS cards on child pages. Functional blocks should use hard-edged panels, thin borders, and restrained shadows so homepage, finals pages, qualifiers, stats, user, and admin remain visually connected.
+```text
+src/styles/theme.css
+src/styles/world-cup-page.css
+src/styles/stats-v4.css
+src/styles/global.css
+```
 
-## Motion
-- Motion personality: quick paper-card lift, ribbon sweep, confetti snap.
-- Use subtle slide/fade entrance, hover lift, and directional underline movement.
-- Avoid constant decorative motion.
-- Respect `prefers-reduced-motion`.
+`world-cup-page.css` is the primary site-level visual system. It includes a site-wide UI consistency guardrail near the bottom of the file.
 
-## Components
-- Buttons: bold pill controls with red/green/blue states.
-- Cards: white paper panel, navy stroke, saturated accent corner.
-- Navigation: compact poster-ticket capsule.
-- Data display: mono labels, bold navy numeric hierarchy.
-- Forms: clear focus rings and compact controls.
+### Page Theme Classes
 
-## What NOT To Do
-- Do not use generic `Inter + purple gradient + white SaaS cards`.
-- Do not make sports pages look like a dark corporate admin template.
-- Do not make every card the same visual weight.
-- Do not hide data density behind oversized empty space.
+`App.tsx` assigns these classes:
+
+- `world-cup-page--finals` for homepage and finals-linked pages
+- `world-cup-page--qualifiers` for qualifier pages
+- `world-cup-page--stats` for stats page
+
+### Typography And Scale
+
+Current linked-page consistency variables:
+
+```css
+--site-title-size
+--site-section-title-size
+--site-card-title-size
+--site-body-size
+--site-meta-size
+--site-line-height
+```
+
+Rules:
+
+- Page titles use the shared title scale.
+- Section titles use the shared section scale.
+- Card and row titles use the shared card title scale.
+- Metadata uses mono type.
+- Child pages must not drift into oversized headings.
+
+### Shape Language
+
+The current design direction is hard-edged editorial data-board style.
+
+Rules:
+
+- Avoid rounded SaaS cards.
+- Prefer 1px borders and hard-edged panels.
+- Use restrained shadow.
+- Use green accent consistently for primary data highlights.
+- User/admin pages may use dense panels, but must stay visually connected to stats/finals pages.
+
+## 12. Build, Test, And Deployment
+
+### Local Development
+
+Default port:
+
+```text
+5174
+```
+
+Run:
+
+```bash
+npm install
+npm run dev
+```
+
+The Vite server uses `strictPort: true` to avoid conflicts with other local projects.
+
+### Tests
+
+Run:
+
+```bash
+npm test
+```
+
+Current test coverage includes:
+
+- route rendering
+- data integrity
+- finals fetch behavior
+- layout tests
+
+### Build
+
+Run:
+
+```bash
+npm run build
+```
+
+Build output:
+
+```text
+dist/
+dist/index.html
+dist/404.html
+```
+
+`404.html` is copied from `index.html` for GitHub Pages SPA fallback.
+
+### GitHub Pages Deployment
+
+Workflow:
+
+```text
+.github/workflows/deploy-pages.yml
+```
+
+Triggers:
+
+- push to `main`
+- manual `workflow_dispatch`
+- scheduled every 30 minutes
+
+Build environment:
+
+```text
+VITE_GITHUB_PAGES=true
+VITE_WORLDCUP_DATA_API_BASE
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
+
+The scheduled deployment does not itself update `football-data-platform`; it rebuilds/redeploys this site. Runtime JSON freshness depends on the data platform deployment.
+
+## 13. External Dependencies
+
+### Runtime Dependencies
+
+| Package | Purpose |
+|---|---|
+| `react` | UI |
+| `react-dom` | UI rendering |
+| `@supabase/supabase-js` | Auth and database access |
+| `chart.js` | Chart rendering |
+
+### Dev Dependencies
+
+| Package | Purpose |
+|---|---|
+| `vite` | dev/build server |
+| `typescript` | static typing |
+| `vitest` | tests |
+| `@testing-library/react` | component tests |
+| `jsdom` | test DOM |
+| `@vitejs/plugin-react` | Vite React support |
+
+### External Services
+
+| Service | Purpose |
+|---|---|
+| GitHub Pages | static hosting |
+| GitHub Actions | deploy workflow |
+| Supabase | auth, user data, admin data |
+| football-data-platform GitHub Pages | runtime football data API |
+
+## 14. Extension Strategy
+
+### Adding A New Page
+
+1. Add the component in `src/pages`.
+2. Add route handling in `src/App.tsx`.
+3. Add navigation links only if it is a top-level page.
+4. Add data contracts in `src/types/tournament.ts` if the page requires new structured data.
+5. If data is shared/canonical, add it first in `football-data-platform`, then consume it here.
+6. Add tests in `src/test/App.test.tsx` or a focused test file.
+7. Update this `DESIGN.md`.
+
+### Adding New Shared Data
+
+Preferred path:
+
+1. Define source and schema in `football-data-platform`.
+2. Publish into its runtime API.
+3. Add TypeScript contract in this project only as a consumer shape.
+4. Update `src/data/siteData.ts` loader if the runtime bundle adds a new dataset.
+5. Optionally update `scripts/sync_shared_data.mjs` for fallback generation.
+6. Add fallback data only as generated compatibility, not as the canonical source.
+
+### Adding New User Features
+
+1. Update Supabase SQL schema and RLS policies.
+2. Add or update hooks under `src/hooks`.
+3. Keep frontend writes scoped to current user unless admin-only.
+4. Update admin views if admins need visibility.
+5. Update docs and tests.
+
+### Adding New Visual Patterns
+
+1. Reuse the current editorial data-board language.
+2. Add tokens or shared rules in `world-cup-page.css`.
+3. Avoid page-only styling that breaks global typography and card scale.
+4. Use Playwright/browser checks for representative pages and child pages.
+
+## 15. Key Constraints And Risks
+
+### Data Freshness
+
+Runtime freshness depends on `football-data-platform` publishing current JSON. Local fallback sync does not guarantee users see fresh data.
+
+### Static Hosting
+
+The site is static. Anything requiring privileged backend access cannot be safely implemented directly in this repository.
+
+### Supabase Admin Limits
+
+Frontend admin pages can manage rows allowed by RLS, but cannot securely create Supabase Auth users without a backend or Edge Function.
+
+### Route Enforcement
+
+Page permission data exists, but full route-level enforcement should be explicitly implemented before treating it as access control.
+
+### Bundle Size
+
+The current Vite build warns about large chunks. Future work should consider route-level code splitting if load performance becomes a problem.
+
+### Visual Drift
+
+The site has many pages and historical CSS. New work must verify linked child pages, not only the homepage.
+
+## 16. Verification Checklist
+
+Before completing meaningful changes:
+
+- Run `npm test`.
+- Run `npm run build`.
+- Browser-check representative routes:
+  - `/`
+  - `/groups`
+  - `/groups/A`
+  - `/teams`
+  - `/teams/Mexico`
+  - `/matches`
+  - `/matches/1`
+  - `/matches/73`
+  - `/cities`
+  - `/cities/Dallas`
+  - `/qualifiers`
+  - `/qualifiers/afc`
+  - `/qualifiers/matches/<id>`
+  - `/stats`
+  - `/me`
+  - `/admin`
+- Check no unintended horizontal overflow.
+- Check page title, section title, and card title scale.
+- Check rounded-card regressions.
+- Check Supabase-authenticated states when changing user/admin pages.
+- Check runtime data fallback behavior when changing data loading.
+
+## 17. Documentation Maintenance Rules
+
+This file is the main design baseline for the `worldcup/2026` project.
+
+Update this file when changing:
+
+- page architecture
+- route structure
+- data source or runtime API contract
+- local fallback data strategy
+- Supabase schema or RLS assumptions
+- user/admin feature boundaries
+- deployment or port behavior
+- visual system rules
+- external dependencies
+
+Small implementation-only changes can leave this file unchanged, but the final delivery note must say why the design baseline was not affected.
