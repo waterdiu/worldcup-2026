@@ -201,7 +201,13 @@ The script:
 scripts/sync_shared_data.mjs
 ```
 
-reads these files from `football-data-platform/data/public`:
+By default it reads from a sibling `football-data-platform/data/public` directory. CI or non-standard local layouts can override the platform location with:
+
+```text
+FOOTBALL_DATA_PLATFORM_DIR=/absolute/path/to/football-data-platform
+```
+
+The sync script reads these data files:
 
 ```text
 worldcup-site-groups.json
@@ -216,15 +222,14 @@ worldcup-site-qualifier-matches.json
 
 and writes the fallback TypeScript modules above.
 
-Important: the current `package.json` does not run this script in `pretest` or `prebuild`. If freshness is required before tests/builds, run:
+`package.json` runs this script in both `pretest` and `prebuild`:
 
 ```bash
-npm run sync:shared-data
 npm test
 npm run build
 ```
 
-Runtime data freshness is controlled by the published `football-data-platform` API, not by this local sync script.
+This means tests and builds refresh local fallback data first, preventing stale TypeScript compatibility data from being published. GitHub Actions checks out `waterdiu/football-data-platform` and points `FOOTBALL_DATA_PLATFORM_DIR` at that checkout. User-facing data freshness is still primarily controlled by the published `football-data-platform` API; local fallback data is used when the runtime API is unavailable.
 
 ## 6. Core Domain Entities
 
@@ -875,7 +880,7 @@ Preferred path:
 
 ### Data Freshness
 
-Runtime freshness depends on `football-data-platform` publishing current JSON. Local fallback sync does not guarantee users see fresh data.
+Runtime freshness depends on `football-data-platform` publishing current JSON. The site now runs `sync:shared-data` before tests and builds so published bundles do not contain stale TypeScript fallback data. This sync protects fallback compatibility, while normal user visits still prefer the runtime API.
 
 ### Static Hosting
 
