@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
-const sharedDir = path.resolve(rootDir, '..', '..', 'football-data-platform');
+const sharedDir = process.env.FOOTBALL_DATA_PLATFORM_DIR
+  ? path.resolve(process.env.FOOTBALL_DATA_PLATFORM_DIR)
+  : path.resolve(rootDir, '..', '..', 'football-data-platform');
 
 const sharedPublicDir = path.join(sharedDir, 'data', 'public');
 const groupsPath = path.join(rootDir, 'src', 'data', 'groups.ts');
