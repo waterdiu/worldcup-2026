@@ -413,6 +413,14 @@ Rules:
 - `localizePath()` prefixes links when locale is English.
 - `stripAppBasePath()` supports GitHub Pages base path.
 
+### Return Navigation Rules
+
+Every non-home page must expose a clear return path:
+
+- Top-level list or feature pages use the `page-return-bar` in `App.tsx` to return home, including groups, teams, matches, cities, qualifiers, stats, user center, and admin.
+- Detail pages provide an in-page return button to their parent list, such as team detail back to teams, match detail back to matches, city detail back to cities, and qualifier match detail back to the relevant confederation page.
+- New pages must define their parent route before implementation; do not rely only on the browser back button or top brand link.
+
 ## 8. Page Responsibilities
 
 ### Home Page
@@ -697,6 +705,7 @@ Rules:
 - Use restrained shadow.
 - Use green accent consistently for primary data highlights.
 - User/admin pages may use dense panels, but must stay visually connected to stats/finals pages.
+- Team detail, match detail, city detail, qualifier detail, and other child pages follow the same hard-edge rule. Rows, personnel tables, history records, recent form items, permission controls, and metric items must not reintroduce rounded-card styling even when their class names do not include `card` or `panel`.
 
 ## 12. Build, Test, And Deployment
 
