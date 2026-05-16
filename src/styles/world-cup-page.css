@@ -9262,6 +9262,95 @@
   border-radius: 0;
 }
 
+.world-cup-page--matches-overview::before,
+.world-cup-page--matches-overview::after {
+  content: none;
+  display: none;
+}
+
+.world-cup-page--matches-overview .page-intro,
+.world-cup-page--matches-overview .match-overview-section,
+.world-cup-page--matches-overview #knockout {
+  max-width: 1336px;
+}
+
+.world-cup-page--matches-overview .matches-page-intro {
+  gap: 18px;
+  padding-bottom: 0;
+}
+
+.world-cup-page--matches-overview .section-header {
+  margin-bottom: 0;
+}
+
+.world-cup-page--matches-overview .section-header h2 {
+  margin: 0;
+}
+
+.world-cup-page--matches-overview .matches-summary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.world-cup-page--matches-overview .matches-summary-grid .feature-card {
+  cursor: default;
+  min-height: 0;
+  padding: 18px 20px;
+}
+
+.world-cup-page--matches-overview .matches-summary-grid .feature-card:hover {
+  background: #161410;
+  border-color: #38342a;
+  transform: none;
+}
+
+.world-cup-page--matches-overview .match-overview-list {
+  background: #38342a;
+  border: 1px solid #38342a;
+  gap: 1px;
+  max-height: 688px;
+  overflow-y: auto;
+  padding: 0;
+  scrollbar-color: #c8f230 #161410;
+  scrollbar-width: thin;
+}
+
+.world-cup-page--matches-overview .match-overview-card {
+  background: #161410;
+  border: 0;
+  box-shadow: none;
+  min-height: 58px;
+  padding: 12px 16px;
+}
+
+.world-cup-page--matches-overview .match-overview-card[data-nearest-upcoming='true'] {
+  box-shadow: inset 3px 0 0 #c8f230;
+}
+
+.world-cup-page--matches-overview .knockout-map {
+  --bracket-card-width: 118px;
+  --bracket-connector-length: 8px;
+  grid-template-columns: max-content calc(var(--bracket-card-width) + 48px) max-content;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.world-cup-page--matches-overview .knockout-final-path {
+  background: #161410;
+  border-color: #38342a;
+  padding: 12px;
+  width: calc(var(--bracket-card-width) + 48px);
+}
+
+.world-cup-page--matches-overview .bracket-match {
+  background: #161410;
+  border-color: #38342a;
+}
+
+.world-cup-page--matches-overview .bracket-match--link:hover,
+.world-cup-page--matches-overview .bracket-match--link:focus-visible {
+  background: #1e1c17;
+}
+
 .world-cup-page--finals .cities-floating-poster img,
 .world-cup-page--finals .city-detail-card img,
 .world-cup-page--finals .city-stadium-hero img {
@@ -11577,5 +11666,13 @@
   .world-cup-page--finals .recent-match-row,
   .world-cup-page--finals .team-match-card--compact {
     grid-template-columns: 1fr;
+  }
+
+  .world-cup-page--matches-overview .matches-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .world-cup-page--matches-overview .match-overview-list {
+    max-height: 640px;
   }
 }
