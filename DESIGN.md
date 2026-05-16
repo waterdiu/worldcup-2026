@@ -467,6 +467,14 @@ Team detail page rules:
 - Qualification and recent-match rows should link to match detail only when an internal match id exists. If the data is outside the current site contract, show it only as a result summary.
 - Team detail pages must not use legacy blue backgrounds or blue gradient panels. History, qualification, recent form, fixtures, and personnel lists must use the current hard-edge dark editorial styling.
 
+Matches overview page rules:
+
+- The page only keeps required titles such as "Schedule Overview", "Group Stage", and "Knockout Stage"; explanatory description copy is not shown.
+- Phase metric boxes show match counts only and must not look clickable or hover-interactive.
+- The group-stage list has a fixed internal scroll area and initializes to the nearest upcoming match by current date.
+- The knockout bracket width must stay within the standard content width and not exceed the group-stage or metric sections.
+- The matches overview page does not use decorative background imagery or legacy blue gradient panels.
+
 ### Qualifier Pages
 
 Qualifier pages include:
