@@ -201,7 +201,13 @@ src/data/qualifierMatches.ts
 scripts/sync_shared_data.mjs
 ```
 
-从 `football-data-platform/data/public` 读取这些文件：
+默认从本项目同级目录的 `football-data-platform/data/public` 读取这些文件。CI 或其他目录结构可以通过环境变量指定数据层项目位置：
+
+```text
+FOOTBALL_DATA_PLATFORM_DIR=/absolute/path/to/football-data-platform
+```
+
+同步脚本读取的数据文件：
 
 ```text
 worldcup-site-groups.json
@@ -216,15 +222,14 @@ worldcup-site-qualifier-matches.json
 
 然后写入上面列出的本地 TypeScript fallback 模块。
 
-重要说明：当前 `package.json` 没有把这个同步脚本挂到 `pretest` 或 `prebuild`。如果需要在测试或构建前刷新本地 fallback 数据，需要手动执行：
+`package.json` 已将同步脚本挂到 `pretest` 和 `prebuild`：
 
 ```bash
-npm run sync:shared-data
 npm test
 npm run build
 ```
 
-用户实际访问时的数据及时性由已发布的 `football-data-platform` API 决定，不由本地同步脚本决定。
+这意味着测试和构建都会先刷新本地 fallback 数据，避免发布旧的 TypeScript 兼容数据。GitHub Actions 会先 checkout `waterdiu/football-data-platform`，再通过 `FOOTBALL_DATA_PLATFORM_DIR` 指向该目录。用户实际访问时的数据及时性仍主要由已发布的 `football-data-platform` API 决定，本地 fallback 负责运行时 API 不可用时的兼容显示。
 
 ## 6. 核心领域实体
 
@@ -875,7 +880,7 @@ VITE_SUPABASE_ANON_KEY
 
 ### 数据新鲜度
 
-运行时数据新鲜度取决于 `football-data-platform` 是否发布了最新 JSON。本地 fallback 同步不保证用户看到最新数据。
+运行时数据新鲜度取决于 `football-data-platform` 是否发布了最新 JSON。展示站测试和构建前会自动执行 `sync:shared-data` 刷新本地 fallback，避免发布旧的兼容 TS 数据；但用户正常访问时仍优先读取运行时 API。
 
 ### 静态托管限制
 
