@@ -47,6 +47,8 @@
 - Keep navigation compact and persistent.
 - Data pages should feel like official printed tournament statistic boards, not spreadsheets.
 - Admin pages should be dense but polished, with rows that scan cleanly inside the same poster system.
+- Linked pages must keep the same editorial data-board scale: page titles around the shared `--site-title-size`, section titles around `--site-section-title-size`, and card titles around `--site-card-title-size`.
+- Avoid returning to rounded SaaS cards on child pages. Functional blocks should use hard-edged panels, thin borders, and restrained shadows so homepage, finals pages, qualifiers, stats, user, and admin remain visually connected.
 
 ## Motion
 - Motion personality: quick paper-card lift, ribbon sweep, confetti snap.
