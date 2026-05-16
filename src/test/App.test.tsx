@@ -338,7 +338,8 @@ describe('App routes', () => {
 
     expect(screen.getAllByRole('heading', { name: /墨西哥/ }).length).toBeGreaterThan(0);
     expect(screen.getByTestId('team-detail-stack')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /球队基本信息/ })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /球队基本信息/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/球队基本信息/)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /球队基本介绍/ })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /历史战绩/ })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /预选赛与近期比赛/ })).toBeInTheDocument();
@@ -351,7 +352,7 @@ describe('App routes', () => {
     expect(screen.getByText(/墨西哥共参加世界杯 18 次/)).toBeInTheDocument();
     expect(screen.getByText(/总战绩：60 场 17 胜 15 平 28 负，进 62 球失 101 球/)).toBeInTheDocument();
     expect(screen.getByText(/最佳成绩是 1970 年和 1986 年两次进入八强/)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /1970 墨西哥世界杯/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /墨西哥世界杯（1970）/ })).toBeInTheDocument();
     expect(screen.getAllByTestId('world-cup-history-toggle')).toHaveLength(17);
     expect(screen.queryByText(/墨西哥 4-0 萨尔瓦多/)).not.toBeInTheDocument();
 
@@ -359,9 +360,9 @@ describe('App routes', () => {
 
     expect(screen.getByText(/墨西哥 4-0 萨尔瓦多/)).toBeInTheDocument();
     expect(screen.getAllByTestId('world-cup-match-row')).toHaveLength(4);
-    expect(screen.getByRole('heading', { name: /1986 墨西哥世界杯/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /墨西哥世界杯（1986）/ })).toBeInTheDocument();
     expect(screen.queryByText(/墨西哥 0-0 西德（点球 1-4）/)).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /2022 卡塔尔世界杯/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /卡塔尔世界杯（2022）/ })).toBeInTheDocument();
     expect(screen.queryByText(/墨西哥 2-1 沙特阿拉伯/)).not.toBeInTheDocument();
     expect(screen.getByTestId('recent-results-card')).toBeInTheDocument();
     expect(screen.getAllByText(/东道主自动晋级/).length).toBeGreaterThan(0);
@@ -373,14 +374,13 @@ describe('App routes', () => {
     expect(recentRows[3]).toHaveTextContent('2025 美金杯小组赛');
     expect(screen.getAllByText(/主教练/).length).toBeGreaterThan(0);
     expect(screen.getByText(/Javier Aguirre/)).toBeInTheDocument();
-    expect(screen.getByText(/官方最终名单待公布/)).toBeInTheDocument();
-    expect(screen.getByText(/FIFA 计划于 2026 年 6 月 2 日确认/)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /人员名单/ })).toBeInTheDocument();
+    expect(screen.getByText(/最终名单确认前，国家队可以公布候选或训练名单/)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /人员名单/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /核心球员观察/ })).not.toBeInTheDocument();
     expect(screen.getAllByTestId('team-person-row')).toHaveLength(7);
     expect(screen.getByText(/Santiago Gimenez/)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Edson Alvarez/ })).toBeInTheDocument();
-    expect(screen.getAllByText(/名单状态：待官方最终确认/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/待确认/).length).toBeGreaterThan(0);
     expect(screen.getAllByTestId('team-match-card')).toHaveLength(3);
     expect(screen.getByText(/🇲🇽 墨西哥 对 🇿🇦 南非/)).toBeInTheDocument();
     expect(screen.getByText(/🇲🇽 墨西哥 对 🇰🇷 韩国/)).toBeInTheDocument();
