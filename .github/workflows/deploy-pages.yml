@@ -23,6 +23,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout football data platform
+        uses: actions/checkout@v4
+        with:
+          repository: waterdiu/football-data-platform
+          path: football-data-platform
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -33,10 +39,13 @@ jobs:
         run: npm ci
 
       - name: Run tests
+        env:
+          FOOTBALL_DATA_PLATFORM_DIR: ${{ github.workspace }}/football-data-platform
         run: npm test
 
       - name: Build
         env:
+          FOOTBALL_DATA_PLATFORM_DIR: ${{ github.workspace }}/football-data-platform
           VITE_GITHUB_PAGES: "true"
           VITE_WORLDCUP_DATA_API_BASE: ${{ vars.VITE_WORLDCUP_DATA_API_BASE }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
