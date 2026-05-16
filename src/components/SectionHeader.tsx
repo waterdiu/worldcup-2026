@@ -1,5 +1,5 @@
 interface SectionHeaderProps {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description?: string;
 }
@@ -7,7 +7,7 @@ interface SectionHeaderProps {
 export function SectionHeader({ eyebrow, title, description }: SectionHeaderProps) {
   return (
     <header className="section-header">
-      <p className="section-header__eyebrow">{eyebrow}</p>
+      {eyebrow ? <p className="section-header__eyebrow">{eyebrow}</p> : null}
       <h2>{title}</h2>
       {description ? <p className="section-header__description">{description}</p> : null}
     </header>
