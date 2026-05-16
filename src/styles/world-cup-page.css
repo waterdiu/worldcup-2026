@@ -11101,7 +11101,9 @@
   .admin-card h2,
   .admin-card h3,
   .admin-dashboard-grid h3,
-  .admin-panel__head h3
+  .admin-panel__head h3,
+  .team-history-card h3,
+  .player-row h4
 ) {
   font-family: 'Barlow Condensed', sans-serif !important;
   font-size: var(--site-card-title-size) !important;
@@ -11193,6 +11195,8 @@
   .team-profile-card,
   .team-people-card,
   .world-cup-history-card,
+  .team-history-card,
+  .player-row,
   .recent-results-card,
   .qualifier-card,
   .qualifier-detail-card,
@@ -11205,6 +11209,14 @@
   .admin-record-panel
 ) {
   box-shadow: none !important;
+}
+
+.world-cup-page.world-cup-page :where(
+  .match-scoreboard__team,
+  .match-stat-row,
+  .player-row > span:last-of-type
+) {
+  border-radius: 0 !important;
 }
 
 .world-cup-page--finals :where(.page-title, .section-header h2, .team-detail-hero h1) {
