@@ -9227,6 +9227,7 @@
 }
 
 .world-cup-page--finals .match-info-card__fact,
+.world-cup-page--finals .match-info-card__team-link,
 .world-cup-page--finals .city-stadium-facts__item,
 .world-cup-page--finals .city-match-section,
 .world-cup-page--finals .player-table__head,
@@ -11324,6 +11325,224 @@
   box-shadow: none !important;
 }
 
+.world-cup-page--finals .team-detail-stack {
+  gap: 18px;
+}
+
+.world-cup-page--finals .team-detail-section {
+  gap: 10px;
+}
+
+.world-cup-page--finals .team-detail-section--overview {
+  border: 1px solid var(--finals-rule-2, #38342a);
+  background: var(--finals-bg-2, #161410);
+}
+
+.world-cup-page--finals .team-profile-facts--overview {
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.world-cup-page--finals .team-profile-facts--overview span {
+  border: 0;
+  border-right: 1px solid var(--finals-rule-2, #38342a);
+  color: var(--finals-ink, #f0ede6);
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+.world-cup-page--finals .team-profile-facts--overview span:last-child {
+  border-right: 0;
+}
+
+.world-cup-page--finals .team-profile-facts--overview strong {
+  color: var(--finals-lime, #c8f230) !important;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px !important;
+  letter-spacing: 0.08em;
+  line-height: 1.2 !important;
+  text-transform: uppercase;
+}
+
+.world-cup-page--finals :where(
+  .team-people-card,
+  .world-cup-history-card,
+  .recent-results-card,
+  .player-table__head,
+  .player-row,
+  .team-history-card,
+  .world-cup-history-row,
+  .recent-match-row,
+  .team-match-card--compact
+) {
+  background: var(--finals-bg-2, #161410) !important;
+  border-color: var(--finals-rule-2, #38342a) !important;
+}
+
+.world-cup-page--finals .player-table {
+  gap: 6px;
+}
+
+.world-cup-page--finals .player-table__head,
+.world-cup-page--finals .player-row {
+  gap: 10px;
+  grid-template-columns: minmax(58px, 0.34fr) minmax(138px, 0.95fr) minmax(80px, 0.48fr) minmax(126px, 0.72fr) minmax(56px, 0.3fr) minmax(92px, 0.48fr);
+  padding: 8px 12px;
+}
+
+.world-cup-page--finals .player-table__head {
+  background: var(--finals-bg-3, #1e1c17) !important;
+}
+
+.world-cup-page--finals .player-row h4 {
+  font-size: 13px !important;
+  letter-spacing: 0.02em !important;
+}
+
+.world-cup-page--finals .player-row > span {
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+.world-cup-page--finals .player-status {
+  border: 1px solid var(--finals-rule-2, #38342a) !important;
+  color: var(--finals-ink-2, #9a9488) !important;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  padding: 5px 7px !important;
+  width: fit-content;
+}
+
+.world-cup-page--finals .player-status--confirmed {
+  border-color: rgba(200, 242, 48, 0.45) !important;
+  color: var(--finals-lime, #c8f230) !important;
+}
+
+.world-cup-page--finals .player-status--candidate {
+  border-color: rgba(242, 184, 48, 0.45) !important;
+  color: #f2b830 !important;
+}
+
+.world-cup-page--finals .player-status--fitness {
+  border-color: rgba(242, 90, 48, 0.45) !important;
+  color: #f25a30 !important;
+}
+
+.world-cup-page--finals .player-status--omitted {
+  color: var(--finals-ink-3, #4a4740) !important;
+}
+
+.world-cup-page--finals .world-cup-history-card {
+  gap: 10px;
+  padding: 16px;
+}
+
+.world-cup-page--finals .world-cup-history-card__summary {
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.world-cup-page--finals .world-cup-history-table {
+  gap: 6px;
+}
+
+.world-cup-page--finals .world-cup-history-table__head,
+.world-cup-page--finals .world-cup-history-row__toggle {
+  gap: 10px;
+  grid-template-columns: minmax(178px, 1.1fr) minmax(70px, 0.42fr) minmax(64px, 0.36fr) minmax(112px, 0.58fr) minmax(86px, 0.42fr) minmax(82px, 0.4fr);
+}
+
+.world-cup-page--finals .world-cup-history-table__head {
+  padding-bottom: 8px;
+}
+
+.world-cup-page--finals .world-cup-history-row__toggle {
+  padding: 9px 12px;
+}
+
+.world-cup-page--finals .world-cup-history-row h3 {
+  font-size: 13px !important;
+  letter-spacing: 0.02em !important;
+}
+
+.world-cup-page--finals .world-cup-history-row__toggle > span {
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+}
+
+.world-cup-page--finals .world-cup-history-row__matches {
+  gap: 5px;
+  padding: 8px 12px 10px;
+}
+
+.world-cup-page--finals .world-cup-match-row {
+  grid-template-columns: minmax(58px, 0.18fr) 1fr;
+  padding: 7px 9px;
+}
+
+.world-cup-page--finals .world-cup-match-row span,
+.world-cup-page--finals .world-cup-match-row strong {
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+}
+
+.world-cup-page--finals .recent-results-card {
+  gap: 10px;
+  padding: 14px;
+}
+
+.world-cup-page--finals .recent-results-card__summary {
+  gap: 5px;
+  padding-bottom: 10px;
+}
+
+.world-cup-page--finals .recent-results-card__summary h3 {
+  font-size: 14px !important;
+}
+
+.world-cup-page--finals .recent-results-card__summary span {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+}
+
+.world-cup-page--finals .recent-match-list {
+  gap: 6px;
+}
+
+.world-cup-page--finals .recent-match-row {
+  gap: 10px;
+  grid-template-columns: minmax(138px, 0.52fr) minmax(138px, 0.45fr) 1fr;
+  padding: 8px 10px;
+}
+
+.world-cup-page--finals .recent-match-row span,
+.world-cup-page--finals .recent-match-row strong,
+.world-cup-page--finals .recent-match-row p {
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+}
+
+.world-cup-page--finals .team-match-card--compact {
+  gap: 10px;
+  grid-template-columns: minmax(124px, 0.7fr) minmax(220px, 1.3fr) minmax(142px, 0.78fr) minmax(92px, 0.5fr);
+  min-height: 0;
+  padding: 9px 12px;
+}
+
+.world-cup-page--finals .team-match-card--compact h3 {
+  font-size: 13px !important;
+  text-underline-offset: 3px;
+}
+
+.world-cup-page--finals .team-match-card--compact p {
+  font-size: 10px !important;
+  line-height: 1.25 !important;
+}
+
 @media (max-width: 640px) {
   .world-cup-page {
     --site-title-size: clamp(28px, 9vw, 42px);
@@ -11334,5 +11553,29 @@
 
   .page-return-bar {
     padding: 0 1rem;
+  }
+
+  .world-cup-page--finals .team-profile-facts--overview {
+    grid-template-columns: 1fr;
+  }
+
+  .world-cup-page--finals .team-profile-facts--overview span {
+    border-right: 0;
+    border-bottom: 1px solid var(--finals-rule-2, #38342a);
+  }
+
+  .world-cup-page--finals .team-profile-facts--overview span:last-child {
+    border-bottom: 0;
+  }
+
+  .world-cup-page--finals .player-table__head {
+    display: none;
+  }
+
+  .world-cup-page--finals .player-row,
+  .world-cup-page--finals .world-cup-history-row__toggle,
+  .world-cup-page--finals .recent-match-row,
+  .world-cup-page--finals .team-match-card--compact {
+    grid-template-columns: 1fr;
   }
 }
