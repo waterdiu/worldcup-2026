@@ -210,11 +210,6 @@ export function CityDetailPage({
             </div>
           </div>
         </div>
-        <div className="match-detail-card detail-return-card">
-          <a className="back-link" href={localizePath('/cities', copy.locale)}>
-            {copy.locale === 'zh' ? '返回主办城市总览' : 'Back to host cities'}
-          </a>
-        </div>
       </section>
     </>
   );
