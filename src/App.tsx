@@ -226,6 +226,7 @@ export default function App() {
   const topLevelReturnLink = getTopLevelReturnLink(normalizedPathname, locale);
   const isStats = normalizedPathname === '/stats';
   const isQualifiers = normalizedPathname === '/qualifiers' || normalizedPathname.startsWith('/qualifiers/');
+  const isMatchesOverview = normalizedPathname === '/matches';
   const isFinalsPage =
     normalizedPathname === '/' ||
     normalizedPathname === '/groups' ||
@@ -239,7 +240,7 @@ export default function App() {
 
   return (
     <main
-      className={`world-cup-page ${isStats ? 'world-cup-page--stats' : ''} ${isQualifiers ? 'world-cup-page--qualifiers' : ''} ${isFinalsPage ? 'world-cup-page--finals' : ''}`}
+      className={`world-cup-page ${isStats ? 'world-cup-page--stats' : ''} ${isQualifiers ? 'world-cup-page--qualifiers' : ''} ${isFinalsPage ? 'world-cup-page--finals' : ''} ${isMatchesOverview ? 'world-cup-page--matches-overview' : ''}`}
       data-data-generated-at={siteData.generatedAt}
       data-data-source={siteData.source}
       data-data-warning={runtimeError ?? undefined}
