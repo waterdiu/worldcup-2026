@@ -13,6 +13,7 @@ interface TeamDetailPageProps {
 }
 
 const hostTeams = new Set(['Canada', 'Mexico', 'United States']);
+type PersonStatusKind = 'confirmed' | 'candidate' | 'pending' | 'fitness' | 'omitted';
 
 function findTeamGroup(team: string, groups: GroupCardData[]) {
   return groups.find((group) => group.teams.some((item) => item.name === team));
@@ -46,6 +47,38 @@ function formatPlainTeamName(team: string, locale: AppCopy['locale']): string {
   return getTeamDisplay(team).zh;
 }
 
+function formatTournamentLabel(record: NonNullable<TeamProfileData['worldCupHistory']>[number], locale: AppCopy['locale']): string {
+  if (locale === 'en') return record.tournament;
+
+  const tournament = record.tournament.replace(/^\d{4}\s*/, '');
+  return `${tournament}（${record.year}）`;
+}
+
+function normalizePersonStatus(status: string, role: string, locale: AppCopy['locale']): { label: string; kind: PersonStatusKind } {
+  const source = status.toLowerCase();
+
+  if (source.includes('伤') || source.includes('injury') || source.includes('fitness')) {
+    return { label: locale === 'zh' ? '伤病待评估' : 'Fitness watch', kind: 'fitness' };
+  }
+
+  if (source.includes('落选') || source.includes('omitted')) {
+    return { label: locale === 'zh' ? '未入选' : 'Omitted', kind: 'omitted' };
+  }
+
+  if (source.includes('候选') || source.includes('training') || source.includes('provisional')) {
+    return { label: locale === 'zh' ? '候选观察' : 'Provisional', kind: 'candidate' };
+  }
+
+  if (source.includes('已任命') || source.includes('appointed') || source.includes('confirmed')) {
+    return {
+      label: role === '主教练' || role === 'Head coach' ? (locale === 'zh' ? '已任命' : 'Appointed') : (locale === 'zh' ? '已确认' : 'Confirmed'),
+      kind: 'confirmed'
+    };
+  }
+
+  return { label: locale === 'zh' ? '待确认' : 'Pending', kind: 'pending' };
+}
+
 function getQualificationLabel(
   team: string,
   confederationName: string | undefined,
@@ -59,22 +92,6 @@ function getQualificationLabel(
   return locale === 'zh'
     ? `${confederationLabel} 预选赛晋级`
     : `Qualified through ${confederationName ?? 'regional'} qualifying`;
-}
-
-function getProfileSummary(
-  team: string,
-  groupId: string,
-  opponents: string[],
-  profile: TeamProfileData | undefined,
-  locale: AppCopy['locale']
-): string {
-  if (profile?.profileSummary && locale === 'zh') return profile.profileSummary;
-
-  if (locale === 'en') {
-    return `${team} enters Group ${groupId} with matches against ${opponents.join(', ')}. This page collects profile, squad, history, recent-form, and fixture context.`;
-  }
-
-  return `${formatTeamName(team, locale)} 位于 ${groupId} 组，小组对手是 ${opponents.map((opponent) => formatTeamName(opponent, locale)).join('、')}。页面集中展示球队基本情况、教练球员、历史战绩、近期成绩和世界杯赛程。`;
 }
 
 function getQualificationCards(
@@ -213,7 +230,6 @@ export function TeamDetailPage({
   const confederation = findTeamConfederation(team, confederations);
   const profile = findTeamProfile(team);
   const teamFixtures = findTeamFixtures(team, fixtures);
-  const opponents = group?.teams.filter((item) => item.name !== team).map((item) => item.name) ?? [];
 
   if (!group) {
     return (
@@ -296,33 +312,21 @@ export function TeamDetailPage({
       </section>
 
       <div className="team-detail-stack" data-testid="team-detail-stack">
-        <section className="section team-detail-section">
-          <h2 className="section-title">{copy.locale === 'zh' ? '球队基本信息' : 'Team Overview'}</h2>
-          <article className="team-profile-card team-overview-card">
-            <p>{getProfileSummary(team, group.id, opponents, profile, copy.locale)}</p>
-            <div className="team-profile-facts">
-              {facts.map(([label, value]) => (
-                <span key={label}>
-                  <strong>{label}</strong>
-                  {value}
-                </span>
-              ))}
-            </div>
-          </article>
+        <section className="section team-detail-section team-detail-section--overview">
+          <div className="team-profile-facts team-profile-facts--overview" aria-label={copy.locale === 'zh' ? '球队基本信息' : 'Team overview'}>
+            {facts.map(([label, value]) => (
+              <span key={label}>
+                <strong>{label}</strong>
+                {value}
+              </span>
+            ))}
+          </div>
         </section>
 
         <section className="section team-detail-section">
           <h2 className="section-title">{copy.locale === 'zh' ? '教练和球员介绍' : 'Coach and Players'}</h2>
           <article className="team-people-card">
-            <div className="team-people-card__summary">
-              <div>
-                <p>{copy.locale === 'zh' ? '名单状态' : 'Squad status'}</p>
-                <h3>{squadStatus.label}</h3>
-              </div>
-              <span>{squadStatus.note}</span>
-            </div>
             <div className="player-table">
-              <h3>{copy.locale === 'zh' ? '人员名单' : 'Team personnel'}</h3>
               <div className="player-table__head" aria-hidden="true">
                 <span>{copy.locale === 'zh' ? '身份' : 'Role'}</span>
                 <span>{copy.locale === 'zh' ? '姓名' : 'Name'}</span>
@@ -331,18 +335,22 @@ export function TeamDetailPage({
                 <span>{copy.locale === 'zh' ? '年龄' : 'Age'}</span>
                 <span>{copy.locale === 'zh' ? '状态' : 'Status'}</span>
               </div>
-              {peopleRows.map((person) => (
-                <article className="player-row" data-testid="team-person-row" key={`${person.role}-${person.name}`}>
-                  <span>{person.role}</span>
-                  <div className="player-row__name">
-                    <h4>{person.name}</h4>
-                  </div>
-                  <span>{person.position}</span>
-                  <span>{person.club}</span>
-                  <span>{person.age}</span>
-                  <span>{person.status}</span>
-                </article>
-              ))}
+              {peopleRows.map((person) => {
+                const normalizedStatus = normalizePersonStatus(person.status, person.role, copy.locale);
+
+                return (
+                  <article className="player-row" data-testid="team-person-row" key={`${person.role}-${person.name}`}>
+                    <span>{person.role}</span>
+                    <div className="player-row__name">
+                      <h4>{person.name}</h4>
+                    </div>
+                    <span>{person.position}</span>
+                    <span>{person.club}</span>
+                    <span>{person.age}</span>
+                    <span className={`player-status player-status--${normalizedStatus.kind}`}>{normalizedStatus.label}</span>
+                  </article>
+                );
+              })}
               {squadStatus.sourceNote ? <small>{squadStatus.sourceNote}</small> : null}
             </div>
           </article>
@@ -378,8 +386,7 @@ export function TeamDetailPage({
                         onClick={() => setExpandedHistoryYear(isExpanded ? null : record.year)}
                       >
                         <div className="world-cup-history-row__event">
-                          <h3>{record.tournament}</h3>
-                          <small>{record.year}</small>
+                          <h3>{formatTournamentLabel(record, copy.locale)}</h3>
                         </div>
                         <span>{record.stage}</span>
                         <span>{record.position}</span>
