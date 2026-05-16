@@ -6,7 +6,7 @@ import { usePredictionsList } from '../hooks/usePredictionsList';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatBracketLabel, formatTeamName, formatVenueName } from '../i18n/formatters';
-import { getAuthDisplayName, isSupabaseConfigured } from '../lib/supabase';
+import { getAuthDisplayName, isSupabaseConfigured, supabase } from '../lib/supabase';
 import type { BracketRoundData, FinalsMatchResultData, GroupStageMatchData } from '../types/tournament';
 
 interface UserCenterPageProps {
@@ -140,7 +140,8 @@ function getPredictionScore(
 
 export function UserCenterPage({ bracket, copy, finalsMatchResults, groupStageMatches }: UserCenterPageProps) {
   const { user, loading, authMessage, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut } = useAuth();
-  const { favorites, loading: favoritesLoading } = useFavoritesList(user);
+  const [favoriteVersion, setFavoriteVersion] = useState(0);
+  const { favorites, loading: favoritesLoading } = useFavoritesList(user, favoriteVersion);
   const { predictions, loading: predictionsLoading } = usePredictionsList(user);
   const { profile, loading: profileLoading, saving: profileSaving, saveProfile } = useUserProfile(user);
   const [displayName, setDisplayName] = useState('');
@@ -164,11 +165,15 @@ export function UserCenterPage({ bracket, copy, finalsMatchResults, groupStageMa
   const exactPredictionCount = predictionScores.filter((score) => score === 3).length;
   const winnerHitCount = predictionScores.filter((score) => score !== null && score > 0).length;
   const predictionPoints = predictionScores.reduce<number>((total, score) => total + (score ?? 0), 0);
-  const followedTeams = useMemo(
+  const favoriteTeams = useMemo(
+    () => new Set(favorites.filter((favorite) => favorite.target_type === 'team').map((favorite) => favorite.target_id)),
+    [favorites]
+  );
+  const suggestedTeams = useMemo(
     () =>
       Array.from(new Set(groupStageMatches.flatMap((match) => [match.homeTeam, match.awayTeam])))
         .slice(0, 10)
-        .map((team) => formatTeamName(team, copy.locale)),
+        .map((team) => ({ id: team, label: formatTeamName(team, copy.locale) })),
     [copy.locale, groupStageMatches]
   );
 
@@ -195,6 +200,16 @@ export function UserCenterPage({ bracket, copy, finalsMatchResults, groupStageMa
       return;
     }
     await signInWithEmail(authEmail, authPassword);
+  }
+
+  async function toggleTeamFavorite(teamId: string) {
+    if (!user || !supabase) return;
+    if (favoriteTeams.has(teamId)) {
+      await supabase.from('favorites').delete().eq('user_id', user.id).eq('target_type', 'team').eq('target_id', teamId);
+    } else {
+      await supabase.from('favorites').insert({ user_id: user.id, target_type: 'team', target_id: teamId });
+    }
+    setFavoriteVersion((value) => value + 1);
   }
 
   const authPanel = (
@@ -307,13 +322,20 @@ export function UserCenterPage({ bracket, copy, finalsMatchResults, groupStageMa
 
         <div className="user-section-rule">
           <span>{copy.locale === 'zh' ? '我关注的球队' : 'Followed Teams'}</span>
-          <small>{copy.locale === 'zh' ? '当前为推荐球队，后续可接入真实关注表' : 'Recommended teams, ready for follow records'}</small>
+          <small>{copy.locale === 'zh' ? '点击球队可关注或取消关注' : 'Click a team to follow or unfollow'}</small>
         </div>
         <div className="user-fav-teams">
-          <span>{copy.locale === 'zh' ? '已关注' : 'Following'}</span>
+          <span>{copy.locale === 'zh' ? '推荐球队' : 'Suggested'}</span>
           <div>
-            {followedTeams.map((team, index) => (
-              <button className={index < 3 ? 'is-on' : undefined} type="button" key={team}>{team}</button>
+            {suggestedTeams.map((team) => (
+              <button
+                className={favoriteTeams.has(team.id) ? 'is-on' : undefined}
+                type="button"
+                key={team.id}
+                onClick={() => toggleTeamFavorite(team.id)}
+              >
+                {team.label}
+              </button>
             ))}
           </div>
         </div>
@@ -331,11 +353,17 @@ export function UserCenterPage({ bracket, copy, finalsMatchResults, groupStageMa
               {favorites.map((favorite) => {
                 const match = matchLookup.get(favorite.target_id) ?? getFallbackMatch(favorite.target_id, copy.locale);
                 const isMatchFavorite = favorite.target_type === 'match';
+                const favoriteLabel =
+                  favorite.target_type === 'team'
+                    ? formatTeamName(favorite.target_id, copy.locale)
+                    : favorite.target_type === 'city'
+                      ? favorite.target_id
+                      : match.title;
                 return (
                   <li key={favorite.id}>
                     <a className="user-match-card" href={getFavoriteHref(favorite.target_type, favorite.target_id, copy.locale)}>
                       <span className="user-match-card__main">
-                        <strong>{isMatchFavorite ? match.title : favorite.target_id}</strong>
+                        <strong>{favoriteLabel}</strong>
                         <span>{isMatchFavorite ? match.meta : favorite.target_type}</span>
                       </span>
                       {isMatchFavorite ? (
