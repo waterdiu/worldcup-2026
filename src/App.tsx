@@ -7,7 +7,7 @@ import {
 } from './data';
 import type { WorldCupSiteData } from './data/siteData';
 import { useWorldCupSiteData } from './hooks/useWorldCupSiteData';
-import { contentByLocale, getLocaleFromPathname, stripAppBasePath, type Locale } from './i18n/content';
+import { contentByLocale, getLocaleFromPathname, localizePath, stripAppBasePath, type Locale } from './i18n/content';
 import { AdminPage } from './pages/AdminPage';
 import { CitiesPage } from './pages/CitiesPage';
 import { GroupDetailPage } from './pages/GroupDetailPage';
@@ -37,6 +37,18 @@ function normalizePathname(pathname: string): string {
     return pathname.slice(3) || '/';
   }
   return pathname;
+}
+
+function getTopLevelReturnLink(pathname: string, locale: Locale): { href: string; label: string } | null {
+  const topLevelPages = new Set(['/groups', '/teams', '/matches', '/cities', '/qualifiers', '/stats', '/me', '/admin']);
+  if (!topLevelPages.has(pathname)) return null;
+
+  return {
+    href: localizePath('/', locale),
+    label: pathname === '/groups'
+      ? locale === 'zh' ? '返回上一个页面' : 'Back'
+      : locale === 'zh' ? '返回首页' : 'Back home'
+  };
 }
 
 function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData) {
@@ -211,6 +223,7 @@ export default function App() {
   const appPathname = stripAppBasePath(window.location.pathname);
   const locale = getLocaleFromPathname(window.location.pathname);
   const normalizedPathname = normalizePathname(appPathname);
+  const topLevelReturnLink = getTopLevelReturnLink(normalizedPathname, locale);
   const isStats = normalizedPathname === '/stats';
   const isQualifiers = normalizedPathname === '/qualifiers' || normalizedPathname.startsWith('/qualifiers/');
   const isFinalsPage =
@@ -232,6 +245,13 @@ export default function App() {
       data-data-warning={runtimeError ?? undefined}
     >
       <PageNav pathname={normalizedPathname} locale={locale} />
+      {topLevelReturnLink ? (
+        <div className="page-return-bar" aria-label={locale === 'zh' ? '页面返回导航' : 'Page return navigation'}>
+          <a className="back-link page-return-bar__link" href={topLevelReturnLink.href}>
+            {topLevelReturnLink.label}
+          </a>
+        </div>
+      ) : null}
       {renderPage(normalizedPathname, locale, siteData)}
     </main>
   );
