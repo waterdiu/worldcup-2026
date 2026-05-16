@@ -11259,11 +11259,80 @@
   line-height: 1 !important;
 }
 
+.page-return-bar {
+  box-sizing: border-box;
+  margin: 1rem auto 0;
+  max-width: 1400px;
+  padding: 0 2rem;
+  width: 100%;
+}
+
+.page-return-bar__link {
+  margin-bottom: 0 !important;
+}
+
+.world-cup-page.world-cup-page :where(
+  .page-return-bar__link,
+  .team-detail-stack,
+  .team-detail-stack > .section,
+  .team-profile-facts span,
+  .team-people-card__summary,
+  .player-table,
+  .player-table__head,
+  .player-row,
+  .player-row > span,
+  .world-cup-history-table,
+  .world-cup-history-table__head,
+  .world-cup-history-row,
+  .world-cup-history-row__toggle,
+  .world-cup-history-row__matches,
+  .world-cup-match-row,
+  .team-history-list,
+  .recent-results-card__summary,
+  .recent-match-row,
+  .recent-match-list,
+  .team-fixture-grid,
+  .match-info-card__fact,
+  .match-detail-facts span,
+  .match-stat-row,
+  .match-timeline__item,
+  .city-stadium-facts,
+  .city-stadium-facts__item,
+  .city-match-section,
+  .qualifier-metric-grid article,
+  .qualifier-source-grid article,
+  .qualifier-control-panel,
+  .qualifier-team-filter,
+  .qualifier-team-filter__list button,
+  .qualifier-missing-fields span,
+  .qualifier-world-map,
+  .qualifier-map-panel,
+  .qualifier-confed-match-section,
+  .user-score-strip article,
+  .user-fav-teams button,
+  .user-leaderboard__head,
+  .user-leaderboard__row,
+  .admin-kpi-grid article,
+  .admin-dashboard-grid > article,
+  .admin-mini-metrics div,
+  .admin-panel,
+  .admin-feed li,
+  .admin-quick-actions button,
+  .admin-permission-grid label
+) {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
 @media (max-width: 640px) {
   .world-cup-page {
     --site-title-size: clamp(28px, 9vw, 42px);
     --site-section-title-size: clamp(18px, 6vw, 26px);
     --site-card-title-size: 14px;
     --site-body-size: 12px;
+  }
+
+  .page-return-bar {
+    padding: 0 1rem;
   }
 }
