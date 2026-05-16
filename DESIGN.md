@@ -457,6 +457,16 @@ Finals pages include:
 
 They should share the `.world-cup-page--finals` visual system.
 
+Team detail page rules:
+
+- The basic information area does not render a standalone title or explanatory paragraph. It renders five connected fact boxes with the same total width as the detail content below.
+- The coach/player area does not render a "squad list" subtitle or descriptive copy. It shows the personnel rows directly.
+- Personnel rows use compact table density. Status chips are limited to the standard states: `confirmed/appointed`, `candidate/provisional`, `pending`, `fitness watch`, and `omitted`.
+- World Cup history headings use a "World Cup (year)" pattern and must not repeat the year as a secondary small line.
+- Expanded history rows keep compact typography and row height. Date, location, and stadium fields are shown only when the data source provides them; the UI must not fabricate them.
+- Qualification and recent-match rows should link to match detail only when an internal match id exists. If the data is outside the current site contract, show it only as a result summary.
+- Team detail pages must not use legacy blue backgrounds or blue gradient panels. History, qualification, recent form, fixtures, and personnel lists must use the current hard-edge dark editorial styling.
+
 ### Qualifier Pages
 
 Qualifier pages include:
