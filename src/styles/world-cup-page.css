@@ -10650,6 +10650,21 @@
   color: var(--account-lime);
 }
 
+.user-center-page--signed-in .user-center-grid {
+  align-items: stretch;
+}
+
+.user-center-page--signed-in .user-center-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.user-center-page--signed-in .user-center-card > p,
+.user-center-page--signed-in .user-center-list {
+  flex: 1;
+}
+
 .user-leaderboard {
   background: var(--account-bg-2);
   border: 1px solid var(--account-rule-2);
