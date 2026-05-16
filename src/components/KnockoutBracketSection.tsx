@@ -109,9 +109,8 @@ export function KnockoutBracketSection({ rounds, copy, title, description }: Kno
   return (
     <section id="knockout" className="section">
       <SectionHeader
-        eyebrow={copy.sections.knockoutEyebrow}
         title={title ?? copy.sections.knockoutTitle}
-        description={description ?? copy.sections.knockoutDescription}
+        description={title ? description : description ?? copy.sections.knockoutDescription}
       />
       <div className="knockout-map" data-testid="knockout-bracket-map">
         <div className="knockout-path knockout-path--left" data-testid="knockout-left-path">
