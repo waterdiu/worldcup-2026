@@ -13,7 +13,9 @@
     "generate:daily-hero": "python3 scripts/generate_daily_home_hero.py",
     "generate:finals-results": "node scripts/generate_finals_results.mjs",
     "import:finals-results": "node scripts/import_finals_results.mjs",
+    "pretest": "npm run sync:shared-data",
     "test": "vitest run",
+    "prebuild": "npm run sync:shared-data",
     "test:watch": "vitest"
   },
   "dependencies": {
