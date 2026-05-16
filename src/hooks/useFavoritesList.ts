@@ -7,7 +7,7 @@ interface FavoritesListState {
   loading: boolean;
 }
 
-export function useFavoritesList(user: AuthUser | null): FavoritesListState {
+export function useFavoritesList(user: AuthUser | null, refreshKey = 0): FavoritesListState {
   const [favorites, setFavorites] = useState<FavoriteRecord[]>([]);
   const [loading, setLoading] = useState(Boolean(user && supabase));
 
@@ -34,7 +34,7 @@ export function useFavoritesList(user: AuthUser | null): FavoritesListState {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [refreshKey, user]);
 
   return { favorites, loading };
 }
