@@ -9375,6 +9375,23 @@
   margin: 0;
 }
 
+.world-cup-page--matches-overview .section-header {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-bottom: 1px solid #38342a !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible;
+  padding: 0 0 10px !important;
+}
+
+.world-cup-page--matches-overview .section-header::before,
+.world-cup-page--matches-overview .section-header::after {
+  content: none !important;
+  display: none !important;
+}
+
 .world-cup-page--matches-overview .matches-summary-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
