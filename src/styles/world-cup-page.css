@@ -4846,10 +4846,6 @@
 }
 
 @media (max-width: 960px) {
-  .team-grid--release.team-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .snapshot,
   .cities-grid,
   .confederation-grid,
@@ -7156,7 +7152,13 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
+  .team-grid--release.team-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
   .team-grid--release.team-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
