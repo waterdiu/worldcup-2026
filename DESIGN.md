@@ -465,6 +465,7 @@ They should share the `.world-cup-page--finals` visual system.
 Team detail page rules:
 
 - The basic information area does not render a standalone title or explanatory paragraph. It renders five connected fact boxes with the same total width as the detail content below.
+- The teams overview page uses a compact adaptive multi-column grid. Desktop must not be locked to three oversized cards per row; cards only carry team name, group, confederation, and ranking with height compressed to content.
 - The coach/player area does not render a "squad list" subtitle or descriptive copy. It shows the personnel rows directly.
 - Personnel rows use compact table density. Status chips are limited to the standard states: `confirmed/appointed`, `candidate/provisional`, `pending`, `injured`, `suspended`, and `omitted`.
 - Team pages prefer the `football-data-platform` runtime core contract `core/rosters.json`. When a team has an official FIFA 26-player roster, the personnel section renders that real roster; uncovered teams fall back to local editorial profiles or a final-squad-pending placeholder.

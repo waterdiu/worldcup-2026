@@ -2512,6 +2512,32 @@
   margin-top: 22px;
 }
 
+.team-grid--release.team-grid {
+  gap: 1px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.team-grid--release .team-card {
+  gap: 7px;
+  min-height: 0;
+  padding: 12px 14px;
+}
+
+.team-grid--release .team-card__meta {
+  gap: 4px;
+}
+
+.team-grid--release .team-card__name-link strong {
+  font-size: 15px !important;
+  letter-spacing: 0.035em !important;
+  line-height: 1 !important;
+  text-underline-offset: 3px;
+}
+
+.team-grid--release .team-card__meta span {
+  line-height: 1.2 !important;
+}
+
 .team-card--interactive {
   padding: 0;
   overflow: hidden;
