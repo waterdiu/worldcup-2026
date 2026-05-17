@@ -105,6 +105,7 @@
 .world-cup-page--finals .bracket-match,
 .world-cup-page--finals .city-stadium-info-card,
 .world-cup-page--finals .city-stadium-hero,
+.world-cup-page--finals .city-profile-card,
 .world-cup-page--finals .team-profile-card,
 .world-cup-page--finals .team-people-card,
 .world-cup-page--finals .world-cup-history-card,
@@ -240,7 +241,6 @@
 }
 
 .world-cup-page--finals .city-detail-shell,
-.world-cup-page--finals .city-detail-main,
 .world-cup-page--finals .team-detail-stack,
 .world-cup-page--finals .city-match-sections {
   gap: 1px;
@@ -3853,7 +3853,6 @@
   padding: 0;
   height: 100%;
   min-height: 0;
-  border-radius: 24px;
 }
 
 .city-stadium-hero img {
@@ -3867,13 +3866,10 @@
 
 .city-detail-card {
   align-self: stretch;
-  aspect-ratio: 2 / 3;
   display: grid;
   overflow: hidden;
   padding: 0;
-  width: 320px;
-  height: 480px;
-  min-height: 480px;
+  min-height: 520px;
 }
 
 .city-detail-card img {
@@ -3892,39 +3888,114 @@
 .city-detail-shell {
   display: grid;
   align-items: stretch;
-  gap: 22px;
-  grid-template-columns: 320px minmax(0, 520px);
-  justify-content: start;
-  max-width: 862px;
+  background: #38342a;
+  border: 1px solid #38342a;
+  gap: 1px;
+  grid-template-columns: minmax(240px, 0.74fr) minmax(320px, 1fr) minmax(440px, 1.38fr);
+  min-height: 520px;
+  width: 100%;
 }
 
-.city-detail-main {
+.city-profile-card {
+  align-content: stretch;
+  background: #161410;
   display: grid;
-  grid-template-rows: 205px minmax(0, 1fr);
-  gap: 18px;
-  height: 480px;
-  min-height: 480px;
-  max-width: 520px;
+  gap: 16px;
+  grid-template-rows: auto auto auto 1fr;
+  padding: 22px;
+}
+
+.city-profile-card__title {
+  display: grid;
+  gap: 8px;
+}
+
+.city-profile-card__title span,
+.city-profile-card__meta span,
+.city-profile-card__notes strong {
+  color: #c8f230;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.city-profile-card__title h1 {
+  color: #f0ede6;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(34px, 4.4vw, 58px);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.88;
+  margin: 0;
+}
+
+.city-profile-card__meta,
+.city-profile-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.city-profile-card__meta span,
+.city-profile-card__tags span {
+  border: 1px solid #38342a;
+  padding: 5px 8px;
+}
+
+.city-profile-card__tags span {
+  color: #f0ede6;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.city-profile-card__notes {
+  align-content: end;
+  display: grid;
+  gap: 10px;
+}
+
+.city-profile-card__notes p {
+  border-top: 1px solid #2a2720;
+  color: #9a9488;
+  display: grid;
+  gap: 5px;
+  line-height: 1.55;
+  margin: 0;
+  padding-top: 10px;
 }
 
 .city-stadium-info-card {
+  background: #161410;
   display: grid;
-  gap: 10px;
-  align-content: stretch;
-  padding: 16px;
+  gap: 0;
+  grid-template-rows: 220px 1fr;
+  padding: 0;
+}
+
+.city-stadium-info-card__body {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.world-cup-page--finals .city-detail-card,
+.world-cup-page--finals .city-stadium-info-card {
+  padding: 0;
 }
 
 .city-stadium-facts {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-auto-rows: minmax(0, 1fr);
   margin-top: 0;
 }
 
 .city-stadium-facts__item,
 .city-match-section {
-  border: 1px solid rgba(167, 194, 217, 0.12);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.03);
+  background: #161410;
+  border: 1px solid #38342a;
+  border-radius: 0;
 }
 
 .city-stadium-facts__item {
@@ -5206,7 +5277,8 @@
   }
 
   .city-detail-card,
-  .city-detail-main {
+  .city-profile-card,
+  .city-stadium-info-card {
     width: 100%;
     max-width: 100%;
     height: auto;
@@ -5214,7 +5286,6 @@
   }
 
   .city-detail-card {
-    max-width: 360px;
     justify-self: center;
     aspect-ratio: 2 / 3;
   }
@@ -5223,8 +5294,13 @@
     height: 100%;
   }
 
-  .city-detail-main {
+  .city-stadium-info-card {
     grid-template-rows: 220px auto;
+  }
+
+  .city-profile-card {
+    gap: 14px;
+    padding: 18px;
   }
 
   .city-stadium-facts {
@@ -9186,6 +9262,7 @@
 .world-cup-page--finals .match-overview-card,
 .world-cup-page--finals .city-stadium-info-card,
 .world-cup-page--finals .city-stadium-hero,
+.world-cup-page--finals .city-profile-card,
 .world-cup-page--finals .team-profile-card,
 .world-cup-page--finals .team-people-card,
 .world-cup-page--finals .world-cup-history-card,
@@ -9311,6 +9388,7 @@
 .world-cup-page--finals .match-overview-card,
 .world-cup-page--finals .city-stadium-info-card,
 .world-cup-page--finals .city-stadium-hero,
+.world-cup-page--finals .city-profile-card,
 .world-cup-page--finals .team-profile-card,
 .world-cup-page--finals .team-people-card,
 .world-cup-page--finals .world-cup-history-card,
@@ -11481,6 +11559,7 @@
   .city-stadium-info-card,
   .city-stadium-hero,
   .city-detail-card,
+  .city-profile-card,
   .team-profile-card,
   .team-people-card,
   .world-cup-history-card,

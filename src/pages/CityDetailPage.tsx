@@ -59,6 +59,81 @@ function formatLocalDate(dateLabel: string, locale: AppCopy['locale']) {
   return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+function getMockCityProfile(detail: { city: string; country: string }, locale: AppCopy['locale']) {
+  const isZh = locale === 'zh';
+  const country = countryLabel(detail.country, locale);
+  const regionByCity: Record<string, { zh: string; en: string }> = {
+    Atlanta: { zh: '佐治亚州', en: 'Georgia' },
+    Boston: { zh: '马萨诸塞州', en: 'Massachusetts' },
+    Dallas: { zh: '德克萨斯州', en: 'Texas' },
+    Guadalajara: { zh: '哈利斯科州', en: 'Jalisco' },
+    Houston: { zh: '德克萨斯州', en: 'Texas' },
+    'Kansas City': { zh: '密苏里州', en: 'Missouri' },
+    'Los Angeles': { zh: '加利福尼亚州', en: 'California' },
+    'Mexico City': { zh: '墨西哥城', en: 'Mexico City' },
+    Miami: { zh: '佛罗里达州', en: 'Florida' },
+    Monterrey: { zh: '新莱昂州', en: 'Nuevo Leon' },
+    'New York New Jersey': { zh: '纽约 / 新泽西都会区', en: 'New York / New Jersey metro' },
+    Philadelphia: { zh: '宾夕法尼亚州', en: 'Pennsylvania' },
+    'San Francisco Bay Area': { zh: '加利福尼亚湾区', en: 'Bay Area, California' },
+    Seattle: { zh: '华盛顿州', en: 'Washington' },
+    Toronto: { zh: '安大略省', en: 'Ontario' },
+    Vancouver: { zh: '不列颠哥伦比亚省', en: 'British Columbia' }
+  };
+  const profileByCountry: Record<string, {
+    tagsZh: string[];
+    tagsEn: string[];
+    climateZh: string;
+    climateEn: string;
+    transportZh: string;
+    transportEn: string;
+    featureZh: string;
+    featureEn: string;
+  }> = {
+    美国: {
+      tagsZh: ['大型体育市场', '航空枢纽', '城市群辐射'],
+      tagsEn: ['Major sports market', 'Air hub', 'Metro reach'],
+      climateZh: '6-7 月整体偏热，部分城市午后体感温度较高，室内或顶棚场馆更利于观赛。',
+      climateEn: 'June and July are generally warm to hot, with covered or indoor venues improving matchday comfort.',
+      transportZh: '主要依托国际机场、城际高速与轨道交通，适合承接跨城市球迷流动。',
+      transportEn: 'International airports, highways, and transit links support heavy tournament travel.',
+      featureZh: '职业体育运营成熟，具备大型赛事安保、票务、商业和转播承载能力。',
+      featureEn: 'A mature pro-sports market with large-event operations, security, ticketing, and broadcast capacity.'
+    },
+    墨西哥: {
+      tagsZh: ['高海拔/热情主场', '足球文化', '城市节庆'],
+      tagsEn: ['Football culture', 'Festival city', 'High-energy crowds'],
+      climateZh: '6-7 月多为温暖到炎热天气，部分城市昼夜温差明显。',
+      climateEn: 'June and July are warm to hot, with some host cities seeing noticeable day-night shifts.',
+      transportZh: '主办城市依托机场与城市快速路，比赛日交通需要提前规划。',
+      transportEn: 'Airports and urban expressways anchor matchday travel, with advance planning recommended.',
+      featureZh: '足球氛围浓厚，城市公共空间和球场周边更容易形成赛事节日感。',
+      featureEn: 'Deep football culture makes the stadium district and public spaces feel like a tournament festival.'
+    },
+    加拿大: {
+      tagsZh: ['多元文化', '凉爽夏季', '城市公共交通'],
+      tagsEn: ['Multicultural', 'Milder summer', 'Urban transit'],
+      climateZh: '6-7 月气候相对温和，适合城市观光和比赛日步行流动。',
+      climateEn: 'June and July are comparatively mild, suitable for city exploration and matchday walking routes.',
+      transportZh: '城市公共交通和机场连接较成熟，适合无车球迷移动。',
+      transportEn: 'Transit and airport links are mature, supporting car-free fan movement.',
+      featureZh: '国际化程度高，适合承接多国家队球迷混合停留。',
+      featureEn: 'Highly international cities can host mixed fan groups from many national teams.'
+    }
+  };
+  const countryProfile = profileByCountry[detail.country] ?? profileByCountry['美国'];
+  const region = regionByCity[detail.city];
+
+  return {
+    country,
+    region: isZh ? region?.zh ?? detail.city : region?.en ?? detail.city,
+    tags: isZh ? countryProfile.tagsZh : countryProfile.tagsEn,
+    climate: isZh ? countryProfile.climateZh : countryProfile.climateEn,
+    transport: isZh ? countryProfile.transportZh : countryProfile.transportEn,
+    feature: isZh ? countryProfile.featureZh : countryProfile.featureEn
+  };
+}
+
 export function CityDetailPage({
   city,
   fixtures,
@@ -92,30 +167,41 @@ export function CityDetailPage({
       .filter((match) => venueCityMap[match.venue] === city)
       .map((match) => ({ ...match, round: round.round }))
   ).sort((first, second) => Date.parse(first.dateLabel) - Date.parse(second.dateLabel));
+  const cityProfile = getMockCityProfile(detail, copy.locale);
+
   return (
     <>
       <section className="section page-intro city-detail-hero">
         <a className="back-link" href={localizePath('/cities', copy.locale)}>
           {copy.locale === 'zh' ? '返回主办城市总览' : 'Back to host cities'}
         </a>
-        <SectionHeader
-          eyebrow={copy.locale === 'zh' ? '城市详情' : 'City Detail'}
-          title={formatHostCityName(detail.city, copy.locale)}
-          description={
-            copy.locale === 'zh'
-              ? `${formatHostCityName(detail.city, copy.locale)} 是 2026 世界杯主办城市之一，这里汇总球场基础资料、坐标和完整承办赛程。`
-              : `${detail.city} is one of the 2026 World Cup host cities, with venue facts, coordinates, and the full hosted match list.`
-          }
-        />
         <div className="city-detail-shell">
           <article className="feature-card city-detail-card">
             <img src={detail.imageUrl} alt={`${formatHostCityName(detail.city, copy.locale)} poster`} />
           </article>
-          <div className="city-detail-main">
-            <article className="feature-card city-stadium-hero">
+          <article className="feature-card city-profile-card">
+            <div className="city-profile-card__title">
+              <span>{copy.locale === 'zh' ? '主办城市' : 'Host City'}</span>
+              <h1>{formatHostCityName(detail.city, copy.locale)}</h1>
+            </div>
+            <div className="city-profile-card__meta">
+              <span>{cityProfile.country}</span>
+              <span>{cityProfile.region}</span>
+            </div>
+            <div className="city-profile-card__tags">
+              {cityProfile.tags.map((tag) => <span key={tag}>{tag}</span>)}
+            </div>
+            <div className="city-profile-card__notes">
+              <p><strong>{copy.locale === 'zh' ? '气候' : 'Climate'}</strong>{cityProfile.climate}</p>
+              <p><strong>{copy.locale === 'zh' ? '交通' : 'Transport'}</strong>{cityProfile.transport}</p>
+              <p><strong>{copy.locale === 'zh' ? '特点' : 'Feature'}</strong>{cityProfile.feature}</p>
+            </div>
+          </article>
+          <article className="feature-card city-stadium-info-card city-stadium-info-card--with-photo">
+            <div className="city-stadium-hero">
               <img src={detail.stadiumImageUrl} alt={`${formatHostCityName(detail.city, copy.locale)} stadium panorama`} />
-            </article>
-            <article className="feature-card city-stadium-info-card">
+            </div>
+            <div className="city-stadium-info-card__body">
               <h3>{copy.locale === 'zh' ? '场馆信息' : 'Venue'}</h3>
               <div className="city-stadium-facts">
                 <div className="city-stadium-facts__item">
@@ -143,8 +229,8 @@ export function CityDetailPage({
                   <strong>{detail.latitude}, {detail.longitude}</strong>
                 </div>
               </div>
-            </article>
-          </div>
+            </div>
+          </article>
         </div>
       </section>
 
