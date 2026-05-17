@@ -9439,6 +9439,33 @@
   background: #1e1c17;
 }
 
+.world-cup-page--matches-overview .matches-summary-grid {
+  background: #38342a;
+  border: 1px solid #38342a;
+  gap: 1px;
+}
+
+.world-cup-page--matches-overview .matches-summary-grid .feature-card,
+.world-cup-page--matches-overview .match-overview-card,
+.world-cup-page--matches-overview .knockout-final-path,
+.world-cup-page--matches-overview .bracket-match {
+  background: #161410 !important;
+  background-image: none !important;
+  border-color: #38342a !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.world-cup-page--matches-overview .matches-summary-grid .feature-card:hover,
+.world-cup-page--matches-overview .match-overview-card:hover,
+.world-cup-page--matches-overview .match-overview-card:focus-visible,
+.world-cup-page--matches-overview .bracket-match--link:hover,
+.world-cup-page--matches-overview .bracket-match--link:focus-visible {
+  background: #1e1c17 !important;
+  border-color: #c8f230 !important;
+  box-shadow: none !important;
+}
+
 .world-cup-page--finals .cities-floating-poster img,
 .world-cup-page--finals .city-detail-card img,
 .world-cup-page--finals .city-stadium-hero img {
