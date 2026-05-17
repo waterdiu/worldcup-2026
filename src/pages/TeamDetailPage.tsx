@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { findTeamProfile, type TeamProfileData } from '../data/teamProfiles';
+import type { WorldCupTeamRoster } from '../data/siteData';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatConfederationName, formatTeamName, formatVenueName, getTeamDisplay } from '../i18n/formatters';
 import type { ConfederationCardData, GroupCardData, GroupStageMatchData } from '../types/tournament';
@@ -9,11 +10,12 @@ interface TeamDetailPageProps {
   groups: GroupCardData[];
   confederations: ConfederationCardData[];
   fixtures: GroupStageMatchData[];
+  rosters: WorldCupTeamRoster[];
   copy: AppCopy;
 }
 
 const hostTeams = new Set(['Canada', 'Mexico', 'United States']);
-type PersonStatusKind = 'confirmed' | 'candidate' | 'pending' | 'fitness' | 'omitted';
+type PersonStatusKind = 'confirmed' | 'candidate' | 'pending' | 'fitness' | 'suspended' | 'omitted';
 
 function findTeamGroup(team: string, groups: GroupCardData[]) {
   return groups.find((group) => group.teams.some((item) => item.name === team));
@@ -57,8 +59,12 @@ function formatTournamentLabel(record: NonNullable<TeamProfileData['worldCupHist
 function normalizePersonStatus(status: string, role: string, locale: AppCopy['locale']): { label: string; kind: PersonStatusKind } {
   const source = status.toLowerCase();
 
+  if (source.includes('停赛') || source.includes('suspend')) {
+    return { label: locale === 'zh' ? '停赛' : 'Suspended', kind: 'suspended' };
+  }
+
   if (source.includes('伤') || source.includes('injury') || source.includes('fitness')) {
-    return { label: locale === 'zh' ? '伤病待评估' : 'Fitness watch', kind: 'fitness' };
+    return { label: locale === 'zh' ? '伤病' : 'Injured', kind: 'fitness' };
   }
 
   if (source.includes('落选') || source.includes('omitted')) {
@@ -69,7 +75,7 @@ function normalizePersonStatus(status: string, role: string, locale: AppCopy['lo
     return { label: locale === 'zh' ? '候选观察' : 'Provisional', kind: 'candidate' };
   }
 
-  if (source.includes('已任命') || source.includes('appointed') || source.includes('confirmed')) {
+  if (source.includes('已任命') || source.includes('已确认') || source.includes('appointed') || source.includes('confirmed')) {
     return {
       label: role === '主教练' || role === 'Head coach' ? (locale === 'zh' ? '已任命' : 'Appointed') : (locale === 'zh' ? '已确认' : 'Confirmed'),
       kind: 'confirmed'
@@ -77,6 +83,19 @@ function normalizePersonStatus(status: string, role: string, locale: AppCopy['lo
   }
 
   return { label: locale === 'zh' ? '待确认' : 'Pending', kind: 'pending' };
+}
+
+function normalizeTeamKey(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function findRuntimeRoster(team: string, rosters: WorldCupTeamRoster[]) {
+  const teamKey = normalizeTeamKey(team);
+  return rosters.find((roster) => roster.team_id === teamKey || normalizeTeamKey(roster.team_name) === teamKey);
 }
 
 function getQualificationLabel(
@@ -200,7 +219,28 @@ function getWorldCupHistorySummary(
   return `${base}${record}${bestFinish}。`;
 }
 
-function getPlayerCards(profile: TeamProfileData | undefined, locale: AppCopy['locale']) {
+function formatRosterStatus(status: string | null | undefined, locale: AppCopy['locale']) {
+  if (!status) return locale === 'zh' ? '已确认' : 'Confirmed';
+  if (status.toLowerCase() === 'selected') return locale === 'zh' ? '已确认' : 'Confirmed';
+  return status;
+}
+
+function getPlayerCards(
+  runtimeRoster: WorldCupTeamRoster | undefined,
+  profile: TeamProfileData | undefined,
+  locale: AppCopy['locale']
+) {
+  if (runtimeRoster?.players.length) {
+    return runtimeRoster.players.map((player) => ({
+      name: player.name_zh ?? player.display_name ?? player.name,
+      position: player.position ?? (locale === 'zh' ? '待确认' : 'Pending'),
+      club: player.club ?? '—',
+      age: 0,
+      status: formatRosterStatus(player.status, locale),
+      summary: ''
+    }));
+  }
+
   if (profile?.players?.length && locale === 'zh') return profile.players;
 
   return [
@@ -223,12 +263,14 @@ export function TeamDetailPage({
   groups,
   confederations,
   fixtures,
+  rosters,
   copy
 }: TeamDetailPageProps) {
   const [expandedHistoryYear, setExpandedHistoryYear] = useState<number | null>(null);
   const group = findTeamGroup(team, groups);
   const confederation = findTeamConfederation(team, confederations);
   const profile = findTeamProfile(team);
+  const runtimeRoster = findRuntimeRoster(team, rosters);
   const teamFixtures = findTeamFixtures(team, fixtures);
 
   if (!group) {
@@ -249,7 +291,7 @@ export function TeamDetailPage({
   const qualificationCards = getQualificationCards(team, group, confederation, profile, copy.locale);
   const recentCards = getRecentCards(profile, copy.locale);
   const historyRecords = getHistoryRecords(team, profile, copy.locale);
-  const playerCards = getPlayerCards(profile, copy.locale);
+  const playerCards = getPlayerCards(runtimeRoster, profile, copy.locale);
   const worldCupHistory = profile?.worldCupHistory;
   const teamDisplay = getTeamDisplay(team);
   const teamTitle = copy.locale === 'zh' ? teamDisplay.zh : team;
@@ -263,6 +305,11 @@ export function TeamDetailPage({
         ? 'FIFA 确认最终名单后，这里会切换成官方参赛球员列表。'
         : 'This section will switch to the official squad list after FIFA confirmation.'
   };
+  const squadSourceNote = runtimeRoster
+    ? copy.locale === 'zh'
+      ? `名单来源：FIFA 官方发布，${runtimeRoster.players.length} 人。${runtimeRoster.published_at ? `发布日期 ${runtimeRoster.published_at}。` : ''}`
+      : `Roster source: official FIFA release, ${runtimeRoster.players.length} players. ${runtimeRoster.published_at ? `Published ${runtimeRoster.published_at}.` : ''}`
+    : squadStatus.sourceNote;
   const facts = [
     [copy.locale === 'zh' ? '小组' : 'Group', groupLabel],
     [copy.locale === 'zh' ? '赛区' : 'Confederation', formatConfederationName(confederation?.name ?? '', copy.locale)],
@@ -285,8 +332,8 @@ export function TeamDetailPage({
       role: copy.locale === 'zh' ? '主教练' : 'Head coach',
       name: coachName,
       position: copy.locale === 'zh' ? '主教练' : 'Head coach',
-      club: copy.locale === 'zh' ? '墨西哥国家队' : 'National team',
-      age: copy.locale === 'zh' ? '67 岁' : '67',
+      club: copy.locale === 'zh' ? `${teamTitle}国家队` : 'National team',
+      age: profile?.coach === 'Javier Aguirre' ? (copy.locale === 'zh' ? '67 岁' : '67') : '—',
       status: copy.locale === 'zh' ? '已任命' : 'Appointed'
     },
     ...playerCards.map((player) => ({
@@ -351,7 +398,7 @@ export function TeamDetailPage({
                   </article>
                 );
               })}
-              {squadStatus.sourceNote ? <small>{squadStatus.sourceNote}</small> : null}
+              {squadSourceNote ? <small>{squadSourceNote}</small> : null}
             </div>
           </article>
         </section>

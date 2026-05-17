@@ -11425,12 +11425,16 @@
 .world-cup-page--finals .team-detail-section--overview {
   border: 1px solid var(--finals-rule-2, #38342a);
   background: var(--finals-bg-2, #161410);
+  overflow: hidden;
+  padding: 0;
 }
 
 .world-cup-page--finals .team-profile-facts--overview {
+  align-items: stretch;
   display: grid;
   gap: 0;
   grid-template-columns: repeat(5, minmax(0, 1fr));
+  height: 100%;
 }
 
 .world-cup-page--finals .team-profile-facts--overview span {
@@ -11519,6 +11523,11 @@
 .world-cup-page--finals .player-status--fitness {
   border-color: rgba(242, 90, 48, 0.45) !important;
   color: #f25a30 !important;
+}
+
+.world-cup-page--finals .player-status--suspended {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: var(--finals-ink, #f0ede6) !important;
 }
 
 .world-cup-page--finals .player-status--omitted {

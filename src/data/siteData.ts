@@ -34,6 +34,31 @@ export type QualifierMissingDataReport = Array<{
 
 export type WorldCupSiteDataSource = 'runtime' | 'fallback';
 
+export type WorldCupRosterPlayer = {
+  player_id?: string;
+  name: string;
+  display_name?: string | null;
+  name_zh?: string | null;
+  position?: string | null;
+  shirt_number?: number | null;
+  club?: string | null;
+  status?: string | null;
+};
+
+export type WorldCupTeamRoster = {
+  competition_id?: string;
+  season_id?: string;
+  team_id: string;
+  team_name: string;
+  roster_type?: string;
+  source_status?: string;
+  confidence?: string;
+  published_at?: string;
+  updated_at?: string;
+  source_url?: string;
+  players: WorldCupRosterPlayer[];
+};
+
 export type WorldCupSiteData = {
   source: WorldCupSiteDataSource;
   generatedAt?: string;
@@ -47,6 +72,7 @@ export type WorldCupSiteData = {
   qualifierMatches: QualifierMatchData[];
   qualifierMissingDataReport: QualifierMissingDataReport;
   apiFootballQualifierSourceReports: QualifierSourceReport[];
+  rosters: WorldCupTeamRoster[];
 };
 
 type RuntimeSiteBundle = {
@@ -76,7 +102,8 @@ export const fallbackWorldCupSiteData: WorldCupSiteData = {
   finalsDataCoverage,
   qualifierMatches,
   qualifierMissingDataReport,
-  apiFootballQualifierSourceReports
+  apiFootballQualifierSourceReports,
+  rosters: []
 };
 
 function normalizeApiBase(base: string) {
@@ -94,6 +121,11 @@ function runtimeApiBase() {
     : '/api/worldcup/2026';
 }
 
+function selectRuntimeEntry(relativeUrl: string | undefined, absoluteUrl: string | undefined, fallback: string) {
+  if (import.meta.env.PROD) return absoluteUrl ?? relativeUrl ?? fallback;
+  return relativeUrl ?? absoluteUrl ?? fallback;
+}
+
 function requireDataset<T>(value: T | undefined, label: string): T {
   if (value === undefined || value === null) {
     throw new Error(`Missing runtime World Cup dataset: ${label}`);
@@ -101,7 +133,7 @@ function requireDataset<T>(value: T | undefined, label: string): T {
   return value;
 }
 
-function toSiteData(bundle: RuntimeSiteBundle): WorldCupSiteData {
+function toSiteData(bundle: RuntimeSiteBundle, rosters: WorldCupTeamRoster[]): WorldCupSiteData {
   const datasets = bundle.datasets ?? {};
 
   return {
@@ -116,7 +148,8 @@ function toSiteData(bundle: RuntimeSiteBundle): WorldCupSiteData {
     finalsDataCoverage: requireDataset(datasets.finals_coverage, 'finals_coverage'),
     qualifierMatches: requireDataset(datasets.qualifier_matches, 'qualifier_matches'),
     qualifierMissingDataReport: datasets.qualifier_missing_data ?? [],
-    apiFootballQualifierSourceReports: datasets.qualifier_source_reports ?? []
+    apiFootballQualifierSourceReports: datasets.qualifier_source_reports ?? [],
+    rosters
   };
 }
 
@@ -132,16 +165,41 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
     runtime_contract?: {
       preferred_site_entrypoint?: string;
       preferred_site_url?: string;
+      core?: {
+        rosters?: {
+          path?: string;
+          url?: string;
+        };
+      };
     };
   };
-  const siteEntry = manifest.runtime_contract?.preferred_site_url
-    ?? manifest.runtime_contract?.preferred_site_entrypoint
-    ?? './site/bundle.json';
+  const siteEntry = selectRuntimeEntry(
+    manifest.runtime_contract?.preferred_site_entrypoint,
+    manifest.runtime_contract?.preferred_site_url,
+    './site/bundle.json'
+  );
   const bundleUrl = new URL(siteEntry, manifestAbsoluteUrl.replace(/\/[^/]*$/, '/')).toString();
   const bundleResponse = await fetch(bundleUrl, { cache: 'no-store', signal });
   if (!bundleResponse.ok) {
     throw new Error(`Failed to load World Cup site data bundle: ${bundleResponse.status}`);
   }
 
-  return toSiteData(await bundleResponse.json() as RuntimeSiteBundle);
+  let rosters: WorldCupTeamRoster[] = [];
+  const rosterEntry = selectRuntimeEntry(
+    manifest.runtime_contract?.core?.rosters?.path,
+    manifest.runtime_contract?.core?.rosters?.url,
+    './core/rosters.json'
+  );
+
+  try {
+    const rosterUrl = new URL(rosterEntry, manifestAbsoluteUrl.replace(/\/[^/]*$/, '/')).toString();
+    const rosterResponse = await fetch(rosterUrl, { cache: 'no-store', signal });
+    if (rosterResponse.ok) {
+      rosters = await rosterResponse.json() as WorldCupTeamRoster[];
+    }
+  } catch {
+    rosters = [];
+  }
+
+  return toSiteData(await bundleResponse.json() as RuntimeSiteBundle, rosters);
 }
