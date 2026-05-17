@@ -417,6 +417,8 @@ describe('App routes', () => {
             age: null
           }
         ]}
+        teamRecentMatches={[]}
+        teamWorldCupHistory={[]}
         copy={contentByLocale.zh}
       />
     );

@@ -247,16 +247,26 @@ function buildRecentCards(
   profile: TeamProfileData | undefined,
   locale: AppCopy['locale']
 ) {
-  if (profile?.recentResults?.length && locale === 'zh') return profile.recentResults;
+  type RecentCard = { title: string; result: string; description: string; matchId?: string };
+
+  if (profile?.recentResults?.length && locale === 'zh') {
+    return profile.recentResults.map((item) => ({
+      title: item.title,
+      result: item.result,
+      description: item.description,
+      matchId: undefined
+    })) satisfies RecentCard[];
+  }
 
   if (!dataset?.matches?.length) {
     return [
       {
         title: locale === 'zh' ? '近期比赛' : 'Recent matches',
         result: locale === 'zh' ? '暂无可用数据' : 'No data available yet',
-        description: locale === 'zh' ? '数据源尚未发布或暂不可用。' : 'The source feed has not been published yet.'
+        description: locale === 'zh' ? '数据源尚未发布或暂不可用。' : 'The source feed has not been published yet.',
+        matchId: undefined
       }
-    ];
+    ] satisfies RecentCard[];
   }
 
   return dataset.matches.map((match) => {
@@ -270,7 +280,7 @@ function buildRecentCards(
       result: score,
       description: meta || (locale === 'zh' ? '—' : '—'),
       matchId: match.match_id
-    };
+    } satisfies RecentCard;
   });
 }
 

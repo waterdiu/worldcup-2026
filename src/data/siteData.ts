@@ -338,6 +338,11 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
     manifest.runtime_contract?.core?.rosters?.url,
     './core/rosters.json'
   );
+  const teamStaffEntry = selectRuntimeEntry(
+    manifest.runtime_contract?.core?.team_staff?.path,
+    manifest.runtime_contract?.core?.team_staff?.url,
+    './core/team-staff.json'
+  );
 
   const baseUrl = manifestAbsoluteUrl.replace(/\/[^/]*$/, '/');
   const rosterUrl = new URL(rosterEntry, baseUrl).toString();
