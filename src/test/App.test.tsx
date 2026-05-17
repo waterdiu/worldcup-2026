@@ -327,6 +327,7 @@ describe('App routes', () => {
     expect(screen.getAllByLabelText(/进入球队详情:/).length).toBe(48);
     expect(screen.getByRole('link', { name: /进入球队详情: Mexico/ })).toHaveClass('team-card__link');
     expect(screen.getByRole('link', { name: /进入球队详情: Mexico/ })).toHaveClass('team-card__name-link');
+    expect(screen.getByRole('link', { name: /进入球队详情: Mexico/ })).toHaveClass('team-card');
     expect(screen.getByText(/世界排名第 15 位/)).toBeInTheDocument();
     expect(screen.queryByText(/查看详情/)).not.toBeInTheDocument();
     expect(screen.queryByText(/后续/)).not.toBeInTheDocument();
