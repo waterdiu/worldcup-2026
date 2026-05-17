@@ -1,4 +1,4 @@
-import { localizePath, type AppCopy } from '../i18n/content';
+import type { AppCopy } from '../i18n/content';
 import { formatTeamName } from '../i18n/formatters';
 import type { MatchEventData, QualifierMatchData } from '../types/tournament';
 
@@ -45,10 +45,6 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
 
   return (
     <section className="qualifier-subpage qualifier-match-detail-page">
-      <a className="qualifier-back-link" href={localizePath(`/qualifiers/${match.confederationId}`, copy.locale)}>
-        {copy.locale === 'zh' ? '返回上级页面' : 'Back to previous level'}
-      </a>
-
       <header className="qualifier-subpage__masthead">
         <h1>{homeLabel} <em>{match.homeScore}-{match.awayScore}</em> {awayLabel}</h1>
         <div className="qualifier-subpage__meta">

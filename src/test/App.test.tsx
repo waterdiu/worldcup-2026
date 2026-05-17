@@ -205,7 +205,6 @@ describe('App routes', () => {
     render(<App />);
 
     expect(screen.getByRole('heading', { name: /欧足联预选赛/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /返回预选赛总览/i })).toHaveAttribute('href', '/qualifiers');
 
     await user.click(screen.getByRole('button', { name: /挪威/i }));
 

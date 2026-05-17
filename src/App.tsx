@@ -12,6 +12,7 @@ import { AdminPage } from './pages/AdminPage';
 import { CitiesPage } from './pages/CitiesPage';
 import { GroupDetailPage } from './pages/GroupDetailPage';
 import { GroupsPage } from './pages/GroupsPage';
+import { HistoricalMatchDetailPage } from './pages/HistoricalMatchDetailPage';
 import { HomePage } from './pages/HomePage';
 import { MatchDetailPage } from './pages/MatchDetailPage';
 import { MatchesPage } from './pages/MatchesPage';
@@ -40,7 +41,9 @@ function normalizePathname(pathname: string): string {
 }
 
 function getTopLevelReturnLink(pathname: string, locale: Locale): { href: string; label: string } | null {
-  const topLevelPages = new Set(['/groups', '/teams', '/matches', '/cities', '/qualifiers', '/stats', '/me', '/admin']);
+  // Only show the top-level return bar on primary finals pages that can benefit from a "back home" affordance.
+  // Qualifiers / stats / user center / admin console intentionally do not show a return bar.
+  const topLevelPages = new Set(['/groups', '/teams', '/matches', '/cities']);
   if (!topLevelPages.has(pathname)) return null;
 
   return {
@@ -64,7 +67,9 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
     groups,
     qualifierMatches,
     rosters,
-    teamStaff
+    teamStaff,
+    teamRecentMatches,
+    teamWorldCupHistory
   } = siteData;
 
   if (pathname === '/qualifiers') {
@@ -173,6 +178,8 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
         fixtures={groupStageMatches}
         rosters={rosters}
         teamStaff={teamStaff}
+        teamRecentMatches={teamRecentMatches}
+        teamWorldCupHistory={teamWorldCupHistory}
         copy={copy}
       />
     );
@@ -192,6 +199,11 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
   }
 
   if (pathname.startsWith('/matches/')) {
+    if (pathname.startsWith('/matches/historical/')) {
+      const matchId = decodeURIComponent(pathname.split('/')[3] ?? '');
+      return <HistoricalMatchDetailPage matchId={matchId} siteData={siteData} copy={copy} />;
+    }
+
     const matchId = pathname.split('/')[2];
     const fixture = groupStageMatches.find((item) => item.id === matchId) ?? groupFixtures.find((item) => item.id === matchId);
 

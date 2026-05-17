@@ -1,6 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { findTeamProfile, type TeamProfileData } from '../data/teamProfiles';
-import type { WorldCupTeamRoster, WorldCupTeamStaff } from '../data/siteData';
+import type {
+  WorldCupTeamRecentMatches,
+  WorldCupTeamRoster,
+  WorldCupTeamStaff,
+  WorldCupTeamWorldCupHistory
+} from '../data/siteData';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatConfederationName, formatTeamName, formatVenueName, getTeamDisplay } from '../i18n/formatters';
 import type { ConfederationCardData, GroupCardData, GroupStageMatchData } from '../types/tournament';
@@ -12,6 +17,8 @@ interface TeamDetailPageProps {
   fixtures: GroupStageMatchData[];
   rosters: WorldCupTeamRoster[];
   teamStaff: WorldCupTeamStaff[];
+  teamRecentMatches: WorldCupTeamRecentMatches[];
+  teamWorldCupHistory: WorldCupTeamWorldCupHistory[];
   copy: AppCopy;
 }
 
@@ -50,11 +57,11 @@ function formatPlainTeamName(team: string, locale: AppCopy['locale']): string {
   return getTeamDisplay(team).zh;
 }
 
-function formatTournamentLabel(record: NonNullable<TeamProfileData['worldCupHistory']>[number], locale: AppCopy['locale']): string {
-  if (locale === 'en') return record.tournament;
+function formatTournamentLabel(label: string, year: number, locale: AppCopy['locale']): string {
+  if (locale === 'en') return `${label} (${year})`;
 
-  const tournament = record.tournament.replace(/^\d{4}\s*/, '');
-  return `${tournament}（${record.year}）`;
+  const tournament = label.replace(/^\d{4}\s*/, '');
+  return `${tournament}（${year}）`;
 }
 
 function normalizePersonStatus(status: string, role: string, locale: AppCopy['locale']): { label: string; kind: PersonStatusKind } {
@@ -94,6 +101,14 @@ function normalizeTeamKey(value: string) {
     .replace(/^-|-$/g, '');
 }
 
+function runtimeApiBase() {
+  const configuredBase = import.meta.env.VITE_WORLDCUP_DATA_API_BASE;
+  if (configuredBase) return configuredBase.replace(/\/+$/, '');
+  return import.meta.env.PROD
+    ? 'https://waterdiu.github.io/football-data-platform/api/worldcup/2026'
+    : '/api/worldcup/2026';
+}
+
 function findRuntimeRoster(team: string, rosters: WorldCupTeamRoster[]) {
   const teamKey = normalizeTeamKey(team);
   return rosters.find((roster) => roster.team_id === teamKey || normalizeTeamKey(roster.team_name) === teamKey);
@@ -104,6 +119,16 @@ function findHeadCoach(team: string, teamStaff: WorldCupTeamStaff[]) {
   return teamStaff.find((staff) => (
     (staff.team_id === teamKey || normalizeTeamKey(staff.team_name) === teamKey) && staff.role === 'head_coach'
   ));
+}
+
+function findTeamRecentMatches(team: string, datasets: WorldCupTeamRecentMatches[]) {
+  const teamKey = normalizeTeamKey(team);
+  return datasets.find((entry) => entry.team_id === teamKey || normalizeTeamKey(entry.team_name) === teamKey);
+}
+
+function findTeamWorldCupHistory(team: string, datasets: WorldCupTeamWorldCupHistory[]) {
+  const teamKey = normalizeTeamKey(team);
+  return datasets.find((entry) => entry.team_id === teamKey || normalizeTeamKey(entry.team_name) === teamKey);
 }
 
 function getQualificationLabel(
@@ -165,49 +190,32 @@ function getQualificationCards(
   ];
 }
 
-function getRecentCards(profile: TeamProfileData | undefined, locale: AppCopy['locale']) {
-  if (profile?.recentResults?.length && locale === 'zh') return profile.recentResults;
-
-  return [
-    {
-      title: locale === 'zh' ? '近期成绩数据位' : 'Recent form data slot',
-      result: locale === 'zh' ? '待接入逐场数据' : 'Ready for match-by-match data',
-      description:
-        locale === 'zh'
-          ? '这里用于展示最近正式比赛或友谊赛的比分、对手和表现摘要。'
-          : 'This area is prepared for recent competitive or friendly results.'
-    }
-  ];
-}
-
-function getHistoryRecords(
-  team: string,
-  profile: TeamProfileData | undefined,
+function buildWorldCupHistorySummary(
+  teamTitle: string,
+  dataset: WorldCupTeamWorldCupHistory | undefined,
   locale: AppCopy['locale']
-) {
-  if (profile?.historyRecords?.length && locale === 'zh') return profile.historyRecords;
+): string | undefined {
+  if (!dataset?.summary) return undefined;
+  const summary = dataset.summary;
+  const appearances = summary.appearances ?? 0;
+  const bestFinish = summary.best_finish ?? null;
 
-  const participations = profile?.participations ?? 0;
-  return [
-    {
-      title: locale === 'zh' ? '世界杯参赛记录' : 'World Cup appearances',
-      result:
-        locale === 'zh'
-          ? participations > 0
-            ? `参赛 ${participations} 次`
-            : '首次参赛周期'
-          : participations > 0
-            ? `${participations} appearances`
-            : 'First appearance cycle',
-      description:
-        locale === 'zh'
-          ? `${formatTeamName(team, locale)} 的历史战绩区用于承接历届成绩、最好名次、淘汰赛经历和关键年份。`
-          : `${team}'s archive section can host historical finishes, best runs, knockout records, and milestone years.`
-    }
-  ];
+  const base = locale === 'zh'
+    ? `${teamTitle}共参加世界杯 ${appearances} 次`
+    : `${teamTitle} has qualified for the World Cup ${appearances} times`;
+  const best = bestFinish
+    ? locale === 'zh'
+      ? `，最好成绩：${bestFinish}`
+      : `, best finish: ${bestFinish}`
+    : '';
+  const record = locale === 'zh'
+    ? `，总战绩 ${summary.won}-${summary.drawn}-${summary.lost}，进失球 ${summary.goals_for}-${summary.goals_against}`
+    : `, record ${summary.won}-${summary.drawn}-${summary.lost}, goals ${summary.goals_for}-${summary.goals_against}`;
+
+  return `${base}${best}${record}`;
 }
 
-function getWorldCupHistorySummary(
+function buildLegacyWorldCupHistorySummary(
   teamTitle: string,
   profile: TeamProfileData | undefined,
   locale: AppCopy['locale']
@@ -225,6 +233,45 @@ function getWorldCupHistorySummary(
         : '';
 
   return `${base}${record}${bestFinish}。`;
+}
+
+function formatRecentMatchTitle(match: WorldCupTeamRecentMatches['matches'][number], locale: AppCopy['locale']) {
+  const date = locale === 'zh' ? formatDetailDate(match.date, locale) : match.date;
+  const opponent = formatPlainTeamName(match.opponent_name, locale);
+  const score = `${match.score_for}-${match.score_against}`;
+  return `${date} · ${opponent} · ${score}`;
+}
+
+function buildRecentCards(
+  dataset: WorldCupTeamRecentMatches | undefined,
+  profile: TeamProfileData | undefined,
+  locale: AppCopy['locale']
+) {
+  if (profile?.recentResults?.length && locale === 'zh') return profile.recentResults;
+
+  if (!dataset?.matches?.length) {
+    return [
+      {
+        title: locale === 'zh' ? '近期比赛' : 'Recent matches',
+        result: locale === 'zh' ? '暂无可用数据' : 'No data available yet',
+        description: locale === 'zh' ? '数据源尚未发布或暂不可用。' : 'The source feed has not been published yet.'
+      }
+    ];
+  }
+
+  return dataset.matches.map((match) => {
+    const score = `${match.score_for}-${match.score_against}`;
+    const venue = match.venue ? (locale === 'zh' ? formatVenueName(match.venue, locale) : match.venue) : undefined;
+    const location = [match.city, match.country].filter(Boolean).join(', ');
+    const meta = [match.tournament, venue ?? location].filter(Boolean).join(' · ');
+
+    return {
+      title: formatRecentMatchTitle(match, locale),
+      result: score,
+      description: meta || (locale === 'zh' ? '—' : '—'),
+      matchId: match.match_id
+    };
+  });
 }
 
 function formatRosterStatus(status: string | null | undefined, locale: AppCopy['locale']) {
@@ -273,14 +320,20 @@ export function TeamDetailPage({
   fixtures,
   rosters,
   teamStaff,
+  teamRecentMatches = [],
+  teamWorldCupHistory = [],
   copy
 }: TeamDetailPageProps) {
   const [expandedHistoryYear, setExpandedHistoryYear] = useState<number | null>(null);
+  const [runtimeHistoryFallback, setRuntimeHistoryFallback] = useState<WorldCupTeamWorldCupHistory | null>(null);
+  const [runtimeRecentFallback, setRuntimeRecentFallback] = useState<WorldCupTeamRecentMatches | null>(null);
   const group = findTeamGroup(team, groups);
   const confederation = findTeamConfederation(team, confederations);
   const profile = findTeamProfile(team);
   const runtimeRoster = findRuntimeRoster(team, rosters);
   const headCoach = findHeadCoach(team, teamStaff);
+  const recentDataset = findTeamRecentMatches(team, teamRecentMatches) ?? runtimeRecentFallback ?? undefined;
+  const historyDataset = findTeamWorldCupHistory(team, teamWorldCupHistory) ?? runtimeHistoryFallback ?? undefined;
   const teamFixtures = findTeamFixtures(team, fixtures);
 
   if (!group) {
@@ -299,13 +352,15 @@ export function TeamDetailPage({
 
   const qualificationLabel = getQualificationLabel(team, confederation?.name, copy.locale);
   const qualificationCards = getQualificationCards(team, group, confederation, profile, copy.locale);
-  const recentCards = getRecentCards(profile, copy.locale);
-  const historyRecords = getHistoryRecords(team, profile, copy.locale);
+  const recentCards = buildRecentCards(recentDataset, profile, copy.locale);
   const playerCards = getPlayerCards(runtimeRoster, profile, copy.locale);
-  const worldCupHistory = profile?.worldCupHistory;
+  const legacyWorldCupHistory = profile?.worldCupHistory;
   const teamDisplay = getTeamDisplay(team);
   const teamTitle = copy.locale === 'zh' ? teamDisplay.zh : team;
-  const worldCupHistorySummary = getWorldCupHistorySummary(teamTitle, profile, copy.locale);
+  const worldCupHistorySummary = historyDataset?.summary
+    ? buildWorldCupHistorySummary(teamTitle, historyDataset, copy.locale)
+    : buildLegacyWorldCupHistorySummary(teamTitle, profile, copy.locale);
+  const expectsWorldCupHistory = Boolean((profile?.participations ?? 0) > 0);
   const groupLabel = `${copy.labels.groupPrefix} ${group.id}`;
   const coachName = headCoach
     ? headCoach.name_zh ?? headCoach.display_name ?? headCoach.name
@@ -357,6 +412,36 @@ export function TeamDetailPage({
       status: player.status
     }))
   ];
+
+  useEffect(() => {
+    // Safety net: if the large runtime datasets haven't been populated into siteData yet,
+    // fetch them directly so team pages don't appear empty.
+    const teamKey = normalizeTeamKey(team);
+    if (expectsWorldCupHistory && !historyDataset) {
+      fetch(`${runtimeApiBase()}/core/team-world-cup-history.json`, { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+        .then((data: WorldCupTeamWorldCupHistory[]) => {
+          const found = data.find((entry) => entry.team_id === teamKey || normalizeTeamKey(entry.team_name) === teamKey) ?? null;
+          setRuntimeHistoryFallback(found);
+        })
+        .catch(() => {
+          setRuntimeHistoryFallback(null);
+        });
+    }
+
+    if (!recentDataset) {
+      fetch(`${runtimeApiBase()}/core/team-recent-matches.json`, { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
+        .then((data: WorldCupTeamRecentMatches[]) => {
+          const found = data.find((entry) => entry.team_id === teamKey || normalizeTeamKey(entry.team_name) === teamKey) ?? null;
+          setRuntimeRecentFallback(found);
+        })
+        .catch(() => {
+          setRuntimeRecentFallback(null);
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [team]);
 
   return (
     <>
@@ -417,7 +502,7 @@ export function TeamDetailPage({
 
         <section className="section team-detail-section">
           <h2 className="section-title">{copy.locale === 'zh' ? '历史战绩' : 'Historical Record'}</h2>
-          {worldCupHistory?.length ? (
+          {historyDataset?.editions?.length ? (
             <article className="world-cup-history-card">
               {worldCupHistorySummary ? (
                 <p className="world-cup-history-card__summary">{worldCupHistorySummary}</p>
@@ -431,7 +516,76 @@ export function TeamDetailPage({
                   <span>{copy.locale === 'zh' ? '进失球' : 'Goals'}</span>
                   <span>{copy.locale === 'zh' ? '比赛' : 'Matches'}</span>
                 </div>
-                {worldCupHistory.map((record) => {
+                {historyDataset.editions.map((edition) => {
+                  const isExpanded = expandedHistoryYear === edition.year;
+                  const record = `${edition.won}-${edition.drawn}-${edition.lost}`;
+                  const goals = `${edition.goals_for}-${edition.goals_against}`;
+
+                  return (
+                    <article className="world-cup-history-row" key={edition.year}>
+                      <button
+                        type="button"
+                        className="world-cup-history-row__toggle"
+                        data-testid="world-cup-history-toggle"
+                        aria-expanded={isExpanded}
+                        aria-label={`${isExpanded ? (copy.locale === 'zh' ? '收起' : 'Collapse') : (copy.locale === 'zh' ? '展开' : 'Expand')} FIFA World Cup ${edition.year} ${copy.locale === 'zh' ? '比赛详情' : 'match details'}`}
+                        onClick={() => setExpandedHistoryYear(isExpanded ? null : edition.year)}
+                      >
+                        <div className="world-cup-history-row__event">
+                          <h3>{formatTournamentLabel('FIFA World Cup', edition.year, copy.locale)}</h3>
+                        </div>
+                        <span>—</span>
+                        <span>—</span>
+                        <span>{record}</span>
+                        <span>{goals}</span>
+                        <span className="world-cup-history-row__cue">
+                          {isExpanded
+                            ? copy.locale === 'zh'
+                              ? '收起'
+                              : 'Collapse'
+                            : copy.locale === 'zh'
+                              ? '展开比赛'
+                              : 'View matches'}
+                        </span>
+                      </button>
+                      {isExpanded ? (
+                        <div className="world-cup-history-row__matches">
+                          {edition.matches.map((match, index) => {
+                            const opponent = formatPlainTeamName(match.opponent_name, copy.locale);
+                            const score = `${match.score_for}-${match.score_against}`;
+                            const date = copy.locale === 'zh' ? formatDetailDate(match.date, copy.locale) : match.date;
+                            const venue = match.venue ? formatVenueName(match.venue, copy.locale) : '';
+                            const meta = [date, opponent, score, venue].filter(Boolean).join(' · ');
+
+                            return (
+                              <div className="world-cup-match-row" data-testid="world-cup-match-row" key={match.match_id}>
+                                <span>{copy.locale === 'zh' ? `比赛 ${index + 1}` : `Match ${index + 1}`}</span>
+                                <strong>{meta}</strong>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                })}
+              </div>
+            </article>
+          ) : legacyWorldCupHistory?.length ? (
+            <article className="world-cup-history-card">
+              {worldCupHistorySummary ? (
+                <p className="world-cup-history-card__summary">{worldCupHistorySummary}</p>
+              ) : null}
+              <div className="world-cup-history-table">
+                <div className="world-cup-history-table__head" aria-hidden="true">
+                  <span>{copy.locale === 'zh' ? '赛事' : 'Tournament'}</span>
+                  <span>{copy.locale === 'zh' ? '阶段' : 'Stage'}</span>
+                  <span>{copy.locale === 'zh' ? '名次' : 'Rank'}</span>
+                  <span>{copy.locale === 'zh' ? '战绩' : 'Record'}</span>
+                  <span>{copy.locale === 'zh' ? '进失球' : 'Goals'}</span>
+                  <span>{copy.locale === 'zh' ? '比赛' : 'Matches'}</span>
+                </div>
+                {legacyWorldCupHistory.map((record) => {
                   const isExpanded = expandedHistoryYear === record.year;
 
                   return (
@@ -445,7 +599,7 @@ export function TeamDetailPage({
                         onClick={() => setExpandedHistoryYear(isExpanded ? null : record.year)}
                       >
                         <div className="world-cup-history-row__event">
-                          <h3>{formatTournamentLabel(record, copy.locale)}</h3>
+                          <h3>{formatTournamentLabel(record.tournament, record.year, copy.locale)}</h3>
                         </div>
                         <span>{record.stage}</span>
                         <span>{record.position}</span>
@@ -476,16 +630,22 @@ export function TeamDetailPage({
                 })}
               </div>
             </article>
+          ) : expectsWorldCupHistory ? (
+            <article className="team-history-card">
+              <p>{copy.locale === 'zh' ? '历史战绩加载中' : 'Historical record loading'}</p>
+              <h3>{copy.locale === 'zh' ? '数据源同步中' : 'Syncing data source'}</h3>
+              <span>
+                {copy.locale === 'zh'
+                  ? '该队有世界杯参赛记录，但当前运行时历史数据尚未加载完成。刷新页面或稍后再试。'
+                  : 'This team has prior World Cup appearances, but the runtime history feed has not finished loading. Refresh or try again soon.'}
+              </span>
+            </article>
           ) : (
-            <div className="team-history-list">
-              {historyRecords.map((record) => (
-                <article className="team-history-card" key={record.title}>
-                  <p>{record.result}</p>
-                  <h3>{record.title}</h3>
-                  <span>{record.description}</span>
-                </article>
-              ))}
-            </div>
+            <article className="team-history-card">
+              <p>{copy.locale === 'zh' ? '暂无世界杯正赛历史记录' : 'No prior World Cup finals record'}</p>
+              <h3>{copy.locale === 'zh' ? '首次参赛周期' : 'First appearance cycle'}</h3>
+              <span>{copy.locale === 'zh' ? '该队此前没有世界杯正赛参赛记录。' : 'This team has no prior World Cup finals appearances.'}</span>
+            </article>
           )}
         </section>
 
@@ -499,11 +659,25 @@ export function TeamDetailPage({
             </div>
             <div className="recent-match-list">
               {recentCards.map((item) => (
-                <article className="recent-match-row" data-testid="recent-match-row" key={`${item.title}-${item.result}`}>
-                  <span>{item.title}</span>
-                  <strong>{item.result}</strong>
-                  <p>{item.description}</p>
-                </article>
+                item.matchId ? (
+                  <a
+                    className="recent-match-row recent-match-row--link"
+                    data-testid="recent-match-row"
+                    key={item.matchId}
+                    href={localizePath(`/matches/historical/${encodeURIComponent(item.matchId)}`, copy.locale)}
+                    aria-label={copy.locale === 'zh' ? `打开历史比赛详情：${item.title}` : `Open historical match: ${item.title}`}
+                  >
+                    <span>{item.title}</span>
+                    <strong>{item.result}</strong>
+                    <p>{item.description}</p>
+                  </a>
+                ) : (
+                  <article className="recent-match-row" data-testid="recent-match-row" key={`${item.title}-${item.result}`}>
+                    <span>{item.title}</span>
+                    <strong>{item.result}</strong>
+                    <p>{item.description}</p>
+                  </article>
+                )
               ))}
             </div>
           </article>

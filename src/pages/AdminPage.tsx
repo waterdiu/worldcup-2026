@@ -157,7 +157,7 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
   const sampleMatches = groupStageMatches.slice(0, 8);
   const adminNavGroups: Array<{
     label: string;
-    items: Array<{ id: AdminTab; icon: string; label: string; badge?: string | number; tone?: 'red' | 'blue' | 'muted' }>;
+    items: Array<{ id: AdminTab; icon: string; label: string; badge?: string | number; tone?: 'red' | 'gold' | 'muted' }>;
   }> = [
     {
       label: isZh ? '概览' : 'Overview',
@@ -169,7 +169,7 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
     {
       label: isZh ? '赛事内容' : 'Tournament',
       items: [
-        { id: 'matches', icon: '⚽', label: isZh ? '赛程管理' : 'Matches', badge: groupStageMatches.length, tone: 'blue' },
+        { id: 'matches', icon: '⚽', label: isZh ? '赛程管理' : 'Matches', badge: groupStageMatches.length, tone: 'gold' },
         { id: 'scores', icon: '✎', label: isZh ? '比分录入' : 'Scores', badge: pendingScoreMatches.length, tone: pendingScoreMatches.length ? 'red' : 'muted' },
         { id: 'groups', icon: '≡', label: isZh ? '积分榜' : 'Groups' }
       ]

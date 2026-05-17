@@ -46,10 +46,6 @@ export function QualifierConfederationPage({
 
   return (
     <section className="qualifier-subpage qualifier-confederation-page">
-      <a className="qualifier-back-link" href={localizePath('/qualifiers', copy.locale)}>
-        {copy.locale === 'zh' ? '返回预选赛总览' : 'Back to qualifiers'}
-      </a>
-
       <header className="qualifier-subpage__masthead">
         <h1>
           {copy.locale === 'zh'
