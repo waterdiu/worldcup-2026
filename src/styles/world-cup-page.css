@@ -116,10 +116,8 @@
   box-shadow: none;
 }
 
-.world-cup-page--finals .feature-card:hover,
 .world-cup-page--finals .fixture-card--link:hover,
 .world-cup-page--finals .fixture-card--link:focus-visible,
-.world-cup-page--finals .team-card:hover,
 .world-cup-page--finals .match-overview-card:hover,
 .world-cup-page--finals .match-overview-card:focus-visible,
 .world-cup-page--finals .bracket-match--link:hover,
@@ -7836,10 +7834,10 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .page-nav a:hover,
-  .home-metric-card:hover,
+  .home-metric-card__summary--link:hover,
   .stats-kpi-grid article:hover,
   .admin-data-row:hover,
-  .user-center-card:hover {
+  .user-match-card:hover {
     transform: translateY(-2px) rotate(-0.15deg);
   }
 }
@@ -9273,10 +9271,8 @@
   box-shadow: none;
 }
 
-.world-cup-page--finals .feature-card:hover,
 .world-cup-page--finals .fixture-card--link:hover,
 .world-cup-page--finals .fixture-card--link:focus-visible,
-.world-cup-page--finals .team-card:hover,
 .world-cup-page--finals .match-overview-card:hover,
 .world-cup-page--finals .match-overview-card:focus-visible,
 .world-cup-page--finals .bracket-match--link:hover,
@@ -9606,7 +9602,6 @@
   box-shadow: none !important;
 }
 
-.world-cup-page--matches-overview .matches-summary-grid .feature-card:hover,
 .world-cup-page--matches-overview .match-overview-card:hover,
 .world-cup-page--matches-overview .match-overview-card:focus-visible,
 .world-cup-page--matches-overview .bracket-match--link:hover,
@@ -9614,6 +9609,29 @@
   background: #1e1c17 !important;
   border-color: #c8f230 !important;
   box-shadow: none !important;
+}
+
+.world-cup-page--finals :where(.feature-card, .team-card):not(a, button, [role='button'], [tabindex]) {
+  cursor: default;
+}
+
+.world-cup-page--finals :where(.feature-card, .team-card):not(a, button, [role='button'], [tabindex]):hover {
+  background: #161410;
+  border-color: #38342a;
+  box-shadow: none;
+  transform: none;
+}
+
+.world-cup-page--finals :where(
+  .city-detail-card,
+  .city-profile-card,
+  .city-stadium-info-card,
+  .matches-summary-grid .feature-card
+):hover {
+  background: #161410 !important;
+  border-color: #38342a !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .world-cup-page--finals .cities-floating-poster img,
