@@ -61,4 +61,10 @@ describe('layout CSS contracts', () => {
     expect(css).toMatch(/\.world-cup-page--finals \.section-header\s*\{[^}]*clip-path:\s*none !important/s);
     expect(css).toMatch(/\.world-cup-page--finals \.section-header::before,\s*\n\.world-cup-page--finals \.section-header::after\s*\{[^}]*content:\s*none !important/s);
   });
+
+  it('removes decorative page background images and section-header pseudo backgrounds', () => {
+    expect(css).toMatch(/\.world-cup-page\s*\{[^}]*background-image:\s*none !important/s);
+    expect(css).toMatch(/\.world-cup-page::before,\s*\n\.world-cup-page::after\s*\{[^}]*background-image:\s*none !important/s);
+    expect(css).toMatch(/\.world-cup-page \.section-header::before,\s*\n\.world-cup-page \.section-header::after\s*\{[^}]*background-image:\s*none !important/s);
+  });
 });

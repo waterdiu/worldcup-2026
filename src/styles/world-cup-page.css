@@ -11840,6 +11840,28 @@
   line-height: 1.25 !important;
 }
 
+/* Final page-background guardrail: content images are allowed, page backdrops are not. */
+.world-cup-page {
+  background: #0e0d0b !important;
+  background-image: none !important;
+}
+
+.world-cup-page::before,
+.world-cup-page::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+}
+
+.world-cup-page .section-header::before,
+.world-cup-page .section-header::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+}
+
 @media (max-width: 640px) {
   .world-cup-page {
     --site-title-size: clamp(28px, 9vw, 42px);
