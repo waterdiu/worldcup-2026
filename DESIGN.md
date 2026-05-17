@@ -902,7 +902,33 @@ The current Vite build warns about large chunks. Future work should consider rou
 
 The site has many pages and historical CSS. New work must verify linked child pages, not only the homepage.
 
-## 16. Verification Checklist
+## 16. Project Rules And Coordination Boundary
+
+Project execution rules are recorded in:
+
+```text
+AGENTS.md
+docs/2026-05-17-project-rules.md
+```
+
+The active Codex work boundary is:
+
+```text
+/Users/chamcham/Documents/AI/CODEX/soccer/worldcup/2026
+```
+
+The site conversation may read, but must not edit, these coordination documents:
+
+```text
+/Users/chamcham/Documents/AI/CODEX/soccer/football-data-platform/docs/2026-05-17-coordination-and-github-publish-rules.md
+/Users/chamcham/Documents/AI/CODEX/soccer/WORKSPACE_STATUS.md
+```
+
+If the site needs data-layer or model-layer changes, it should produce a handoff note for the user to forward to the appropriate project conversation. This project only owns the presentation site UI, routing, frontend data consumption, fallback behavior, Supabase frontend integration, tests, deployment, and site documentation.
+
+GitHub publishing policy: prefer normal SSH Git `fetch/pull/push`; use GitHub API only when SSH/Git transport fails. Always check `git status --short --branch` before publishing.
+
+## 17. Verification Checklist
 
 Before completing meaningful changes:
 
@@ -931,7 +957,7 @@ Before completing meaningful changes:
 - Check Supabase-authenticated states when changing user/admin pages.
 - Check runtime data fallback behavior when changing data loading.
 
-## 17. Documentation Maintenance Rules
+## 18. Documentation Maintenance Rules
 
 This file is the main design baseline for the `worldcup/2026` project.
 
