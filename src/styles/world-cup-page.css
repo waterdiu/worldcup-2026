@@ -9411,6 +9411,42 @@
   display: none !important;
 }
 
+.world-cup-page--matches-overview .matches-section-title {
+  align-items: baseline;
+  border-bottom: 1px solid #38342a;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+}
+
+.world-cup-page--matches-overview .matches-section-title span {
+  color: #c8f230;
+  flex: 0 0 auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}
+
+.world-cup-page--matches-overview .matches-section-title h1,
+.world-cup-page--matches-overview .matches-section-title h2 {
+  color: #f0ede6;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(24px, 3vw, 40px);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 0.9;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.world-cup-page--matches-overview .matches-section-title--primary h1 {
+  font-size: clamp(34px, 4.8vw, 64px);
+  letter-spacing: -0.025em;
+}
+
 .world-cup-page--matches-overview .matches-summary-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }

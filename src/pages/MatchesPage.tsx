@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { KnockoutBracketSection } from '../components/KnockoutBracketSection';
-import { SectionHeader } from '../components/SectionHeader';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatTeamName, formatVenueName } from '../i18n/formatters';
 import type { BracketRoundData, GroupStageMatchData } from '../types/tournament';
@@ -62,9 +61,10 @@ export function MatchesPage({ fixtures, rounds, copy }: MatchesPageProps) {
   return (
     <>
       <section className="section page-intro matches-page-intro">
-        <SectionHeader
-          title={copy.locale === 'zh' ? '赛程总览' : 'Schedule Overview'}
-        />
+        <div className="matches-section-title matches-section-title--primary">
+          <span>01</span>
+          <h1>{copy.locale === 'zh' ? '赛程总览' : 'Schedule Overview'}</h1>
+        </div>
         <div className="feature-grid matches-summary-grid" aria-label={copy.locale === 'zh' ? '赛程阶段统计' : 'Schedule phase totals'}>
           <article className="feature-card">
             <h3>{copy.locale === 'zh' ? `${sortedFixtures.length} 场小组赛` : `${sortedFixtures.length} group matches`}</h3>
@@ -75,9 +75,10 @@ export function MatchesPage({ fixtures, rounds, copy }: MatchesPageProps) {
         </div>
       </section>
       <section className="section match-overview-section">
-        <SectionHeader
-          title={copy.locale === 'zh' ? '小组赛' : 'Group Stage'}
-        />
+        <div className="matches-section-title">
+          <span>02</span>
+          <h2>{copy.locale === 'zh' ? '小组赛' : 'Group Stage'}</h2>
+        </div>
         <div className="match-overview-list" ref={groupListRef}>
           {sortedFixtures.map((fixture) => {
             const isNearestUpcoming = fixture.id === nearestUpcomingFixtureId;
@@ -107,6 +108,7 @@ export function MatchesPage({ fixtures, rounds, copy }: MatchesPageProps) {
         rounds={rounds}
         copy={copy}
         title={copy.locale === 'zh' ? '淘汰赛' : 'Knockout Stage'}
+        titlePrefix="03"
       />
     </>
   );

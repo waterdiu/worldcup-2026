@@ -46,6 +46,9 @@ describe('layout CSS contracts', () => {
     expect(css).toMatch(/\.world-cup-page--matches-overview \.section-header\s*\{[^}]*background-image:\s*none !important/s);
     expect(css).toMatch(/\.world-cup-page--matches-overview \.section-header\s*\{[^}]*box-shadow:\s*none !important/s);
     expect(css).toMatch(/\.world-cup-page--matches-overview \.section-header::before,\s*\n\.world-cup-page--matches-overview \.section-header::after\s*\{[^}]*content:\s*none !important/s);
+    expect(css).toMatch(/\.world-cup-page--matches-overview \.matches-section-title\s*\{[^}]*border-bottom:\s*1px solid #38342a/s);
+    expect(css).toMatch(/\.world-cup-page--matches-overview \.matches-section-title span\s*\{[^}]*color:\s*#c8f230/s);
+    expect(css).toMatch(/\.world-cup-page--matches-overview \.matches-section-title h1,\s*\n\.world-cup-page--matches-overview \.matches-section-title h2\s*\{[^}]*font-style:\s*italic/s);
     expect(css).toMatch(/\.world-cup-page--matches-overview \.match-overview-list\s*\{[^}]*max-height:\s*688px/s);
     expect(css).toMatch(/\.world-cup-page--matches-overview \.match-overview-list\s*\{[^}]*overflow-y:\s*auto/s);
     expect(css).toMatch(/\.world-cup-page--matches-overview \.knockout-map\s*\{[^}]*--bracket-card-width:\s*118px/s);

@@ -9,6 +9,7 @@ interface KnockoutBracketSectionProps {
   rounds: BracketRoundData[];
   copy: AppCopy;
   title?: string;
+  titlePrefix?: string;
   description?: string;
 }
 
@@ -95,7 +96,7 @@ function KnockoutColumn({
   );
 }
 
-export function KnockoutBracketSection({ rounds, copy, title, description }: KnockoutBracketSectionProps) {
+export function KnockoutBracketSection({ rounds, copy, title, titlePrefix, description }: KnockoutBracketSectionProps) {
   const roundOf32 = getRound(rounds, 'Round of 32');
   const roundOf16 = getRound(rounds, 'Round of 16');
   const quarterFinals = getRound(rounds, 'Quarter-finals');
@@ -108,10 +109,17 @@ export function KnockoutBracketSection({ rounds, copy, title, description }: Kno
 
   return (
     <section id="knockout" className="section">
-      <SectionHeader
-        title={title ?? copy.sections.knockoutTitle}
-        description={title ? description : description ?? copy.sections.knockoutDescription}
-      />
+      {titlePrefix ? (
+        <div className="matches-section-title">
+          <span>{titlePrefix}</span>
+          <h2>{title ?? copy.sections.knockoutTitle}</h2>
+        </div>
+      ) : (
+        <SectionHeader
+          title={title ?? copy.sections.knockoutTitle}
+          description={title ? description : description ?? copy.sections.knockoutDescription}
+        />
+      )}
       <div className="knockout-map" data-testid="knockout-bracket-map">
         <div className="knockout-path knockout-path--left" data-testid="knockout-left-path">
           <KnockoutColumn label={formatBracketLabel('Round of 32', copy.locale)} matches={roundOf32.slice(0, 8)} copy={copy} />
