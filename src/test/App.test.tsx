@@ -2,9 +2,10 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import App from '../App';
-import { bracket, finalsMatchResults, groups, tournamentMeta } from '../data';
+import { bracket, confederations, finalsMatchResults, groups, groupStageMatches, tournamentMeta } from '../data';
 import { buildOAuthRedirectUrl } from '../hooks/useAuth';
 import { contentByLocale } from '../i18n/content';
+import { TeamDetailPage } from '../pages/TeamDetailPage';
 
 describe('App routes', () => {
   beforeEach(() => {
@@ -374,7 +375,8 @@ describe('App routes', () => {
     expect(recentRows[0]).toHaveTextContent('美国 1-2 墨西哥');
     expect(recentRows[3]).toHaveTextContent('2025 美金杯小组赛');
     expect(screen.getAllByText(/主教练/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Javier Aguirre/)).toBeInTheDocument();
+    expect(screen.getByText(/暂未公布/)).toBeInTheDocument();
+    expect(screen.queryByText(/Javier Aguirre/)).not.toBeInTheDocument();
     expect(screen.getByText(/最终名单确认前，国家队可以公布候选或训练名单/)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /人员名单/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /核心球员观察/ })).not.toBeInTheDocument();
@@ -393,6 +395,36 @@ describe('App routes', () => {
     expect(screen.getAllByText(/墨西哥城球场/).length).toBeGreaterThan(0);
     expect(screen.queryByText(/后续/)).not.toBeInTheDocument();
     expect(screen.queryByText(/当前页面/)).not.toBeInTheDocument();
+
+  });
+
+  it('renders runtime head coach data from team staff records', () => {
+    render(
+      <TeamDetailPage
+        team="France"
+        groups={groups}
+        confederations={confederations}
+        fixtures={groupStageMatches}
+        rosters={[]}
+        teamStaff={[
+          {
+            team_id: 'france',
+            team_name: 'France',
+            name: 'Didier Deschamps',
+            display_name: 'Didier Deschamps',
+            role: 'head_coach',
+            role_zh: '主教练',
+            status: 'active',
+            age: null
+          }
+        ]}
+        copy={contentByLocale.zh}
+      />
+    );
+
+    expect(screen.getByText(/Didier Deschamps/)).toBeInTheDocument();
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/57 岁/)).not.toBeInTheDocument();
   });
 
   it('renders a release-ready matches overview with knockout route context', () => {

@@ -59,6 +59,28 @@ export type WorldCupTeamRoster = {
   players: WorldCupRosterPlayer[];
 };
 
+export type WorldCupTeamStaff = {
+  competition_id?: string;
+  season_id?: string;
+  team_id: string;
+  team_name: string;
+  staff_id?: string;
+  name: string;
+  display_name?: string | null;
+  name_zh?: string | null;
+  role: string;
+  role_zh?: string | null;
+  status?: string | null;
+  nationality?: string | null;
+  date_of_birth?: string | null;
+  age?: number | null;
+  appointed_at?: string | null;
+  contract_until?: string | null;
+  source_status?: string | null;
+  source_url?: string | null;
+  updated_at?: string | null;
+};
+
 export type WorldCupSiteData = {
   source: WorldCupSiteDataSource;
   generatedAt?: string;
@@ -73,6 +95,7 @@ export type WorldCupSiteData = {
   qualifierMissingDataReport: QualifierMissingDataReport;
   apiFootballQualifierSourceReports: QualifierSourceReport[];
   rosters: WorldCupTeamRoster[];
+  teamStaff: WorldCupTeamStaff[];
 };
 
 type RuntimeSiteBundle = {
@@ -103,7 +126,8 @@ export const fallbackWorldCupSiteData: WorldCupSiteData = {
   qualifierMatches,
   qualifierMissingDataReport,
   apiFootballQualifierSourceReports,
-  rosters: []
+  rosters: [],
+  teamStaff: []
 };
 
 function normalizeApiBase(base: string) {
@@ -133,7 +157,11 @@ function requireDataset<T>(value: T | undefined, label: string): T {
   return value;
 }
 
-function toSiteData(bundle: RuntimeSiteBundle, rosters: WorldCupTeamRoster[]): WorldCupSiteData {
+function toSiteData(
+  bundle: RuntimeSiteBundle,
+  rosters: WorldCupTeamRoster[],
+  teamStaff: WorldCupTeamStaff[]
+): WorldCupSiteData {
   const datasets = bundle.datasets ?? {};
 
   return {
@@ -149,7 +177,8 @@ function toSiteData(bundle: RuntimeSiteBundle, rosters: WorldCupTeamRoster[]): W
     qualifierMatches: requireDataset(datasets.qualifier_matches, 'qualifier_matches'),
     qualifierMissingDataReport: datasets.qualifier_missing_data ?? [],
     apiFootballQualifierSourceReports: datasets.qualifier_source_reports ?? [],
-    rosters
+    rosters,
+    teamStaff
   };
 }
 
@@ -170,6 +199,10 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
           path?: string;
           url?: string;
         };
+        team_staff?: {
+          path?: string;
+          url?: string;
+        };
       };
     };
   };
@@ -185,6 +218,7 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
   }
 
   let rosters: WorldCupTeamRoster[] = [];
+  let teamStaff: WorldCupTeamStaff[] = [];
   const rosterEntry = selectRuntimeEntry(
     manifest.runtime_contract?.core?.rosters?.path,
     manifest.runtime_contract?.core?.rosters?.url,
@@ -201,5 +235,21 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
     rosters = [];
   }
 
-  return toSiteData(await bundleResponse.json() as RuntimeSiteBundle, rosters);
+  const teamStaffEntry = selectRuntimeEntry(
+    manifest.runtime_contract?.core?.team_staff?.path,
+    manifest.runtime_contract?.core?.team_staff?.url,
+    './core/team-staff.json'
+  );
+
+  try {
+    const teamStaffUrl = new URL(teamStaffEntry, manifestAbsoluteUrl.replace(/\/[^/]*$/, '/')).toString();
+    const teamStaffResponse = await fetch(teamStaffUrl, { cache: 'no-store', signal });
+    if (teamStaffResponse.ok) {
+      teamStaff = await teamStaffResponse.json() as WorldCupTeamStaff[];
+    }
+  } catch {
+    teamStaff = [];
+  }
+
+  return toSiteData(await bundleResponse.json() as RuntimeSiteBundle, rosters, teamStaff);
 }

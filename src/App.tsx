@@ -63,7 +63,8 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
     groupStageMatches,
     groups,
     qualifierMatches,
-    rosters
+    rosters,
+    teamStaff
   } = siteData;
 
   if (pathname === '/qualifiers') {
@@ -171,6 +172,7 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
         confederations={confederations}
         fixtures={groupStageMatches}
         rosters={rosters}
+        teamStaff={teamStaff}
         copy={copy}
       />
     );

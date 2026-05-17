@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { findTeamProfile, type TeamProfileData } from '../data/teamProfiles';
-import type { WorldCupTeamRoster } from '../data/siteData';
+import type { WorldCupTeamRoster, WorldCupTeamStaff } from '../data/siteData';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatConfederationName, formatTeamName, formatVenueName, getTeamDisplay } from '../i18n/formatters';
 import type { ConfederationCardData, GroupCardData, GroupStageMatchData } from '../types/tournament';
@@ -11,6 +11,7 @@ interface TeamDetailPageProps {
   confederations: ConfederationCardData[];
   fixtures: GroupStageMatchData[];
   rosters: WorldCupTeamRoster[];
+  teamStaff: WorldCupTeamStaff[];
   copy: AppCopy;
 }
 
@@ -96,6 +97,13 @@ function normalizeTeamKey(value: string) {
 function findRuntimeRoster(team: string, rosters: WorldCupTeamRoster[]) {
   const teamKey = normalizeTeamKey(team);
   return rosters.find((roster) => roster.team_id === teamKey || normalizeTeamKey(roster.team_name) === teamKey);
+}
+
+function findHeadCoach(team: string, teamStaff: WorldCupTeamStaff[]) {
+  const teamKey = normalizeTeamKey(team);
+  return teamStaff.find((staff) => (
+    (staff.team_id === teamKey || normalizeTeamKey(staff.team_name) === teamKey) && staff.role === 'head_coach'
+  ));
 }
 
 function getQualificationLabel(
@@ -264,6 +272,7 @@ export function TeamDetailPage({
   confederations,
   fixtures,
   rosters,
+  teamStaff,
   copy
 }: TeamDetailPageProps) {
   const [expandedHistoryYear, setExpandedHistoryYear] = useState<number | null>(null);
@@ -271,6 +280,7 @@ export function TeamDetailPage({
   const confederation = findTeamConfederation(team, confederations);
   const profile = findTeamProfile(team);
   const runtimeRoster = findRuntimeRoster(team, rosters);
+  const headCoach = findHeadCoach(team, teamStaff);
   const teamFixtures = findTeamFixtures(team, fixtures);
 
   if (!group) {
@@ -297,7 +307,9 @@ export function TeamDetailPage({
   const teamTitle = copy.locale === 'zh' ? teamDisplay.zh : team;
   const worldCupHistorySummary = getWorldCupHistorySummary(teamTitle, profile, copy.locale);
   const groupLabel = `${copy.labels.groupPrefix} ${group.id}`;
-  const coachName = profile?.coach ?? (copy.locale === 'zh' ? '官方教练组待确认' : 'Official coaching staff');
+  const coachName = headCoach
+    ? headCoach.name_zh ?? headCoach.display_name ?? headCoach.name
+    : (copy.locale === 'zh' ? '暂未公布' : 'Not published');
   const squadStatus = profile?.squadStatus ?? {
     label: copy.locale === 'zh' ? '官方最终名单待公布' : 'Final squad pending',
     note:
@@ -331,10 +343,10 @@ export function TeamDetailPage({
     {
       role: copy.locale === 'zh' ? '主教练' : 'Head coach',
       name: coachName,
-      position: copy.locale === 'zh' ? '主教练' : 'Head coach',
+      position: copy.locale === 'zh' ? headCoach?.role_zh ?? '主教练' : 'Head coach',
       club: copy.locale === 'zh' ? `${teamTitle}国家队` : 'National team',
-      age: profile?.coachAge ? (copy.locale === 'zh' ? `${profile.coachAge} 岁` : `${profile.coachAge}`) : '—',
-      status: copy.locale === 'zh' ? '已任命' : 'Appointed'
+      age: headCoach?.age ? (copy.locale === 'zh' ? `${headCoach.age} 岁` : `${headCoach.age}`) : '—',
+      status: headCoach ? (copy.locale === 'zh' ? '已任命' : 'Appointed') : (copy.locale === 'zh' ? '待确认' : 'Pending')
     },
     ...playerCards.map((player) => ({
       role: copy.locale === 'zh' ? '球员' : 'Player',

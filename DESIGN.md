@@ -469,7 +469,7 @@ Team detail page rules:
 - The coach/player area does not render a "squad list" subtitle or descriptive copy. It shows the personnel rows directly.
 - Personnel rows use compact table density. Status chips are limited to the standard states: `confirmed/appointed`, `candidate/provisional`, `pending`, `injured`, `suspended`, and `omitted`.
 - Team pages prefer the `football-data-platform` runtime core contract `core/rosters.json`. When a team has an official FIFA 26-player roster, the personnel section renders that real roster; uncovered teams fall back to local editorial profiles or a final-squad-pending placeholder.
-- Until `football-data-platform` publishes staff records in `core/team-staff.json`, `src/data/teamProfiles.ts` may provide `coach` and `coachAge` as page-level supplements; do not fabricate unconfirmed coaching staff.
+- Coach data prefers the `football-data-platform` runtime core contract `core/team-staff.json`, matched by `team_id` with `role=head_coach` shown first. `date_of_birth` / `age` may be null; the frontend must not fabricate ages. If a team has no staff record, show "not published / pending" and do not treat local legacy coach fields as production facts.
 - World Cup history headings use a "World Cup (year)" pattern and must not repeat the year as a secondary small line.
 - Expanded history rows keep compact typography and row height. Date, location, and stadium fields are shown only when the data source provides them; the UI must not fabricate them.
 - Qualification and recent-match rows should link to match detail only when an internal match id exists. If the data is outside the current site contract, show it only as a result summary.

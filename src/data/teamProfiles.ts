@@ -7,7 +7,6 @@ export interface TeamProfileData {
   historySummary?: string;
   overallWorldCupRecord?: string;
   coach?: string;
-  coachAge?: number;
   coachSummary?: string;
   squadStatus?: {
     label: string;
@@ -71,8 +70,7 @@ export const teamProfiles: TeamProfileData[] = [
     team: 'France',
     worldRanking: 1,
     participations: 16,
-    coach: 'Didier Deschamps',
-    coachAge: 57
+    coach: 'Didier Deschamps'
   },
   { team: 'Germany', worldRanking: 10, participations: 10 },
   { team: 'Ghana', worldRanking: 74, participations: 4 },
@@ -91,7 +89,6 @@ export const teamProfiles: TeamProfileData[] = [
     historySummary: '墨西哥长期保持世界杯正赛竞争力，队史多次从小组出线，历史最佳成绩是在本土举办的 1970 年和 1986 年世界杯进入八强。',
     overallWorldCupRecord: '总战绩：60 场 17 胜 15 平 28 负，进 62 球失 101 球',
     coach: 'Javier Aguirre',
-    coachAge: 67,
     coachSummary: '经验丰富，长期执教俱乐部和国家队，适合带领球队在主场压力下保持稳定性和比赛纪律。',
     squadStatus: {
       label: '官方最终名单待公布',
