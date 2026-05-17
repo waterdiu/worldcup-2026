@@ -27,7 +27,8 @@ const venueCityMap: Record<string, string> = {
   'San Francisco Bay Area Stadium': 'San Francisco Bay Area',
   'Seattle Stadium': 'Seattle',
   'Toronto Stadium': 'Toronto',
-  'BC Place Vancouver': 'Vancouver'
+  'BC Place Vancouver': 'Vancouver',
+  'BC Place 温哥华球场': 'Vancouver'
 };
 
 function countryLabel(country: string, locale: AppCopy['locale']) {

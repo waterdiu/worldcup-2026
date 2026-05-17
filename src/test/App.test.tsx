@@ -572,6 +572,15 @@ describe('App routes', () => {
     expect(screen.queryByText(/当前页面/)).not.toBeInTheDocument();
   });
 
+  it('maps mixed Vancouver venue labels to the same city detail page', () => {
+    window.history.replaceState({}, '', '/cities/Vancouver');
+    render(<App />);
+
+    expect(screen.getByRole('heading', { name: /温哥华/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /打开比赛详情: 比赛 10/ })).toHaveAttribute('href', '/matches/10');
+    expect(screen.getByRole('link', { name: /打开比赛详情: 比赛 85/ })).toHaveAttribute('href', '/matches/85');
+  });
+
   it('renders the supplied host city map artwork with pre-positioned markers', () => {
     window.history.replaceState({}, '', '/zh/cities');
     render(<App />);
