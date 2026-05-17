@@ -105,7 +105,7 @@ export const bracket: BracketRoundData[] = [
         "dateLabel": "Thu 2 Jul 2026",
         "homeLabel": "Group B winners",
         "awayLabel": "Best third from E/F/G/I/J",
-        "venue": "BC Place Vancouver",
+        "venue": "BC Place 温哥华球场",
         "predictionStatus": "Model-ready display"
       },
       {
@@ -198,7 +198,7 @@ export const bracket: BracketRoundData[] = [
         "dateLabel": "Tue 7 Jul 2026",
         "homeLabel": "Winner Match 85",
         "awayLabel": "Winner Match 87",
-        "venue": "BC Place Vancouver",
+        "venue": "BC Place 温哥华球场",
         "predictionStatus": "Model-ready display"
       }
     ]

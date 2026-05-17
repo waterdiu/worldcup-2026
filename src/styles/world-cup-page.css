@@ -11959,6 +11959,257 @@
   background-image: none !important;
 }
 
+/* Final admin guardrail: keep the console on the editorial data-board system. */
+.world-cup-page .admin-page.stats-page {
+  --account-ink: #f0ede6;
+  --account-ink-2: #9a9488;
+  --account-ink-3: #6e685d;
+  --account-bg: #0e0d0b;
+  --account-bg-2: #161410;
+  --account-bg-3: #1e1c17;
+  --account-rule: #2a2720;
+  --account-rule-2: #38342a;
+  --account-lime: #c8f230;
+  --account-red: #f25a30;
+  --account-blue: #30a8f2;
+  background: #0e0d0b !important;
+  color: #f0ede6 !important;
+  max-width: none !important;
+  padding: 0 0 3rem !important;
+}
+
+.world-cup-page .admin-page :where(
+  .admin-console-topbar,
+  .admin-sidebar,
+  .admin-main,
+  .stats-section,
+  .admin-kpi-grid,
+  .stats-kpi-grid.admin-kpi-grid,
+  .admin-dashboard-grid,
+  .admin-panel,
+  .admin-card,
+  .admin-record-panel,
+  .admin-user-permission-card,
+  .stats-panel-grid,
+  .stats-panel,
+  .admin-data-table
+) {
+  background-image: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.world-cup-page .admin-page .admin-console-topbar {
+  background: #0e0d0b !important;
+  border: 0 !important;
+  border-bottom: 1px solid #38342a !important;
+  height: 56px;
+  margin: 0 !important;
+}
+
+.world-cup-page .admin-page .admin-shell {
+  background: #38342a;
+  border-top: 0;
+  display: grid;
+  gap: 1px;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: calc(100vh - 56px);
+}
+
+.world-cup-page .admin-page .admin-sidebar {
+  background: #161410 !important;
+  border: 0 !important;
+  height: calc(100vh - 56px);
+  padding: 14px 0;
+  top: 56px;
+}
+
+.world-cup-page .admin-page .admin-main {
+  background: #0e0d0b !important;
+  min-width: 0;
+  padding: 28px 32px 48px;
+}
+
+.world-cup-page .admin-page .stats-section {
+  background: transparent !important;
+  border: 0 !important;
+  display: grid;
+  gap: 22px;
+  padding: 0 !important;
+}
+
+.world-cup-page .admin-page .admin-section-head {
+  border-bottom: 1px solid #38342a !important;
+  margin: 0 !important;
+  padding: 0 0 12px !important;
+}
+
+.world-cup-page .admin-page .admin-section-head h2 {
+  color: #f0ede6 !important;
+  font-family: 'Barlow Condensed', sans-serif !important;
+  font-size: clamp(28px, 3.2vw, 44px) !important;
+  font-style: italic;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 0.95 !important;
+}
+
+.world-cup-page .admin-page .admin-section-head h2::before {
+  height: 28px !important;
+  width: 4px !important;
+}
+
+.world-cup-page .admin-page .admin-section-head span {
+  color: #6e685d !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 10px !important;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid,
+.world-cup-page .admin-page .stats-kpi-grid.admin-kpi-grid,
+.world-cup-page .admin-page .admin-dashboard-grid,
+.world-cup-page .admin-page .stats-panel-grid {
+  background: #38342a !important;
+  border: 1px solid #38342a !important;
+  display: grid;
+  gap: 1px !important;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid,
+.world-cup-page .admin-page .stats-kpi-grid.admin-kpi-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.world-cup-page .admin-page .admin-dashboard-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 !important;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid article,
+.world-cup-page .admin-page .stats-kpi-grid.admin-kpi-grid article,
+.world-cup-page .admin-page .admin-dashboard-grid > article,
+.world-cup-page .admin-page .stats-panel,
+.world-cup-page .admin-page .admin-card,
+.world-cup-page .admin-page .admin-panel,
+.world-cup-page .admin-page .admin-record-panel,
+.world-cup-page .admin-page .admin-user-permission-card {
+  background: #161410 !important;
+  border-color: #38342a !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid article,
+.world-cup-page .admin-page .stats-kpi-grid.admin-kpi-grid article {
+  min-height: 118px;
+  padding: 16px 18px !important;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid span,
+.world-cup-page .admin-page .admin-kpi-grid small,
+.world-cup-page .admin-page .admin-dashboard-grid p span,
+.world-cup-page .admin-page .admin-mini-metrics span {
+  color: #6e685d !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 10px !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid strong {
+  color: #f0ede6 !important;
+  font-family: 'Barlow Condensed', sans-serif !important;
+  font-size: clamp(38px, 4.2vw, 64px) !important;
+  font-style: italic;
+  font-weight: 800 !important;
+  letter-spacing: -0.04em;
+  line-height: 0.9 !important;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid .is-lime,
+.world-cup-page .admin-page .admin-kpi-grid article:nth-child(2) strong,
+.world-cup-page .admin-page .admin-kpi-grid article:nth-child(4) strong,
+.world-cup-page .admin-page .admin-dashboard-grid p b {
+  color: #c8f230 !important;
+}
+
+.world-cup-page .admin-page .admin-dashboard-grid > article,
+.world-cup-page .admin-page .admin-panel {
+  padding: 18px !important;
+}
+
+.world-cup-page .admin-page .admin-dashboard-grid h3,
+.world-cup-page .admin-page .admin-panel__head h3,
+.world-cup-page .admin-page .admin-card h2,
+.world-cup-page .admin-page .admin-card h3,
+.world-cup-page .admin-page .stats-panel h3 {
+  color: #f0ede6 !important;
+  font-family: 'Barlow Condensed', sans-serif !important;
+  font-size: 18px !important;
+  font-style: italic;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1 !important;
+  text-transform: uppercase;
+}
+
+.world-cup-page .admin-page .admin-dashboard-grid p,
+.world-cup-page .admin-page .admin-mini-metrics div {
+  border-bottom: 1px solid #2a2720 !important;
+  margin: 0 !important;
+  padding: 8px 0 !important;
+}
+
+.world-cup-page .admin-page .admin-panel__head,
+.world-cup-page .admin-page .admin-table-toolbar,
+.world-cup-page .admin-page .admin-record-panel summary {
+  background: #1e1c17 !important;
+  border-bottom: 1px solid #38342a !important;
+}
+
+.world-cup-page .admin-page :where(button, .admin-segmented-control, .admin-status-chip, .admin-role-chip, .admin-current-access, .admin-permission-grid label) {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.world-cup-page .admin-page .admin-data-row {
+  background: #161410 !important;
+  border-bottom: 1px solid #2a2720 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.world-cup-page .admin-page .admin-data-row--head {
+  background: #1e1c17 !important;
+}
+
+.world-cup-page .admin-page .admin-data-row:hover:not(.admin-data-row--head) {
+  background: #1e1c17 !important;
+}
+
+.world-cup-page .admin-page .admin-sidebar button:hover,
+.world-cup-page .admin-page .admin-sidebar button.is-active {
+  background: #1e1c17 !important;
+  color: #c8f230 !important;
+}
+
+.world-cup-page .admin-page :where(.admin-table-toolbar button:not(:disabled), .admin-row-actions button:not(.admin-button--secondary), .admin-quick-actions button:first-child, .admin-segmented-control button.is-active, .admin-hero button) {
+  background: #c8f230 !important;
+  border-color: #c8f230 !important;
+  color: #0e0d0b !important;
+}
+
+.world-cup-page .admin-page :where(.admin-quick-actions button, .admin-button--secondary, .admin-segmented-control button) {
+  background: transparent !important;
+  border-color: #38342a !important;
+  color: #9a9488 !important;
+}
+
+.world-cup-page .admin-page .admin-quick-actions button:first-child,
+.world-cup-page .admin-page .admin-segmented-control button.is-active {
+  color: #0e0d0b !important;
+}
+
 @media (max-width: 640px) {
   .world-cup-page {
     --site-title-size: clamp(28px, 9vw, 42px);
