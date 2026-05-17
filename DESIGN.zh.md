@@ -902,7 +902,33 @@ VITE_SUPABASE_ANON_KEY
 
 站点页面多，CSS 历史较长。以后改 UI 时不能只看首页，必须检查关联页面和子页面。
 
-## 16. 验证清单
+## 16. 项目规则与协调边界
+
+本项目的执行规则记录在：
+
+```text
+AGENTS.md
+docs/2026-05-17-project-rules.md
+```
+
+当前 Codex 工作边界只限：
+
+```text
+/Users/chamcham/Documents/AI/CODEX/soccer/worldcup/2026
+```
+
+可以读取以下协调文档，但不能从本项目对话中修改：
+
+```text
+/Users/chamcham/Documents/AI/CODEX/soccer/football-data-platform/docs/2026-05-17-coordination-and-github-publish-rules.md
+/Users/chamcham/Documents/AI/CODEX/soccer/WORKSPACE_STATUS.md
+```
+
+如果网站需要数据层或模型层改动，应输出交接说明，由用户转发给对应项目对话。本站只负责展示网站 UI、路由、前端数据消费、fallback 行为、Supabase 前端集成、测试、部署和本站文档。
+
+GitHub 发布策略：优先使用普通 SSH Git `fetch/pull/push`；只有 SSH/Git 传输失败时，才 fallback 到 GitHub API。发布前必须检查 `git status --short --branch`。
+
+## 17. 验证清单
 
 完成重要改动前需要检查：
 
@@ -931,7 +957,7 @@ VITE_SUPABASE_ANON_KEY
 - 改用户/管理页面时检查 Supabase 登录状态下页面。
 - 改数据加载时检查运行时数据和 fallback 行为。
 
-## 17. 文档维护规则
+## 18. 文档维护规则
 
 本文件是 `worldcup/2026` 项目的中文主设计基线。
 
