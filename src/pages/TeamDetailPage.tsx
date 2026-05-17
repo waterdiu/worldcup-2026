@@ -333,7 +333,7 @@ export function TeamDetailPage({
       name: coachName,
       position: copy.locale === 'zh' ? '主教练' : 'Head coach',
       club: copy.locale === 'zh' ? `${teamTitle}国家队` : 'National team',
-      age: profile?.coach === 'Javier Aguirre' ? (copy.locale === 'zh' ? '67 岁' : '67') : '—',
+      age: profile?.coachAge ? (copy.locale === 'zh' ? `${profile.coachAge} 岁` : `${profile.coachAge}`) : '—',
       status: copy.locale === 'zh' ? '已任命' : 'Appointed'
     },
     ...playerCards.map((player) => ({
