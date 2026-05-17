@@ -74,5 +74,7 @@ describe('layout CSS contracts', () => {
     expect(css).toMatch(/\.world-cup-page \.admin-page \.admin-kpi-grid,\s*\n\.world-cup-page \.admin-page \.stats-kpi-grid\.admin-kpi-grid\s*\{[^}]*grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/s);
     expect(css).toMatch(/\.world-cup-page \.admin-page \.admin-dashboard-grid\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/s);
     expect(css).toMatch(/\.world-cup-page \.admin-page \.admin-kpi-grid article,[\s\S]*border-radius:\s*0 !important/s);
+    expect(css).toMatch(/\.world-cup-page \.admin-page \.admin-kpi-grid strong\s*\{[^}]*font-family:\s*'DM Mono'/s);
+    expect(css).toMatch(/\.world-cup-page \.admin-page \.admin-kpi-grid article::before,[\s\S]*content:\s*none !important/s);
   });
 });

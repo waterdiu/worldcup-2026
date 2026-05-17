@@ -12055,8 +12055,10 @@
 }
 
 .world-cup-page .admin-page .admin-section-head h2::before {
-  height: 28px !important;
-  width: 4px !important;
+  background: #c8f230 !important;
+  height: 14px !important;
+  margin-top: 4px;
+  width: 3px !important;
 }
 
 .world-cup-page .admin-page .admin-section-head span {
@@ -12078,6 +12080,8 @@
 .world-cup-page .admin-page .admin-kpi-grid,
 .world-cup-page .admin-page .stats-kpi-grid.admin-kpi-grid {
   grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 0 !important;
+  overflow: hidden;
 }
 
 .world-cup-page .admin-page .admin-dashboard-grid {
@@ -12101,8 +12105,11 @@
 
 .world-cup-page .admin-page .admin-kpi-grid article,
 .world-cup-page .admin-page .stats-kpi-grid.admin-kpi-grid article {
-  min-height: 118px;
-  padding: 16px 18px !important;
+  align-content: start;
+  display: grid;
+  gap: 4px;
+  min-height: 88px;
+  padding: 16px !important;
 }
 
 .world-cup-page .admin-page .admin-kpi-grid span,
@@ -12118,12 +12125,22 @@
 
 .world-cup-page .admin-page .admin-kpi-grid strong {
   color: #f0ede6 !important;
-  font-family: 'Barlow Condensed', sans-serif !important;
-  font-size: clamp(38px, 4.2vw, 64px) !important;
-  font-style: italic;
-  font-weight: 800 !important;
-  letter-spacing: -0.04em;
-  line-height: 0.9 !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: clamp(21px, 2.4vw, 30px) !important;
+  font-style: normal !important;
+  font-weight: 350 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+  order: 2;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid span {
+  order: 1;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid small {
+  color: #c8f230 !important;
+  order: 3;
 }
 
 .world-cup-page .admin-page .admin-kpi-grid .is-lime,
@@ -12131,6 +12148,26 @@
 .world-cup-page .admin-page .admin-kpi-grid article:nth-child(4) strong,
 .world-cup-page .admin-page .admin-dashboard-grid p b {
   color: #c8f230 !important;
+}
+
+.world-cup-page .admin-page .admin-kpi-grid article::before,
+.world-cup-page .admin-page .stats-kpi-grid.admin-kpi-grid article::before,
+.world-cup-page .admin-page .admin-console-brand::before,
+.world-cup-page .admin-page .admin-console-brand::after,
+.world-cup-page .admin-page .admin-hero::before,
+.world-cup-page .admin-page .admin-hero::after,
+.world-cup-page .admin-page .admin-card::before,
+.world-cup-page .admin-page .admin-card::after,
+.world-cup-page .admin-page .stats-section::before,
+.world-cup-page .admin-page .stats-section::after {
+  background: none !important;
+  background-image: none !important;
+  content: none !important;
+  display: none !important;
+}
+
+.world-cup-page .admin-page :where(.admin-console-brand, .admin-section-head, .admin-kpi-grid, .stats-kpi-grid.admin-kpi-grid) {
+  background-image: none !important;
 }
 
 .world-cup-page .admin-page .admin-dashboard-grid > article,
