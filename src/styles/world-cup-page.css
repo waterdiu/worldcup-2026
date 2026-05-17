@@ -9276,6 +9276,25 @@
   margin-bottom: 1.25rem;
 }
 
+.world-cup-page--finals .section-header {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-bottom: 1px solid #38342a !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  clip-path: none !important;
+  min-height: 0 !important;
+  overflow: visible;
+  padding: 0 0 10px !important;
+}
+
+.world-cup-page--finals .section-header::before,
+.world-cup-page--finals .section-header::after {
+  content: none !important;
+  display: none !important;
+}
+
 .world-cup-page--finals .section {
   padding-top: 2rem;
 }
@@ -10928,6 +10947,18 @@
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
+}
+
+.user-center-page .user-auth-actions button,
+.user-center-page .user-auth-tabs button.is-active,
+.user-center-page .user-auth-form button,
+.user-center-page .user-profile-form button,
+.admin-page .admin-card__header button,
+.admin-page .admin-table-toolbar button,
+.admin-page .admin-row-actions button,
+.admin-page .admin-hero button {
+  background: var(--account-lime) !important;
+  color: var(--account-bg) !important;
 }
 
 /* Claude structure pass: admin is topbar + sidebar + main modules. */

@@ -43,9 +43,19 @@ describe('layout CSS contracts', () => {
 
   it('keeps the matches overview dense and bounded', () => {
     expect(css).toMatch(/\.world-cup-page--matches-overview::before,\s*\n\.world-cup-page--matches-overview::after\s*\{[^}]*content:\s*none/s);
+    expect(css).toMatch(/\.world-cup-page--matches-overview \.section-header\s*\{[^}]*background-image:\s*none !important/s);
+    expect(css).toMatch(/\.world-cup-page--matches-overview \.section-header\s*\{[^}]*box-shadow:\s*none !important/s);
+    expect(css).toMatch(/\.world-cup-page--matches-overview \.section-header::before,\s*\n\.world-cup-page--matches-overview \.section-header::after\s*\{[^}]*content:\s*none !important/s);
     expect(css).toMatch(/\.world-cup-page--matches-overview \.match-overview-list\s*\{[^}]*max-height:\s*688px/s);
     expect(css).toMatch(/\.world-cup-page--matches-overview \.match-overview-list\s*\{[^}]*overflow-y:\s*auto/s);
     expect(css).toMatch(/\.world-cup-page--matches-overview \.knockout-map\s*\{[^}]*--bracket-card-width:\s*118px/s);
     expect(css).toMatch(/\.world-cup-page--matches-overview \.knockout-final-path\s*\{[^}]*width:\s*calc\(var\(--bracket-card-width\) \+ 48px\)/s);
+  });
+
+  it('keeps finals section headers out of the legacy blue card treatment', () => {
+    expect(css).toMatch(/\.world-cup-page--finals \.section-header\s*\{[^}]*background-image:\s*none !important/s);
+    expect(css).toMatch(/\.world-cup-page--finals \.section-header\s*\{[^}]*box-shadow:\s*none !important/s);
+    expect(css).toMatch(/\.world-cup-page--finals \.section-header\s*\{[^}]*clip-path:\s*none !important/s);
+    expect(css).toMatch(/\.world-cup-page--finals \.section-header::before,\s*\n\.world-cup-page--finals \.section-header::after\s*\{[^}]*content:\s*none !important/s);
   });
 });
