@@ -926,7 +926,7 @@ The site conversation may read, but must not edit, these coordination documents:
 
 If the site needs data-layer or model-layer changes, it should produce a handoff note for the user to forward to the appropriate project conversation. This project only owns the presentation site UI, routing, frontend data consumption, fallback behavior, Supabase frontend integration, tests, deployment, and site documentation.
 
-GitHub publishing policy: prefer normal SSH Git `fetch/pull/push`; use GitHub API only when SSH/Git transport fails. Always check `git status --short --branch` before publishing.
+GitHub publishing policy: prefer normal SSH Git `fetch/pull/push`; if full fetch is slow because it downloads historical blobs, use `git fetch --filter=blob:none --no-tags origin main` to align commit history first; use GitHub API only when SSH/Git transport fails. Always check `git status --short --branch` before publishing.
 
 ## 17. Verification Checklist
 

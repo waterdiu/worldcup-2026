@@ -89,6 +89,12 @@ git pull
 git push
 ```
 
+If full `git fetch` starts downloading historical blobs very slowly, use a filtered fetch before treating SSH/Git as failed:
+
+```bash
+git fetch --filter=blob:none --no-tags origin main
+```
+
 GitHub API publishing is only a fallback when SSH/Git transport fails.
 
 Before publishing:

@@ -926,7 +926,7 @@ docs/2026-05-17-project-rules.md
 
 如果网站需要数据层或模型层改动，应输出交接说明，由用户转发给对应项目对话。本站只负责展示网站 UI、路由、前端数据消费、fallback 行为、Supabase 前端集成、测试、部署和本站文档。
 
-GitHub 发布策略：优先使用普通 SSH Git `fetch/pull/push`；只有 SSH/Git 传输失败时，才 fallback 到 GitHub API。发布前必须检查 `git status --short --branch`。
+GitHub 发布策略：优先使用普通 SSH Git `fetch/pull/push`；如果完整 fetch 因历史 blob 下载过慢，应先使用 `git fetch --filter=blob:none --no-tags origin main` 对齐提交链；只有 SSH/Git 传输失败时，才 fallback 到 GitHub API。发布前必须检查 `git status --short --branch`。
 
 ## 17. 验证清单
 

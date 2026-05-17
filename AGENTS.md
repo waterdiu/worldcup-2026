@@ -67,6 +67,7 @@ Return report expected:
 ## GitHub Publish Rules
 
 - Prefer normal SSH Git for this repository: `git fetch`, `git pull`, `git push`.
+- If a full fetch is slow because it starts downloading historical blobs, use `git fetch --filter=blob:none --no-tags origin main` before falling back to GitHub API.
 - Use GitHub Contents API or Git Database API only when SSH/Git transport fails.
 - Before publishing, check `git status --short --branch`.
 - Do not force-push or use destructive reset commands unless the user explicitly approves.
