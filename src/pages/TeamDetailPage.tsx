@@ -9,6 +9,7 @@ import type {
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatConfederationName, formatTeamName, formatVenueName, getTeamDisplay } from '../i18n/formatters';
 import type { ConfederationCardData, GroupCardData, GroupStageMatchData } from '../types/tournament';
+import { buildPersonId, buildPersonPath, slugifyPersonId } from '../utils/personRoutes';
 
 interface TeamDetailPageProps {
   team: string;
@@ -19,6 +20,13 @@ interface TeamDetailPageProps {
   teamStaff: WorldCupTeamStaff[];
   teamRecentMatches: WorldCupTeamRecentMatches[];
   teamWorldCupHistory: WorldCupTeamWorldCupHistory[];
+  peopleIndex: Array<{
+    person_id: string;
+    kind: 'coach' | 'player' | 'referee';
+    display_name: string;
+    name_zh: string | null;
+    primary_team_id?: string | null;
+  }>;
   copy: AppCopy;
 }
 
@@ -99,6 +107,23 @@ function normalizeTeamKey(value: string) {
     .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+function resolvePersonId(
+  kind: 'coach' | 'player' | 'referee',
+  teamId: string | null | undefined,
+  name: string,
+  peopleIndex: TeamDetailPageProps['peopleIndex']
+) {
+  const normalized = slugifyPersonId(name);
+  const matched = peopleIndex.find((entry) => {
+    if (entry.kind !== kind) return false;
+    if (teamId && entry.primary_team_id && entry.primary_team_id !== teamId) return false;
+    const en = slugifyPersonId(entry.display_name);
+    const zh = entry.name_zh ? slugifyPersonId(entry.name_zh) : '';
+    return en === normalized || (zh && zh === normalized);
+  });
+  return matched?.person_id ?? buildPersonId(kind, teamId, name);
 }
 
 function runtimeApiBase() {
@@ -332,6 +357,7 @@ export function TeamDetailPage({
   teamStaff,
   teamRecentMatches = [],
   teamWorldCupHistory = [],
+  peopleIndex = [],
   copy
 }: TeamDetailPageProps) {
   const [expandedHistoryYear, setExpandedHistoryYear] = useState<number | null>(null);
@@ -375,6 +401,9 @@ export function TeamDetailPage({
   const coachName = headCoach
     ? headCoach.name_zh ?? headCoach.display_name ?? headCoach.name
     : (copy.locale === 'zh' ? '暂未公布' : 'Not published');
+  const coachPersonId = headCoach
+    ? (headCoach.staff_id ?? resolvePersonId('coach', headCoach.team_id, headCoach.display_name ?? headCoach.name, peopleIndex))
+    : null;
   const squadStatus = profile?.squadStatus ?? {
     label: copy.locale === 'zh' ? '官方最终名单待公布' : 'Final squad pending',
     note:
@@ -408,6 +437,10 @@ export function TeamDetailPage({
     {
       role: copy.locale === 'zh' ? '主教练' : 'Head coach',
       name: coachName,
+      link:
+        headCoach && coachPersonId
+          ? localizePath(buildPersonPath('coach', coachPersonId), copy.locale)
+          : null,
       position: copy.locale === 'zh' ? headCoach?.role_zh ?? '主教练' : 'Head coach',
       club: copy.locale === 'zh' ? `${teamTitle}国家队` : 'National team',
       age: headCoach?.age ? (copy.locale === 'zh' ? `${headCoach.age} 岁` : `${headCoach.age}`) : '—',
@@ -416,6 +449,10 @@ export function TeamDetailPage({
     ...playerCards.map((player) => ({
       role: copy.locale === 'zh' ? '球员' : 'Player',
       name: player.name,
+      link: localizePath(
+        buildPersonPath('player', resolvePersonId('player', headCoach?.team_id ?? normalizeTeamKey(team), player.name, peopleIndex)),
+        copy.locale
+      ),
       position: player.position,
       club: player.club,
       age: player.age > 0 ? (copy.locale === 'zh' ? `${player.age} 岁` : `${player.age}`) : '—',
@@ -496,7 +533,17 @@ export function TeamDetailPage({
                   <article className="player-row" data-testid="team-person-row" key={`${person.role}-${person.name}`}>
                     <span>{person.role}</span>
                     <div className="player-row__name">
-                      <h4>{person.name}</h4>
+                      {person.link ? (
+                        <a
+                          className="person-inline-link"
+                          href={person.link}
+                          aria-label={copy.locale === 'zh' ? `打开人物档案：${person.name}` : `Open profile: ${person.name}`}
+                        >
+                          <h4>{person.name}</h4>
+                        </a>
+                      ) : (
+                        <h4>{person.name}</h4>
+                      )}
                     </div>
                     <span>{person.position}</span>
                     <span>{person.club}</span>

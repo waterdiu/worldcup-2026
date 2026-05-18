@@ -210,6 +210,7 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
         teamStaff={teamStaff}
         teamRecentMatches={teamRecentMatches}
         teamWorldCupHistory={teamWorldCupHistory}
+        peopleIndex={peopleIndex}
         copy={copy}
       />
     );

@@ -12643,6 +12643,15 @@
   background: rgba(200, 242, 48, 0.9);
 }
 
+.person-inline-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.person-inline-link:hover h4 {
+  color: rgba(200, 242, 48, 0.92);
+}
+
 @media (max-width: 920px) {
   .people-index-card,
   .people-kpi {
