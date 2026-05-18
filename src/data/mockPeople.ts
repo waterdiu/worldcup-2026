@@ -100,6 +100,9 @@ export type PersonProfile = {
   photo_url?: string | null;
   kpis: PersonKpi[];
   sections: PersonSection[];
+  direct?: Record<string, unknown>;
+  derived?: Record<string, unknown>;
+  distilled?: Record<string, unknown>;
   distillation_status?: 'available' | 'insufficient_sample' | 'pending_source';
   source_status: 'mock_demo' | 'available' | 'missing_source';
   source_urls: string[];

@@ -23,6 +23,145 @@ function kindLabel(kind: PersonProfile['kind'], locale: AppCopy['locale']) {
   return '裁判';
 }
 
+function initials(name: string) {
+  const parts = name.split(/\s+/).filter(Boolean);
+  const letters = parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '');
+  return letters.join('');
+}
+
+function coerceString(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return null;
+}
+
+function pickCoachHeroFacts(profile: PersonProfile, locale: AppCopy['locale']) {
+  const direct = (profile.direct ?? {}) as any;
+  const derived = (profile.derived ?? {}) as any;
+  const metrics = (derived.metrics ?? {}) as any;
+
+  const facts: Array<[string, string]> = [];
+  const nation = coerceString(direct.nationality) ?? (locale === 'zh' ? profile.country_name_zh : profile.country_name_en);
+  if (nation) facts.push([locale === 'zh' ? '国籍' : 'Nation', nation]);
+  if (profile.primary_team_name) facts.push([locale === 'zh' ? '球队' : 'Team', profile.primary_team_name]);
+
+  const last10 = metrics.recent_10_form;
+  if (last10 && typeof last10 === 'object') {
+    const w = (last10 as any).won;
+    const d = (last10 as any).drawn;
+    const l = (last10 as any).lost;
+    if (typeof w === 'number' && typeof d === 'number' && typeof l === 'number') {
+      facts.push([locale === 'zh' ? '近10场' : 'Last 10', `${w}-${d}-${l}`]);
+    }
+  }
+
+  const contractUntil = coerceString(direct.contract_until);
+  if (contractUntil) facts.push([locale === 'zh' ? '合同至' : 'Contract', contractUntil]);
+
+  return facts;
+}
+
+function pickPlayerHeroFacts(profile: PersonProfile, locale: AppCopy['locale']) {
+  const direct = (profile.direct ?? {}) as any;
+  const facts: Array<[string, string]> = [];
+  if (profile.primary_team_name) facts.push([locale === 'zh' ? '球队' : 'Team', profile.primary_team_name]);
+  const pos = coerceString(direct.position);
+  if (pos) facts.push([locale === 'zh' ? '位置' : 'Position', pos]);
+  const club = coerceString(direct.club);
+  if (club) facts.push([locale === 'zh' ? '俱乐部' : 'Club', club]);
+  const shirt = direct.shirt_number;
+  if (typeof shirt === 'number') facts.push([locale === 'zh' ? '号码' : 'Shirt', String(shirt)]);
+  return facts;
+}
+
+function pickRefereeHeroFacts(profile: PersonProfile, locale: AppCopy['locale']) {
+  const derived = (profile.derived ?? {}) as any;
+  const metrics = (derived.metrics ?? {}) as any;
+  const facts: Array<[string, string]> = [];
+  if (profile.country_name_en || profile.country_name_zh) {
+    facts.push([locale === 'zh' ? '国籍' : 'Nation', locale === 'zh' ? profile.country_name_zh : profile.country_name_en]);
+  }
+  if (typeof metrics.matches === 'number') facts.push([locale === 'zh' ? '样本场次' : 'Sample', `${metrics.matches}`]);
+  if (typeof metrics.yellow_cards_per_match === 'number') facts.push([locale === 'zh' ? '场均黄牌' : 'Yellows', `${metrics.yellow_cards_per_match}`]);
+  return facts;
+}
+
+function renderHero(profile: PersonProfile, locale: AppCopy['locale']) {
+  const name = locale === 'zh' ? profile.name_zh : profile.display_name;
+  const eyebrow = locale === 'zh'
+    ? `${kindLabel(profile.kind, locale)}档案`
+    : `${kindLabel(profile.kind, locale)} profile`;
+
+  const facts =
+    profile.kind === 'coach'
+      ? pickCoachHeroFacts(profile, locale)
+      : profile.kind === 'player'
+        ? pickPlayerHeroFacts(profile, locale)
+        : pickRefereeHeroFacts(profile, locale);
+
+  const distilled = (profile.distilled ?? {}) as any;
+  const styleTags = Array.isArray(distilled.style_tags) ? distilled.style_tags : [];
+  const showTags = profile.distillation_status === 'available' && styleTags.length;
+
+  return (
+    <div className="person-hero">
+      <div className="person-hero__text">
+        <div className="person-hero__eyebrow">{eyebrow}</div>
+        <div className="person-hero__name">
+          {name.split(' ').slice(0, 1).join(' ')}{' '}
+          <em>{name.split(' ').slice(1).join(' ') || name}</em>
+        </div>
+        <div className="person-hero__sub">
+          {facts.map(([k, v]) => (
+            <div key={k}>
+              <strong>{k}</strong> {v}
+            </div>
+          ))}
+        </div>
+        {showTags ? (
+          <div className="person-hero__tags">
+            {styleTags.slice(0, 6).map((tag: any) => (
+              <span className="tag lime" key={String(tag)}>{String(tag)}</span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <div className="person-hero__visual">
+        <div className="hero-glyph">{initials(profile.display_name || profile.name_zh || '?')}</div>
+      </div>
+    </div>
+  );
+}
+
+function renderKpiStrip(profile: PersonProfile, locale: AppCopy['locale']) {
+  const items = profile.kpis.slice(0, profile.kind === 'player' ? 6 : 5);
+  const cols = items.length;
+  return (
+    <div className={`kpi-strip cols-${cols}`}>
+      {items.map((kpi) => {
+        const label = locale === 'zh' ? kpi.label_zh : kpi.label_en;
+        const unit = locale === 'zh' ? kpi.unit_zh : kpi.unit_en;
+        const pending = (kpi.status ?? '').includes('pending') || kpi.value === 'null' || kpi.value === '';
+        const val = pending ? (locale === 'zh' ? '待补齐' : 'Pending') : kpi.value;
+        return (
+          <div className="kpi" key={kpi.id}>
+            <div className="kl">{label}</div>
+            <div className={`kv ${kpi.tier === 'direct' ? 'lime' : kpi.tier === 'derived' ? 'gold' : ''}`}>
+              {val}{unit ? <span style={{ fontSize: 18 }}>{unit}</span> : null}
+            </div>
+            <div className="ks">
+              <span className={`src ${kpi.tier === 'direct' ? 'src-d' : kpi.tier === 'derived' ? 'src-a' : 'src-s'}`}>
+                {tierLabel(kpi.tier, locale)}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function renderSection(section: PersonSection, locale: AppCopy['locale']) {
   const title = locale === 'zh' ? section.title_zh : section.title_en;
 
@@ -221,7 +360,6 @@ export function PersonDetailPage({
 
   const country = locale === 'zh' ? profile.country_name_zh : profile.country_name_en;
   const role = locale === 'zh' ? profile.role_title_zh : profile.role_title_en;
-  const name = locale === 'zh' ? profile.name_zh : profile.display_name;
   const teamMeta = profile.primary_team_name ? ` · ${profile.primary_team_name}` : '';
 
   return (
@@ -230,37 +368,15 @@ export function PersonDetailPage({
         <a className="back-link" href={localizePath('/people', locale)}>
           {locale === 'zh' ? '返回人物列表' : 'Back to people'}
         </a>
-        <div className="people-hero">
-          <div className="people-hero__badge">{kindLabel(profile.kind, locale)}</div>
-          <h1 className="people-hero__title">{name}</h1>
-          <p className="people-hero__meta">
-            {role} · {country}
-            {teamMeta}
-          </p>
-        </div>
+        {renderHero(profile, locale)}
       </section>
 
       <section className="section">
-        <div className="people-kpi-grid" aria-label={locale === 'zh' ? '关键指标' : 'Key metrics'}>
-          {profile.kpis.map((kpi) => {
-            const unit = locale === 'zh' ? kpi.unit_zh : kpi.unit_en;
-            const label = locale === 'zh' ? kpi.label_zh : kpi.label_en;
-            const note = locale === 'zh' ? kpi.note_zh : kpi.note_en;
-            return (
-              <article className="people-kpi" key={kpi.id}>
-                <div className="people-kpi__head">
-                  <span className="people-kpi__label">{label}</span>
-                  <span className={`tier-badge tier-badge--${kpi.tier}`}>{tierLabel(kpi.tier, locale)}</span>
-                </div>
-                <div className="people-kpi__value">
-                  <strong>{kpi.value}</strong>
-                  {unit ? <span>{unit}</span> : null}
-                </div>
-                <div className="people-kpi__note">{note ?? '—'}</div>
-              </article>
-            );
-          })}
+        <div className="sec-rule">
+          <span className="sec-title">{locale === 'zh' ? '核心指标' : 'Key metrics'}</span>
+          <span className="sec-note">{profile.updated_at}</span>
         </div>
+        {renderKpiStrip(profile, locale)}
       </section>
 
       <section className="section people-sections">
@@ -296,4 +412,3 @@ export function PersonDetailPage({
     </main>
   );
 }
-
