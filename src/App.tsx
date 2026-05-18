@@ -14,6 +14,7 @@ import { GroupDetailPage } from './pages/GroupDetailPage';
 import { GroupsPage } from './pages/GroupsPage';
 import { HistoricalMatchDetailPage } from './pages/HistoricalMatchDetailPage';
 import { HomePage } from './pages/HomePage';
+import { PeopleIndexPage } from './pages/PeopleIndexPage';
 import { MatchDetailPage } from './pages/MatchDetailPage';
 import { MatchesPage } from './pages/MatchesPage';
 import { QualifierConfederationPage } from './pages/QualifierConfederationPage';
@@ -24,6 +25,9 @@ import { TeamDetailPage } from './pages/TeamDetailPage';
 import { TeamsPage } from './pages/TeamsPage';
 import { CityDetailPage } from './pages/CityDetailPage';
 import { UserCenterPage } from './pages/UserCenterPage';
+import { CoachDetailPage } from './pages/CoachDetailPage';
+import { PlayerDetailPage } from './pages/PlayerDetailPage';
+import { RefereeDetailPage } from './pages/RefereeDetailPage';
 import './styles/theme.css';
 import './styles/world-cup-page.css';
 import './styles/stats-v4.css';
@@ -69,8 +73,34 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
     rosters,
     teamStaff,
     teamRecentMatches,
-    teamWorldCupHistory
+    teamWorldCupHistory,
+    peopleIndex,
+    coachProfiles,
+    playerProfiles,
+    refereeProfiles
   } = siteData;
+
+  if (pathname === '/people') {
+    return <PeopleIndexPage people={peopleIndex} copy={copy} />;
+  }
+
+  if (pathname.startsWith('/people/coaches/')) {
+    const personId = decodeURIComponent(pathname.split('/')[3] ?? '');
+    const profile = coachProfiles.find((item) => item.person_id === personId) ?? null;
+    return <CoachDetailPage profile={profile} copy={copy} />;
+  }
+
+  if (pathname.startsWith('/people/players/')) {
+    const personId = decodeURIComponent(pathname.split('/')[3] ?? '');
+    const profile = playerProfiles.find((item) => item.person_id === personId) ?? null;
+    return <PlayerDetailPage profile={profile} copy={copy} />;
+  }
+
+  if (pathname.startsWith('/people/referees/')) {
+    const personId = decodeURIComponent(pathname.split('/')[3] ?? '');
+    const profile = refereeProfiles.find((item) => item.person_id === personId) ?? null;
+    return <RefereeDetailPage profile={profile} copy={copy} />;
+  }
 
   if (pathname === '/qualifiers') {
     return (

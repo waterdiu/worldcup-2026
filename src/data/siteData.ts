@@ -16,6 +16,14 @@ import { groupFixtures } from './groupFixtures';
 import { groupStageMatches } from './groupStageMatches';
 import { groups } from './groups';
 import { apiFootballQualifierSourceReports, qualifierMatches, qualifierMissingDataReport } from './qualifierMatches';
+import {
+  mockCoachProfiles,
+  mockPlayerProfiles,
+  mockPeopleIndex,
+  mockRefereeProfiles,
+  type PeopleIndexEntry,
+  type PersonProfile
+} from './mockPeople';
 
 export type QualifierSourceReport = {
   confederationId: QualifierMatchData['confederationId'] | 'intercontinental' | 'shared';
@@ -198,6 +206,10 @@ export type WorldCupSiteData = {
   teamStaff: WorldCupTeamStaff[];
   teamRecentMatches: WorldCupTeamRecentMatches[];
   teamWorldCupHistory: WorldCupTeamWorldCupHistory[];
+  peopleIndex: PeopleIndexEntry[];
+  coachProfiles: PersonProfile[];
+  playerProfiles: PersonProfile[];
+  refereeProfiles: PersonProfile[];
 };
 
 type RuntimeSiteBundle = {
@@ -232,6 +244,10 @@ export const fallbackWorldCupSiteData: WorldCupSiteData = {
   teamStaff: [],
   teamRecentMatches: [],
   teamWorldCupHistory: [],
+  peopleIndex: mockPeopleIndex,
+  coachProfiles: mockCoachProfiles,
+  playerProfiles: mockPlayerProfiles,
+  refereeProfiles: mockRefereeProfiles,
   runtimeWarnings: []
 };
 
@@ -268,6 +284,10 @@ function toSiteData(
   teamStaff: WorldCupTeamStaff[],
   teamRecentMatches: WorldCupTeamRecentMatches[],
   teamWorldCupHistory: WorldCupTeamWorldCupHistory[],
+  peopleIndex: PeopleIndexEntry[],
+  coachProfiles: PersonProfile[],
+  playerProfiles: PersonProfile[],
+  refereeProfiles: PersonProfile[],
   runtimeWarnings: string[]
 ): WorldCupSiteData {
   const datasets = bundle.datasets ?? {};
@@ -289,7 +309,11 @@ function toSiteData(
     rosters,
     teamStaff,
     teamRecentMatches,
-    teamWorldCupHistory
+    teamWorldCupHistory,
+    peopleIndex,
+    coachProfiles,
+    playerProfiles,
+    refereeProfiles
   };
 }
 
@@ -333,6 +357,10 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
   let teamStaff: WorldCupTeamStaff[] = [];
   let teamRecentMatches: WorldCupTeamRecentMatches[] = [];
   let teamWorldCupHistory: WorldCupTeamWorldCupHistory[] = [];
+  let peopleIndex: PeopleIndexEntry[] = mockPeopleIndex;
+  let coachProfiles: PersonProfile[] = mockCoachProfiles;
+  let playerProfiles: PersonProfile[] = mockPlayerProfiles;
+  let refereeProfiles: PersonProfile[] = mockRefereeProfiles;
   const rosterEntry = selectRuntimeEntry(
     manifest.runtime_contract?.core?.rosters?.path,
     manifest.runtime_contract?.core?.rosters?.url,
@@ -363,12 +391,31 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
     ),
     baseUrl
   ).toString();
+  // NOTE: People datasets are still in integration. We only activate runtime fetch when the manifest
+  // explicitly advertises them. Otherwise we keep the DEMO dataset to avoid mismatched partial feeds.
+  const peopleContract = (manifest.runtime_contract?.core as any)?.people;
+  const peopleIndexUrl = peopleContract?.people_index
+    ? new URL(selectRuntimeEntry(peopleContract.people_index?.path, peopleContract.people_index?.url, './core/people-index.json'), baseUrl).toString()
+    : null;
+  const coachProfilesUrl = peopleContract?.coach_profiles
+    ? new URL(selectRuntimeEntry(peopleContract.coach_profiles?.path, peopleContract.coach_profiles?.url, './core/coach-profiles.json'), baseUrl).toString()
+    : null;
+  const playerProfilesUrl = peopleContract?.player_profiles
+    ? new URL(selectRuntimeEntry(peopleContract.player_profiles?.path, peopleContract.player_profiles?.url, './core/player-profiles.json'), baseUrl).toString()
+    : null;
+  const refereeProfilesUrl = peopleContract?.referee_profiles
+    ? new URL(selectRuntimeEntry(peopleContract.referee_profiles?.path, peopleContract.referee_profiles?.url, './core/referee-profiles.json'), baseUrl).toString()
+    : null;
 
-  const [rosterRes, staffRes, recentRes, historyRes] = await Promise.allSettled([
+  const [rosterRes, staffRes, recentRes, historyRes, peopleIndexRes, coachProfilesRes, playerProfilesRes, refereeProfilesRes] = await Promise.allSettled([
     fetch(rosterUrl, { cache: 'no-store', signal }),
     fetch(teamStaffUrl, { cache: 'no-store', signal }),
     fetch(recentUrl, { cache: 'no-store', signal }),
-    fetch(historyUrl, { cache: 'no-store', signal })
+    fetch(historyUrl, { cache: 'no-store', signal }),
+    peopleIndexUrl ? fetch(peopleIndexUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('people-index disabled')),
+    coachProfilesUrl ? fetch(coachProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('coach-profiles disabled')),
+    playerProfilesUrl ? fetch(playerProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('player-profiles disabled')),
+    refereeProfilesUrl ? fetch(refereeProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('referee-profiles disabled'))
   ]);
 
   if (rosterRes.status === 'fulfilled' && rosterRes.value.ok) {
@@ -419,6 +466,42 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
     warnings.push(`Failed to load runtime core team-world-cup-history.json (${historyRes.value.status})`);
   }
 
+  if (peopleIndexRes.status === 'fulfilled' && peopleIndexRes.value.ok) {
+    try {
+      peopleIndex = await peopleIndexRes.value.json() as PeopleIndexEntry[];
+    } catch {
+      warnings.push('Failed to parse runtime core people-index.json');
+      peopleIndex = mockPeopleIndex;
+    }
+  }
+
+  if (coachProfilesRes.status === 'fulfilled' && coachProfilesRes.value.ok) {
+    try {
+      coachProfiles = await coachProfilesRes.value.json() as PersonProfile[];
+    } catch {
+      warnings.push('Failed to parse runtime core coach-profiles.json');
+      coachProfiles = mockCoachProfiles;
+    }
+  }
+
+  if (playerProfilesRes.status === 'fulfilled' && playerProfilesRes.value.ok) {
+    try {
+      playerProfiles = await playerProfilesRes.value.json() as PersonProfile[];
+    } catch {
+      warnings.push('Failed to parse runtime core player-profiles.json');
+      playerProfiles = mockPlayerProfiles;
+    }
+  }
+
+  if (refereeProfilesRes.status === 'fulfilled' && refereeProfilesRes.value.ok) {
+    try {
+      refereeProfiles = await refereeProfilesRes.value.json() as PersonProfile[];
+    } catch {
+      warnings.push('Failed to parse runtime core referee-profiles.json');
+      refereeProfiles = mockRefereeProfiles;
+    }
+  }
+
   if (!import.meta.env.PROD) {
     // Dev-only: helps diagnose silent dataset fetch failures.
     console.info('[worldcup-runtime] core datasets', {
@@ -426,6 +509,10 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
       teamStaff: teamStaff.length,
       teamRecentMatches: teamRecentMatches.length,
       teamWorldCupHistory: teamWorldCupHistory.length,
+      peopleIndex: peopleIndex.length,
+      coachProfiles: coachProfiles.length,
+      playerProfiles: playerProfiles.length,
+      refereeProfiles: refereeProfiles.length,
       warnings
     });
   }
@@ -436,6 +523,10 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
     teamStaff,
     teamRecentMatches,
     teamWorldCupHistory,
+    peopleIndex,
+    coachProfiles,
+    playerProfiles,
+    refereeProfiles,
     warnings
   );
 }
