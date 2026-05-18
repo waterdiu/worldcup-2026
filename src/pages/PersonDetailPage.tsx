@@ -162,6 +162,253 @@ function renderKpiStrip(profile: PersonProfile, locale: AppCopy['locale']) {
   );
 }
 
+function valueOrPending(value: unknown, locale: AppCopy['locale']) {
+  const s = coerceString(value);
+  if (s && s !== 'null') return s;
+  return locale === 'zh' ? '待补齐' : 'Pending';
+}
+
+function isPending(value: unknown) {
+  const s = coerceString(value);
+  return !s || s === 'null';
+}
+
+function renderDataGrid(profile: PersonProfile, locale: AppCopy['locale']) {
+  const direct = (profile.direct ?? {}) as any;
+  const coverage = (direct.field_coverage ?? {}) as Record<string, string>;
+  const derived = (profile.derived ?? {}) as any;
+  const metrics = (derived.metrics ?? {}) as any;
+
+  const nation = direct.nationality ?? (locale === 'zh' ? profile.country_name_zh : profile.country_name_en);
+
+  const leftRows: Array<{ field: string; value: unknown; note: string }> = [
+    { field: locale === 'zh' ? '国籍' : 'Nation', value: nation, note: coverage.nationality ?? 'FIFA' }
+  ];
+
+  if (profile.kind !== 'referee') {
+    leftRows.push({ field: locale === 'zh' ? '球队' : 'Team', value: profile.primary_team_name ?? '—', note: 'FIFA' });
+  }
+
+  if (profile.kind === 'coach') {
+    leftRows.push({
+      field: locale === 'zh' ? '合同至' : 'Contract',
+      value: direct.contract_until,
+      note: coverage.contract_until ?? 'pending_source'
+    });
+    leftRows.push({
+      field: locale === 'zh' ? '任命日期' : 'Appointed',
+      value: direct.appointed_at,
+      note: coverage.appointed_at ?? 'pending_source'
+    });
+  }
+
+  if (profile.kind === 'player') {
+    leftRows.push({ field: locale === 'zh' ? '位置' : 'Position', value: direct.position, note: coverage.position ?? 'FIFA' });
+    leftRows.push({ field: locale === 'zh' ? '俱乐部' : 'Club', value: direct.club, note: coverage.club ?? 'pending_source' });
+    leftRows.push({ field: locale === 'zh' ? '号码' : 'Shirt', value: direct.shirt_number, note: coverage.shirt_number ?? 'pending_source' });
+  }
+
+  leftRows.push({ field: locale === 'zh' ? '出生日期' : 'DOB', value: direct.date_of_birth, note: coverage.date_of_birth ?? 'pending_source' });
+  leftRows.push({ field: locale === 'zh' ? '年龄' : 'Age', value: direct.age, note: coverage.age ?? 'pending_source' });
+
+  const rightRows: Array<{ field: string; value: unknown; note: string }> = [];
+
+  if (profile.kind === 'coach') {
+    const w = metrics.w_total;
+    const d = metrics.d_total;
+    const l = metrics.l_total;
+    rightRows.push({
+      field: locale === 'zh' ? '近10场' : 'Last 10',
+      value: typeof w === 'number' && typeof d === 'number' && typeof l === 'number' ? `${w}-${d}-${l}` : null,
+      note: derived.window ?? 'last_10'
+    });
+    rightRows.push({
+      field: locale === 'zh' ? '胜率' : 'Win rate',
+      value: typeof metrics.win_rate_pct === 'number' ? `${metrics.win_rate_pct.toFixed(1)}%` : null,
+      note: 'derived'
+    });
+    rightRows.push({
+      field: locale === 'zh' ? '场均进球' : 'GF / match',
+      value: typeof metrics.goals_for_per_match === 'number' ? metrics.goals_for_per_match.toFixed(2) : null,
+      note: 'derived'
+    });
+    rightRows.push({
+      field: locale === 'zh' ? '场均失球' : 'GA / match',
+      value: typeof metrics.goals_against_per_match === 'number' ? metrics.goals_against_per_match.toFixed(2) : null,
+      note: 'derived'
+    });
+    rightRows.push({
+      field: locale === 'zh' ? '零封率' : 'Shutouts',
+      value: typeof metrics.clean_sheet_rate_pct === 'number' ? `${metrics.clean_sheet_rate_pct.toFixed(0)}%` : null,
+      note: 'derived'
+    });
+  }
+
+  if (profile.kind === 'player') {
+    rightRows.push({ field: locale === 'zh' ? '出场' : 'Caps', value: metrics.caps ?? null, note: derived.status ?? 'pending_source' });
+    rightRows.push({ field: locale === 'zh' ? '进球' : 'Goals', value: metrics.goals ?? null, note: derived.status ?? 'pending_source' });
+    rightRows.push({ field: locale === 'zh' ? '影响力' : 'Impact', value: metrics.impact_score ?? null, note: derived.status ?? 'pending_source' });
+  }
+
+  if (profile.kind === 'referee') {
+    rightRows.push({ field: locale === 'zh' ? '样本场次' : 'Sample', value: metrics.matches ?? null, note: derived.status ?? 'derived' });
+    rightRows.push({ field: locale === 'zh' ? '场均黄牌' : 'Yellows', value: metrics.yellow_cards_per_match ?? null, note: derived.status ?? 'derived' });
+    rightRows.push({ field: locale === 'zh' ? '场均红牌' : 'Reds', value: metrics.red_cards_per_match ?? null, note: derived.status ?? 'derived' });
+    rightRows.push({ field: locale === 'zh' ? '平局率' : 'Draw rate', value: metrics.draw_rate ?? null, note: derived.status ?? 'derived' });
+  }
+
+  const column = (title: string, rows: typeof leftRows, tierBadge: 'src-d' | 'src-a') => (
+    <div className="data-col">
+      <div className="data-col__label">
+        {title} <span className={`src ${tierBadge}`}>{tierBadge === 'src-d' ? (locale === 'zh' ? '直接数据' : 'Direct') : (locale === 'zh' ? '派生分析' : 'Derived')}</span>
+      </div>
+      {rows.map((row) => (
+        <div className="data-row" key={row.field}>
+          <span className="field">{row.field}</span>
+          <span className={`val ${isPending(row.value) ? 'val--pending' : ''}`}>{valueOrPending(row.value, locale)}</span>
+          <span className="note">{row.note}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <section className="section">
+      <div className="sec-rule">
+        <span className="sec-title">{locale === 'zh' ? '基础档案' : 'Profile'}</span>
+        <span className="sec-note">{locale === 'zh' ? 'direct / derived' : 'direct / derived'}</span>
+      </div>
+      <div className="data-grid cols-2">
+        {column(locale === 'zh' ? '个人信息' : 'Identity', leftRows, 'src-d')}
+        {column(locale === 'zh' ? '指标摘要' : 'Summary', rightRows, 'src-a')}
+      </div>
+    </section>
+  );
+}
+
+function renderAbilityBars(profile: PersonProfile, locale: AppCopy['locale']) {
+  const derived = (profile.derived ?? {}) as any;
+  const ratings = (derived.dimension_ratings ?? {}) as Record<string, number>;
+  const hasRatings = ratings && Object.keys(ratings).length > 0;
+
+  const placeholder = [
+    { label_zh: '速度突破', label_en: 'Pace', value: null },
+    { label_zh: '终结能力', label_en: 'Finishing', value: null },
+    { label_zh: '传球创造', label_en: 'Creation', value: null },
+    { label_zh: '防守参与', label_en: 'Defending', value: null }
+  ];
+
+  const items = hasRatings
+    ? Object.entries(ratings).slice(0, 6).map(([k, v]) => ({ label_zh: k, label_en: k, value: v }))
+    : placeholder;
+
+  return (
+    <section className="section">
+      <div className="sec-rule">
+        <span className="sec-title">{locale === 'zh' ? '能力评分' : 'Ability ratings'}</span>
+        <span className="sec-note">{hasRatings ? (locale === 'zh' ? '派生分析' : 'derived') : (locale === 'zh' ? '待补齐' : 'pending')}</span>
+      </div>
+      <div className="ability-grid cols-2">
+        <div className="ability-col">
+          <div className="ability-col__label">
+            <span>{locale === 'zh' ? '维度' : 'Dimensions'}</span>
+            <span className="src src-a">{locale === 'zh' ? '派生分析' : 'Derived'}</span>
+          </div>
+          {items.map((item) => {
+            const label = locale === 'zh' ? item.label_zh : item.label_en;
+            const pending = item.value === null || Number.isNaN(item.value as any);
+            const value = pending ? null : Math.max(0, Math.min(100, Number(item.value)));
+            return (
+              <div className="bar-row" key={label}>
+                <div className="bar-row__head">
+                  <span className="bar-row__label">{label}</span>
+                  <span className="bar-row__val">{pending ? (locale === 'zh' ? '待补齐' : 'Pending') : value}</span>
+                </div>
+                <div className="bar-track">
+                  <div className="bar-fill bar-lime" style={{ width: pending ? '0%' : `${value}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="ability-col">
+          <div className="ability-col__label">
+            <span>{locale === 'zh' ? '说明' : 'Notes'}</span>
+            <span className="src src-a">{locale === 'zh' ? '派生分析' : 'Derived'}</span>
+          </div>
+          <p className="people-card__muted">
+            {locale === 'zh'
+              ? '能力评分需要稳定的分钟数、技术统计或事件数据源。当前若显示“待补齐”，表示数据层尚未发布可复现的评分输入。'
+              : 'Ability ratings require stable minutes + stats/event feeds. Pending means the data layer has not published reproducible inputs yet.'}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function renderStyleProfile(profile: PersonProfile, locale: AppCopy['locale']) {
+  const distilled = (profile.distilled ?? {}) as any;
+  const tags = Array.isArray(distilled.style_tags) ? distilled.style_tags : [];
+  const status = distilled.distillation_status ?? profile.distillation_status ?? 'insufficient_sample';
+  const summary = coerceString(distilled.summary);
+
+  return (
+    <section className="section">
+      <div className="sec-rule">
+        <span className="sec-title">{locale === 'zh' ? '风格画像' : 'Style profile'}</span>
+        <span className="sec-note">{String(status)}</span>
+      </div>
+      <div className="style-grid cols-2">
+        <div className="style-col">
+          <div className="style-col__label">{locale === 'zh' ? '标签' : 'Tags'}</div>
+          <div className="style-tags">
+            {tags.length ? tags.slice(0, 10).map((t: any) => <span className="tag lime" key={String(t)}>{String(t)}</span>) : (
+              <span className="people-card__muted">{locale === 'zh' ? '样本不足' : 'Insufficient sample'}</span>
+            )}
+          </div>
+          <div className="evidence">
+            {locale === 'zh'
+              ? '蒸馏规则：样本 ≥30 场才输出稳定标签；不足时仅展示状态，不输出结论。'
+              : 'Rule: requires ≥30 matches to output stable tags; otherwise show status only.'}
+          </div>
+        </div>
+        <div className="style-col">
+          <div className="style-col__label">{locale === 'zh' ? '摘要' : 'Summary'}</div>
+          <div className="style-summary">
+            {summary ?? (locale === 'zh'
+              ? '暂无可用摘要（样本不足或数据层未发布）。'
+              : 'No summary yet (insufficient sample or not published).')}
+          </div>
+          <div className="evidence">{locale === 'zh' ? '来源：事件/阵型/换人等高粒度数据。' : 'Source: event/shape/substitution feeds.'}</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function renderImpactBox(profile: PersonProfile, locale: AppCopy['locale']) {
+  if (profile.kind !== 'player') return null;
+  const derived = (profile.derived ?? {}) as any;
+  const box = derived.impact_box ?? {};
+  const pct = box.absence_impact_pct;
+  const explain = locale === 'zh' ? box.absence_impact_explain_zh : box.absence_impact_explain_en;
+  const pending = pct === null || pct === undefined;
+  return (
+    <section className="section">
+      <div className="impact-box">
+        <div className="impact-title">{locale === 'zh' ? '缺阵影响' : 'Absence impact'}</div>
+        <p>
+          {pending
+            ? (locale === 'zh' ? '需要可靠的出场分钟、进球贡献或模型输入源后才能计算。' : 'Requires reliable minutes/stats or model inputs.')
+            : `${locale === 'zh' ? '缺席时球队预期进球变化：' : 'Estimated team xG change when absent: '}${pct}%`}
+          {!pending && explain ? ` ${explain}` : ''}
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function renderSection(section: PersonSection, locale: AppCopy['locale']) {
   const title = locale === 'zh' ? section.title_zh : section.title_en;
 
@@ -361,6 +608,7 @@ export function PersonDetailPage({
   const country = locale === 'zh' ? profile.country_name_zh : profile.country_name_en;
   const role = locale === 'zh' ? profile.role_title_zh : profile.role_title_en;
   const teamMeta = profile.primary_team_name ? ` · ${profile.primary_team_name}` : '';
+  const sections = profile.sections.filter((section) => !['profile_facts', 'style_tags'].includes(section.type));
 
   return (
     <main className="world-cup-page world-cup-page--people">
@@ -379,11 +627,18 @@ export function PersonDetailPage({
         {renderKpiStrip(profile, locale)}
       </section>
 
-      <section className="section people-sections">
-        {profile.sections.map((section) => (
-          <div key={`${profile.person_id}:${section.type}`}>{renderSection(section, locale)}</div>
-        ))}
-      </section>
+      {renderDataGrid(profile, locale)}
+      {renderAbilityBars(profile, locale)}
+      {renderStyleProfile(profile, locale)}
+      {renderImpactBox(profile, locale)}
+
+      {sections.length ? (
+        <section className="section people-sections">
+          {sections.map((section) => (
+            <div key={`${profile.person_id}:${section.type}`}>{renderSection(section, locale)}</div>
+          ))}
+        </section>
+      ) : null}
 
       <section className="section">
         <article className="people-card">

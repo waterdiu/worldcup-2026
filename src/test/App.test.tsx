@@ -405,6 +405,7 @@ describe('App routes', () => {
         confederations={confederations}
         fixtures={groupStageMatches}
         rosters={[]}
+        peopleIndex={[]}
         teamStaff={[
           {
             team_id: 'france',
