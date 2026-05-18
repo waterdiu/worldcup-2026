@@ -287,6 +287,7 @@ function renderDataGrid(profile: PersonProfile, locale: AppCopy['locale']) {
 }
 
 function renderAbilityBars(profile: PersonProfile, locale: AppCopy['locale']) {
+  if (profile.kind !== 'player') return null;
   const derived = (profile.derived ?? {}) as any;
   const ratings = (derived.dimension_ratings ?? {}) as Record<string, number>;
   const hasRatings = ratings && Object.keys(ratings).length > 0;
@@ -404,6 +405,97 @@ function renderImpactBox(profile: PersonProfile, locale: AppCopy['locale']) {
             : `${locale === 'zh' ? '缺席时球队预期进球变化：' : 'Estimated team xG change when absent: '}${pct}%`}
           {!pending && explain ? ` ${explain}` : ''}
         </p>
+      </div>
+    </section>
+  );
+}
+
+function renderMethodology(profile: PersonProfile, locale: AppCopy['locale']) {
+  const kind = profile.kind;
+  const base = import.meta.env.PROD
+    ? 'https://waterdiu.github.io/football-data-platform/api/worldcup/2026'
+    : '/api/worldcup/2026';
+  const dataLinks =
+    kind === 'coach'
+      ? [
+          { label: locale === 'zh' ? '教练档案' : 'coach-profiles', url: `${base}/core/coach-profiles.json` },
+          { label: locale === 'zh' ? '教练补充事实' : 'staff-external-facts', url: `${base}/core/staff-external-facts.json` }
+        ]
+      : kind === 'player'
+        ? [
+            { label: locale === 'zh' ? '球员档案' : 'player-profiles', url: `${base}/core/player-profiles.json` },
+            { label: locale === 'zh' ? '球员补充事实' : 'player-external-facts', url: `${base}/core/player-external-facts.json` }
+          ]
+        : [
+            { label: locale === 'zh' ? '裁判档案' : 'referee-profiles', url: `${base}/core/referee-profiles.json` }
+          ];
+
+  const directText =
+    locale === 'zh'
+      ? kind === 'coach'
+        ? '官方确认“谁是主教练”、所属球队。补充事实来自可追溯的第三方离线数据，字段带来源标记。'
+        : kind === 'player'
+          ? '官方名单确认“谁在 26 人名单”、位置。俱乐部/生日等补充事实来自可追溯的第三方离线数据，字段带来源标记。'
+          : '裁判名单与历史执法样本来自公开赛果数据集；世界杯官方指派发布后会替换为赛事样本。'
+      : kind === 'coach'
+        ? 'Direct facts: official head coach + team. Extra facts come from auditable offline datasets and are source-tagged.'
+        : kind === 'player'
+          ? 'Direct facts: official roster membership + position. Extra facts (club/DOB) come from auditable offline datasets and are source-tagged.'
+          : 'Referee facts: public match-result datasets. Will be replaced by official World Cup assignments when published.';
+
+  const derivedText =
+    locale === 'zh'
+      ? kind === 'coach'
+        ? '近 10 场窗口派生：胜/平/负、胜率、场均进失球、零封率。公式只依赖比分，不做主观打分。'
+        : kind === 'player'
+          ? '国家队出场/进球为事实汇总；影响力当前为代理分（impact_proxy_score），仅用于展示“已接入/待升级”。'
+          : '按历史样本计算：黄/红/点球/平局率等，并可与样本均值做对比。样本不足时会标注。'
+      : kind === 'coach'
+        ? 'Derived: last-10 window W/D/L, win rate, goals for/against per match, clean sheet rate. Scoreline-only, no subjective scoring.'
+        : kind === 'player'
+          ? 'Derived: caps/goals aggregation; impact is a proxy score for UI only and clearly labeled.'
+          : 'Derived: yellows/reds/pens/draw-rate from sample matches, with league-mean comparisons when available.';
+
+  const distilledText =
+    locale === 'zh'
+      ? '风格蒸馏需要事件/阵型/换人等高粒度数据。规则：样本 ≥30 场才输出稳定标签；否则仅显示“样本不足”。'
+      : 'Distillation requires event/shape/substitution feeds. Rule: ≥30 matches required for stable tags; otherwise show “insufficient sample”.';
+
+  return (
+    <section className="section">
+      <div className="sec-rule">
+        <span className="sec-title">{locale === 'zh' ? '数据与模型说明' : 'Data & methodology'}</span>
+        <span className="sec-note">{locale === 'zh' ? '不伪造 · 可复现 · 可追溯' : 'No fabrication · Reproducible · Traceable'}</span>
+      </div>
+      <div className="method-grid">
+        <div className="method-col">
+          <div className="method-col__label">
+            <span>{locale === 'zh' ? '直接数据' : 'Direct'}</span>
+            <span className="src src-d">{tierLabel('direct', locale)}</span>
+          </div>
+          <div className="method-body">{directText}</div>
+        </div>
+        <div className="method-col">
+          <div className="method-col__label">
+            <span>{locale === 'zh' ? '派生指标' : 'Derived'}</span>
+            <span className="src src-a">{tierLabel('derived', locale)}</span>
+          </div>
+          <div className="method-body">{derivedText}</div>
+        </div>
+        <div className="method-col">
+          <div className="method-col__label">
+            <span>{locale === 'zh' ? '风格蒸馏' : 'Distilled'}</span>
+            <span className="src src-s">{tierLabel('distilled', locale)}</span>
+          </div>
+          <div className="method-body">{distilledText}</div>
+        </div>
+      </div>
+      <div className="method-links">
+        {dataLinks.map((l) => (
+          <a key={l.url} className="method-link" href={l.url} target="_blank" rel="noreferrer">
+            {l.label}
+          </a>
+        ))}
       </div>
     </section>
   );
@@ -609,6 +701,9 @@ export function PersonDetailPage({
   const role = locale === 'zh' ? profile.role_title_zh : profile.role_title_en;
   const teamMeta = profile.primary_team_name ? ` · ${profile.primary_team_name}` : '';
   const sections = profile.sections.filter((section) => !['profile_facts', 'style_tags'].includes(section.type));
+  const coachSections = sections.filter((s) => s.type === 'career_timeline' || s.type === 'recent_matches');
+  const refereeSections = sections.filter((s) => s.type === 'referee_bias' || s.type === 'recent_matches');
+  const miscSections = sections.filter((s) => !['career_timeline', 'referee_bias', 'recent_matches'].includes(s.type));
 
   return (
     <main className="world-cup-page world-cup-page--people">
@@ -628,13 +723,30 @@ export function PersonDetailPage({
       </section>
 
       {renderDataGrid(profile, locale)}
-      {renderAbilityBars(profile, locale)}
       {renderStyleProfile(profile, locale)}
       {renderImpactBox(profile, locale)}
+      {renderAbilityBars(profile, locale)}
+      {renderMethodology(profile, locale)}
 
-      {sections.length ? (
+      {profile.kind === 'coach' && coachSections.length ? (
         <section className="section people-sections">
-          {sections.map((section) => (
+          {coachSections.map((section) => (
+            <div key={`${profile.person_id}:${section.type}`}>{renderSection(section, locale)}</div>
+          ))}
+        </section>
+      ) : null}
+
+      {profile.kind === 'referee' && refereeSections.length ? (
+        <section className="section people-sections">
+          {refereeSections.map((section) => (
+            <div key={`${profile.person_id}:${section.type}`}>{renderSection(section, locale)}</div>
+          ))}
+        </section>
+      ) : null}
+
+      {profile.kind === 'player' && miscSections.length ? (
+        <section className="section people-sections">
+          {miscSections.map((section) => (
             <div key={`${profile.person_id}:${section.type}`}>{renderSection(section, locale)}</div>
           ))}
         </section>

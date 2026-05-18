@@ -152,6 +152,27 @@ core/bundle.json
 
 The 2026 site currently consumes the page-compatible `site/bundle.json`, not the lower-level `core/bundle.json`.
 
+### People Profiles (Coach / Player / Referee)
+
+People profiles are treated as optional, runtime-advertised datasets. The site will only fetch them if the runtime manifest includes their URLs. This avoids breaking the site during partial rollouts.
+
+Design baseline and rules live in:
+
+```text
+docs/2026-05-18-people-profiles-design.md
+```
+
+Runtime datasets (when available):
+
+```text
+core/people-index.json
+core/coach-profiles.json
+core/player-profiles.json
+core/referee-profiles.json
+core/player-external-facts.json
+core/staff-external-facts.json
+```
+
 ### Runtime Site Bundle Shape
 
 `src/data/siteData.ts` expects:
