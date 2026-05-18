@@ -1,7 +1,6 @@
-import { localizePath, type AppCopy } from '../i18n/content';
+import type { AppCopy } from '../i18n/content';
 import { formatTeamName } from '../i18n/formatters';
 import type { MatchEventData, QualifierMatchData } from '../types/tournament';
-import { buildPersonId, buildPersonPath, normalizeTeamId } from '../utils/personRoutes';
 
 interface QualifierMatchDetailPageProps {
   match: QualifierMatchData;
@@ -137,16 +136,7 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
                   <p>
                     <strong>{formatTeamName(event.team, copy.locale)}</strong>
                     {' · '}
-                    <a
-                      className="person-inline-link"
-                      href={localizePath(
-                        buildPersonPath('player', buildPersonId('player', normalizeTeamId(event.team), event.player)),
-                        copy.locale
-                      )}
-                      aria-label={copy.locale === 'zh' ? `打开球员档案：${event.player}` : `Open player profile: ${event.player}`}
-                    >
-                      {event.player}
-                    </a>
+                    {event.player}
                     {event.detail ? ` · ${event.detail}` : ''}
                   </p>
                 </div>
@@ -167,16 +157,7 @@ export function QualifierMatchDetailPage({ match, copy }: QualifierMatchDetailPa
               {match.playerRatings!.map((rating) => (
                 <div className="match-stat-row" key={`${rating.team}-${rating.player}`}>
                   <span>{formatTeamName(rating.team, copy.locale)}</span>
-                  <a
-                    className="person-inline-link"
-                    href={localizePath(
-                      buildPersonPath('player', buildPersonId('player', normalizeTeamId(rating.team), rating.player)),
-                      copy.locale
-                    )}
-                    aria-label={copy.locale === 'zh' ? `打开球员档案：${rating.player}` : `Open player profile: ${rating.player}`}
-                  >
-                    <strong>{rating.player}</strong>
-                  </a>
+                  <strong>{rating.player}</strong>
                   <strong>{rating.rating.toFixed(1)}</strong>
                 </div>
               ))}

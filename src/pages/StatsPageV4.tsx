@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import type { Qatar2022RawMatch } from '../data/qatar2022Raw';
 import type { BracketRoundData, GroupStageMatchData } from '../types/tournament';
-import { buildPersonId, buildPersonPath, normalizeTeamId } from '../utils/personRoutes';
 
 type TabKey = 'all' | 'gf' | 'ga' | 'gd';
 
@@ -1054,15 +1053,7 @@ export function StatsPageV4({ bracket, groupStageMatches }: StatsPageV4Props) {
                     {SCORERS.map(([p, t, g], i) => (
                       <tr key={p}>
                         <td className="rk">{String(i + 1).padStart(2, '0')}</td>
-                        <td>
-                          <a
-                            className="person-inline-link"
-                            href={buildPersonPath('player', buildPersonId('player', normalizeTeamId(t), p))}
-                            aria-label={`打开球员档案：${p}`}
-                          >
-                            {p}
-                          </a>
-                        </td>
+                        <td>{p}</td>
                         <td style={{ color: 'var(--ink3)' }}>{t}</td>
                         <td className="ny">{g}</td>
                       </tr>
