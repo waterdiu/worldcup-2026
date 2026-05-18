@@ -127,6 +127,73 @@ function normalizePersonProfiles(entries: unknown, kind: PeopleIndexEntry['kind'
     .filter(Boolean) as PersonProfile[];
 }
 
+function normalizeExternalFacts(entries: unknown) {
+  if (!Array.isArray(entries)) return new Map<string, any>();
+  const map = new Map<string, any>();
+  for (const entry of entries) {
+    const id = (entry as any)?.person_id;
+    if (!id) continue;
+    map.set(String(id), entry);
+  }
+  return map;
+}
+
+function mergeFieldCoverage(target: Record<string, unknown>, patch: Record<string, string>) {
+  const current = (target.field_coverage ?? {}) as Record<string, string>;
+  target.field_coverage = { ...current, ...patch };
+}
+
+function mergeCoachExternalFacts(profiles: PersonProfile[], facts: Map<string, any>) {
+  if (!facts.size) return profiles;
+  return profiles.map((profile) => {
+    const fact = facts.get(profile.person_id);
+    if (!fact) return profile;
+    const direct = { ...(profile.direct ?? {}) } as Record<string, unknown>;
+
+    if (fact.nationality !== undefined) direct.nationality = fact.nationality;
+    if (fact.date_of_birth !== undefined) direct.date_of_birth = fact.date_of_birth;
+    if (fact.age !== undefined) direct.age = fact.age;
+
+    mergeFieldCoverage(direct, {
+      nationality: 'external_facts',
+      date_of_birth: 'external_facts',
+      age: 'external_facts'
+    });
+
+    return { ...profile, direct };
+  });
+}
+
+function mergePlayerExternalFacts(profiles: PersonProfile[], facts: Map<string, any>) {
+  if (!facts.size) return profiles;
+  return profiles.map((profile) => {
+    const fact = facts.get(profile.person_id);
+    if (!fact) return profile;
+
+    const direct = { ...(profile.direct ?? {}) } as Record<string, unknown>;
+    const derived = { ...(profile.derived ?? {}) } as Record<string, unknown>;
+    const metrics = { ...(((derived as any).metrics ?? {}) as Record<string, unknown>) };
+
+    if (fact.club !== undefined) direct.club = fact.club;
+    if (fact.date_of_birth !== undefined) direct.date_of_birth = fact.date_of_birth;
+    if (fact.age !== undefined) direct.age = fact.age;
+
+    if (fact.caps !== undefined) metrics.caps = fact.caps;
+    if (fact.goals !== undefined) metrics.goals = fact.goals;
+    if (fact.impact_proxy_score !== undefined) metrics.impact_score = fact.impact_proxy_score;
+
+    (derived as any).metrics = metrics;
+
+    mergeFieldCoverage(direct, {
+      club: 'external_facts',
+      date_of_birth: 'external_facts',
+      age: 'external_facts'
+    });
+
+    return { ...profile, direct, derived };
+  });
+}
+
 export type QualifierSourceReport = {
   confederationId: QualifierMatchData['confederationId'] | 'intercontinental' | 'shared';
   leagueId: number;
@@ -508,8 +575,25 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
   const refereeProfilesUrl = coreContract.referee_profiles
     ? new URL(selectRuntimeEntry(coreContract.referee_profiles?.path, coreContract.referee_profiles?.url, './core/referee-profiles.json'), baseUrl).toString()
     : null;
+  const playerExternalFactsUrl = coreContract.player_external_facts
+    ? new URL(selectRuntimeEntry(coreContract.player_external_facts?.path, coreContract.player_external_facts?.url, './core/player-external-facts.json'), baseUrl).toString()
+    : null;
+  const staffExternalFactsUrl = coreContract.staff_external_facts
+    ? new URL(selectRuntimeEntry(coreContract.staff_external_facts?.path, coreContract.staff_external_facts?.url, './core/staff-external-facts.json'), baseUrl).toString()
+    : null;
 
-  const [rosterRes, staffRes, recentRes, historyRes, peopleIndexRes, coachProfilesRes, playerProfilesRes, refereeProfilesRes] = await Promise.allSettled([
+  const [
+    rosterRes,
+    staffRes,
+    recentRes,
+    historyRes,
+    peopleIndexRes,
+    coachProfilesRes,
+    playerProfilesRes,
+    refereeProfilesRes,
+    playerExternalFactsRes,
+    staffExternalFactsRes
+  ] = await Promise.allSettled([
     fetch(rosterUrl, { cache: 'no-store', signal }),
     fetch(teamStaffUrl, { cache: 'no-store', signal }),
     fetch(recentUrl, { cache: 'no-store', signal }),
@@ -517,8 +601,31 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
     peopleIndexUrl ? fetch(peopleIndexUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('people-index disabled')),
     coachProfilesUrl ? fetch(coachProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('coach-profiles disabled')),
     playerProfilesUrl ? fetch(playerProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('player-profiles disabled')),
-    refereeProfilesUrl ? fetch(refereeProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('referee-profiles disabled'))
+    refereeProfilesUrl ? fetch(refereeProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('referee-profiles disabled')),
+    playerExternalFactsUrl ? fetch(playerExternalFactsUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('player-external-facts disabled')),
+    staffExternalFactsUrl ? fetch(staffExternalFactsUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('staff-external-facts disabled'))
   ]);
+
+  let playerExternalFacts = new Map<string, any>();
+  let staffExternalFacts = new Map<string, any>();
+
+  if (playerExternalFactsRes.status === 'fulfilled' && playerExternalFactsRes.value.ok) {
+    try {
+      playerExternalFacts = normalizeExternalFacts(await playerExternalFactsRes.value.json());
+    } catch {
+      warnings.push('Failed to parse runtime core player-external-facts.json');
+      playerExternalFacts = new Map();
+    }
+  }
+
+  if (staffExternalFactsRes.status === 'fulfilled' && staffExternalFactsRes.value.ok) {
+    try {
+      staffExternalFacts = normalizeExternalFacts(await staffExternalFactsRes.value.json());
+    } catch {
+      warnings.push('Failed to parse runtime core staff-external-facts.json');
+      staffExternalFacts = new Map();
+    }
+  }
 
   if (rosterRes.status === 'fulfilled' && rosterRes.value.ok) {
     try {
@@ -579,7 +686,7 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
 
   if (coachProfilesRes.status === 'fulfilled' && coachProfilesRes.value.ok) {
     try {
-      coachProfiles = normalizePersonProfiles(await coachProfilesRes.value.json(), 'coach');
+      coachProfiles = mergeCoachExternalFacts(normalizePersonProfiles(await coachProfilesRes.value.json(), 'coach'), staffExternalFacts);
     } catch {
       warnings.push('Failed to parse runtime core coach-profiles.json');
       coachProfiles = mockCoachProfiles;
@@ -588,7 +695,7 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
 
   if (playerProfilesRes.status === 'fulfilled' && playerProfilesRes.value.ok) {
     try {
-      playerProfiles = normalizePersonProfiles(await playerProfilesRes.value.json(), 'player');
+      playerProfiles = mergePlayerExternalFacts(normalizePersonProfiles(await playerProfilesRes.value.json(), 'player'), playerExternalFacts);
     } catch {
       warnings.push('Failed to parse runtime core player-profiles.json');
       playerProfiles = mockPlayerProfiles;
