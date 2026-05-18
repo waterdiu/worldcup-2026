@@ -239,7 +239,7 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
     const fixture = groupStageMatches.find((item) => item.id === matchId) ?? groupFixtures.find((item) => item.id === matchId);
 
     if (fixture) {
-      return <MatchDetailPage fixture={fixture} copy={copy} />;
+      return <MatchDetailPage fixture={fixture} rosters={rosters} teamStaff={teamStaff} copy={copy} />;
     }
 
     const knockoutEntry = bracket
@@ -247,7 +247,7 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
       .find((item) => item.id === matchId);
 
     if (knockoutEntry) {
-      return <MatchDetailPage fixture={knockoutEntry} copy={copy} />;
+      return <MatchDetailPage fixture={knockoutEntry} rosters={rosters} teamStaff={teamStaff} copy={copy} />;
     }
   }
 

@@ -5,6 +5,7 @@ import type { BracketMatchData, GroupFixtureData, GroupStageMatchData } from '..
 import { FavoriteButton } from '../components/FavoriteButton';
 import { PredictionForm } from '../components/PredictionForm';
 import { buildPersonId, buildPersonPath, normalizeTeamId } from '../utils/personRoutes';
+import type { WorldCupTeamRoster, WorldCupTeamStaff } from '../data/siteData';
 
 type KnockoutMatchDetailData = BracketMatchData & {
   roundLabel: string;
@@ -14,6 +15,8 @@ type GroupMatchDetailData = GroupFixtureData | GroupStageMatchData;
 
 interface MatchDetailPageProps {
   fixture: GroupMatchDetailData | KnockoutMatchDetailData;
+  rosters: WorldCupTeamRoster[];
+  teamStaff: WorldCupTeamStaff[];
   copy: AppCopy;
 }
 
@@ -388,7 +391,78 @@ function OpeningMatchCompleteDetail({
   );
 }
 
-export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
+function pickRoster(rosters: WorldCupTeamRoster[], teamName: string) {
+  const key = normalizeTeamId(teamName);
+  const direct = rosters.find((r) => normalizeTeamId(r.team_name) === key || r.team_id === key);
+  return direct ?? null;
+}
+
+function pickHeadCoach(teamStaff: WorldCupTeamStaff[], teamName: string) {
+  const key = normalizeTeamId(teamName);
+  return teamStaff.find((s) => (s.role === 'head_coach' || s.role === 'head coach') && (s.team_id === key || normalizeTeamId(s.team_name) === key)) ?? null;
+}
+
+function renderRosterColumn({
+  label,
+  teamName,
+  rosters,
+  teamStaff,
+  copy
+}: {
+  label: string;
+  teamName: string;
+  rosters: WorldCupTeamRoster[];
+  teamStaff: WorldCupTeamStaff[];
+  copy: AppCopy;
+}) {
+  const roster = pickRoster(rosters, teamName);
+  const coach = pickHeadCoach(teamStaff, teamName);
+  const teamId = normalizeTeamId(teamName);
+
+  return (
+    <div className="match-roster-col">
+      <h4>{label}</h4>
+      <div className="match-roster-meta">
+        <span>{copy.locale === 'zh' ? '主教练' : 'Head coach'}</span>
+        <strong>
+          {coach ? (
+            <a
+              className="person-inline-link"
+              href={localizePath(buildPersonPath('coach', buildPersonId('coach', teamId, coach.display_name ?? coach.name)), copy.locale)}
+              aria-label={copy.locale === 'zh' ? `打开主教练档案：${coach.display_name ?? coach.name}` : `Open coach profile: ${coach.display_name ?? coach.name}`}
+            >
+              {coach.display_name ?? coach.name}
+            </a>
+          ) : (
+            '—'
+          )}
+        </strong>
+      </div>
+      <div className="match-roster-list" role="list" aria-label={copy.locale === 'zh' ? `${label}球员名单` : `${label} roster`}>
+        {roster?.players?.length ? (
+          roster.players.map((p) => (
+            <a
+              key={`${roster.team_id}-${p.name}`}
+              className="match-roster-row person-inline-link"
+              role="listitem"
+              href={localizePath(buildPersonPath('player', buildPersonId('player', teamId, p.display_name ?? p.name)), copy.locale)}
+              aria-label={copy.locale === 'zh' ? `打开球员档案：${p.display_name ?? p.name}` : `Open player profile: ${p.display_name ?? p.name}`}
+            >
+              <span className="mr-name">{p.display_name ?? p.name}</span>
+              <span className="mr-pos">{p.position ?? '—'}</span>
+            </a>
+          ))
+        ) : (
+          <div className="match-roster-empty">
+            {copy.locale === 'zh' ? '名单待补齐' : 'Roster pending'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function MatchDetailPage({ fixture, rosters, teamStaff, copy }: MatchDetailPageProps) {
   const isKnockout = isKnockoutMatch(fixture);
   const groupFixture = isKnockout ? undefined : fixture;
   const openingDetail = groupFixture?.id === openingMatchDetail.id ? openingMatchDetail : undefined;
@@ -513,16 +587,35 @@ export function MatchDetailPage({ fixture, copy }: MatchDetailPageProps) {
 
         <article className="match-detail-card">
           <h3>{copy.locale === 'zh' ? '阵容与人员' : 'Lineups and Personnel'}</h3>
-          <div className="lineup-shell">
-            <div>
-              <h4>{homeLabel}</h4>
-              <p>{copy.locale === 'zh' ? '首发阵容将在赛前公布。这里预留首发、替补、主教练和伤停名单展示位。' : 'Lineups will be published before kickoff.'}</p>
+          {isKnockout ? (
+            <div className="lineup-shell">
+              <div>
+                <h4>{homeLabel}</h4>
+                <p>{copy.locale === 'zh' ? '淘汰赛对阵席位在晋级路径确定后才会发布阵容与主教练信息。' : 'Knockout participants publish lineups after bracket qualification.'}</p>
+              </div>
+              <div>
+                <h4>{awayLabel}</h4>
+                <p>{copy.locale === 'zh' ? '赛前将接入首发、替补、主教练与伤停信息。' : 'Lineups, coaches, and availability will be attached pre-match.'}</p>
+              </div>
             </div>
-            <div>
-              <h4>{awayLabel}</h4>
-              <p>{copy.locale === 'zh' ? '客队阵容将在赛前公布。这里预留首发、替补、主教练和伤停名单展示位。' : 'Lineups will be published before kickoff.'}</p>
+          ) : (
+            <div className="match-roster-shell">
+              {renderRosterColumn({
+                label: homeLabel,
+                teamName: fixture.homeTeam,
+                rosters,
+                teamStaff,
+                copy
+              })}
+              {renderRosterColumn({
+                label: awayLabel,
+                teamName: fixture.awayTeam,
+                rosters,
+                teamStaff,
+                copy
+              })}
             </div>
-          </div>
+          )}
         </article>
 
         <article className="match-detail-card">
