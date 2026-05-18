@@ -1,5 +1,13 @@
 export type PersonKind = 'coach' | 'player' | 'referee';
 
+export function normalizeTeamId(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export function slugifyPersonId(value: string) {
   return value
     .normalize('NFKD')
@@ -24,4 +32,3 @@ export function buildPersonPath(kind: PersonKind, personId: string) {
   if (kind === 'player') return `/people/players/${encodeURIComponent(personId)}`;
   return `/people/referees/${encodeURIComponent(personId)}`;
 }
-

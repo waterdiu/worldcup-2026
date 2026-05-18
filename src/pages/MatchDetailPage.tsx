@@ -4,6 +4,7 @@ import { openingMatchDetail, type OpeningMatchDetailData } from '../data/opening
 import type { BracketMatchData, GroupFixtureData, GroupStageMatchData } from '../types/tournament';
 import { FavoriteButton } from '../components/FavoriteButton';
 import { PredictionForm } from '../components/PredictionForm';
+import { buildPersonId, buildPersonPath, normalizeTeamId } from '../utils/personRoutes';
 
 type KnockoutMatchDetailData = BracketMatchData & {
   roundLabel: string;
@@ -214,7 +215,19 @@ function OpeningMatchCompleteDetail({
           <div className="match-info-card__fact">
             <span>{copy.locale === 'zh' ? '裁判组' : 'Officials'}</span>
             <strong className="match-info-card__officials">
-              {detail.refereeCrew.map((crew) => `${getLocalizedText(crew.role, copy.locale)}: ${crew.name}`).join(' · ')}
+              {detail.refereeCrew.map((crew, index) => (
+                <span key={`${crew.role.en}-${crew.name}-${index}`}>
+                  {getLocalizedText(crew.role, copy.locale)}:{' '}
+                  <a
+                    className="person-inline-link"
+                    href={localizePath(buildPersonPath('referee', buildPersonId('referee', null, crew.name)), copy.locale)}
+                    aria-label={copy.locale === 'zh' ? `打开裁判档案：${crew.name}` : `Open referee profile: ${crew.name}`}
+                  >
+                    {crew.name}
+                  </a>
+                  {index === detail.refereeCrew.length - 1 ? '' : ' · '}
+                </span>
+              ))}
             </strong>
           </div>
           <PredictionForm
@@ -258,7 +271,16 @@ function OpeningMatchCompleteDetail({
                     }}
                   >
                     <span className="lineup-player-marker__number">{player.number}</span>
-                    <strong className="lineup-player-marker__name">{player.name}</strong>
+                    <a
+                      className="lineup-player-marker__name person-inline-link"
+                      href={localizePath(
+                        buildPersonPath('player', buildPersonId('player', normalizeTeamId(lineup.team), player.name)),
+                        copy.locale
+                      )}
+                      aria-label={copy.locale === 'zh' ? `打开球员档案：${player.name}` : `Open player profile: ${player.name}`}
+                    >
+                      <strong>{player.name}</strong>
+                    </a>
                     <small className="lineup-player-marker__role">{getLocalizedText(player.role, copy.locale)}</small>
                   </div>
                 ))
