@@ -6,6 +6,7 @@ const links = [
   { href: '/', label: { en: 'Home', zh: '首页' } },
   { href: '/qualifiers', label: { en: 'Qualifiers', zh: '预选赛' } },
   { href: '/stats', label: { en: 'Stats', zh: '统计' } },
+  { href: '/people', label: { en: 'People', zh: '人物' } },
   { href: '/me', label: { en: 'Me', zh: '我的' } }
 ];
 

@@ -20,6 +20,7 @@ function kindLabel(kind: PeopleIndexEntry['kind'], locale: AppCopy['locale']) {
 
 export function PeopleIndexPage({ people, copy }: { people: PeopleIndexEntry[]; copy: AppCopy }) {
   const locale = copy.locale;
+  const visiblePeople = people.filter((entry) => entry.kind !== 'referee');
 
   return (
     <main className="world-cup-page world-cup-page--people">
@@ -28,15 +29,15 @@ export function PeopleIndexPage({ people, copy }: { people: PeopleIndexEntry[]; 
           <h1 className="page-title">{locale === 'zh' ? '人物档案' : 'Person Profiles'}</h1>
           <p className="page-subtitle">
             {locale === 'zh'
-              ? '教练、球员、裁判的档案页结构已就绪。数据层接入后将自动替换 DEMO 内容。'
-              : 'Coach, player, and referee profiles are ready. Demo content will be replaced when the data layer publishes.'}
+              ? '教练、球员、裁判的档案页。数据分为：直接事实 / 派生分析 / 风格蒸馏（样本不足时会隐藏）。'
+              : 'Coach, player, and referee profiles. Data tiers: direct facts, derived analysis, distilled style (hidden if insufficient sample).'}
           </p>
         </div>
       </section>
 
       <section className="section">
         <div className="people-index-grid" role="list" aria-label={locale === 'zh' ? '人物列表' : 'People list'}>
-          {people.map((entry) => {
+          {visiblePeople.map((entry) => {
             const title = locale === 'zh' ? entry.name_zh : entry.display_name;
             const meta = locale === 'zh'
               ? `${kindLabel(entry.kind, locale)} · ${entry.country_name_zh}${entry.primary_team_name ? ` · ${entry.primary_team_name}` : ''}`
@@ -60,4 +61,3 @@ export function PeopleIndexPage({ people, copy }: { people: PeopleIndexEntry[]; 
     </main>
   );
 }
-

@@ -3,16 +3,18 @@ import type { AppCopy } from '../i18n/content';
 export type PersonKind = 'coach' | 'player' | 'referee';
 export type PersonDataTier = 'direct' | 'derived' | 'distilled';
 
+// Normalized KPI shape consumed by the UI. Data-platform may provide different raw keys; siteData loader adapts.
 export type PersonKpi = {
   id: string;
   label_zh: string;
   label_en: string;
   value: string;
-  unit_zh?: string;
-  unit_en?: string;
+  unit_zh?: string | null;
+  unit_en?: string | null;
   tier: PersonDataTier;
-  note_zh?: string;
-  note_en?: string;
+  status?: string | null;
+  note_zh?: string | null;
+  note_en?: string | null;
 };
 
 export type PersonSection =
@@ -98,6 +100,7 @@ export type PersonProfile = {
   photo_url?: string | null;
   kpis: PersonKpi[];
   sections: PersonSection[];
+  distillation_status?: 'available' | 'insufficient_sample' | 'pending_source';
   source_status: 'mock_demo' | 'available' | 'missing_source';
   source_urls: string[];
   updated_at: string;
@@ -107,10 +110,10 @@ export type PeopleIndexEntry = {
   person_id: string;
   kind: PersonKind;
   display_name: string;
-  name_zh: string;
-  country_code: string;
-  country_name_en: string;
-  country_name_zh: string;
+  name_zh: string | null;
+  country_code?: string | null;
+  country_name_en?: string | null;
+  country_name_zh?: string | null;
   primary_team_id?: string | null;
   primary_team_name?: string | null;
   role_title_en: string;
@@ -393,4 +396,3 @@ export const mockRefereeProfiles: PersonProfile[] = [
 export function localizePersonLabel(entry: PeopleIndexEntry, locale: AppCopy['locale']) {
   return locale === 'zh' ? entry.name_zh : entry.display_name;
 }
-

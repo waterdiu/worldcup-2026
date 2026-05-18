@@ -22,8 +22,107 @@ import {
   mockPeopleIndex,
   mockRefereeProfiles,
   type PeopleIndexEntry,
-  type PersonProfile
+  type PersonProfile,
+  type PersonDataTier
 } from './mockPeople';
+
+function normalizeTier(value: unknown): PersonDataTier {
+  if (value === 'direct' || value === 'derived' || value === 'distilled') return value;
+  return 'direct';
+}
+
+function normalizePeopleIndex(entries: unknown): PeopleIndexEntry[] {
+  if (!Array.isArray(entries)) return mockPeopleIndex;
+  return entries
+    .map((entry) => {
+      const personType = (entry as any)?.person_type ?? (entry as any)?.personType ?? (entry as any)?.kind;
+      const kind = personType === 'coach' || personType === 'player' || personType === 'referee' ? personType : null;
+      if (!kind) return null;
+      return {
+        person_id: String((entry as any).person_id ?? ''),
+        kind,
+        display_name: String((entry as any).display_name ?? (entry as any).name ?? ''),
+        name_zh: (entry as any).name_zh ?? null,
+        country_code: (entry as any).country_code ?? null,
+        country_name_en: (entry as any).country_name ?? (entry as any).country_name_en ?? null,
+        country_name_zh: (entry as any).country_name_zh ?? (entry as any).country_name ?? null,
+        primary_team_id: (entry as any).team_id ?? (entry as any).primary_team_id ?? null,
+        primary_team_name: (entry as any).team_name ?? (entry as any).primary_team_name ?? null,
+        role_title_en: String((entry as any).role ?? (entry as any).role_title_en ?? ''),
+        role_title_zh: String((entry as any).role_zh ?? (entry as any).role_title_zh ?? '')
+      } satisfies PeopleIndexEntry;
+    })
+    .filter(Boolean) as PeopleIndexEntry[];
+}
+
+function normalizePersonProfiles(entries: unknown, kind: PeopleIndexEntry['kind']): PersonProfile[] {
+  if (!Array.isArray(entries)) {
+    if (kind === 'coach') return mockCoachProfiles;
+    if (kind === 'player') return mockPlayerProfiles;
+    return mockRefereeProfiles;
+  }
+
+  return entries
+    .map((entry) => {
+      const personType = (entry as any)?.person_type ?? (entry as any)?.personType ?? (entry as any)?.kind;
+      if (personType !== kind) return null;
+      const kpisRaw = Array.isArray((entry as any).kpis) ? (entry as any).kpis : [];
+      const kpis = kpisRaw.map((k: any) => ({
+        id: String(k.key ?? k.id ?? ''),
+        label_zh: String(k.label_zh ?? k.labelZh ?? k.key ?? ''),
+        label_en: String((k.label && !['direct', 'derived', 'distilled'].includes(String(k.label))) ? k.label : (k.label_en ?? k.labelEn ?? k.key ?? '')),
+        value: String(k.value ?? ''),
+        unit_zh: k.unit_zh ?? k.unit ?? null,
+        unit_en: k.unit_en ?? k.unit ?? null,
+        tier: normalizeTier(k.data_tier ?? k.tier),
+        status: k.status ?? null,
+        note_zh: k.note_zh ?? null,
+        note_en: k.note_en ?? null
+      }));
+
+      // Sections from data platform are not guaranteed to match our fine-grained schema yet.
+      // For Phase 1, we keep a minimal, renderable set: profile facts + sources.
+      const factsSection = {
+        type: 'profile_facts',
+        title_zh: '基础档案',
+        title_en: 'Profile facts',
+        rows: [
+          { label_zh: '国籍', label_en: 'Nation', value: String((entry as any).country_name_zh ?? (entry as any).country_name ?? '—'), tier: 'direct' as const },
+          { label_zh: '身份', label_en: 'Role', value: String((entry as any).role_zh ?? (entry as any).role ?? '—'), tier: 'direct' as const },
+          ...(kind === 'coach'
+            ? [{ label_zh: '执教球队', label_en: 'Team', value: String((entry as any).team_name ?? '—'), tier: 'direct' as const }]
+            : kind === 'player'
+              ? [{ label_zh: '所属球队', label_en: 'Team', value: String((entry as any).team_name ?? '—'), tier: 'direct' as const }]
+              : [])
+        ]
+      } as const;
+
+      const distillationStatus = (entry as any).distillation_status ?? (entry as any).distilled?.distillation_status ?? undefined;
+      const sections = [factsSection];
+
+      return {
+        person_id: String((entry as any).person_id ?? ''),
+        kind,
+        display_name: String((entry as any).display_name ?? (entry as any).name ?? ''),
+        name_zh: String((entry as any).name_zh ?? (entry as any).display_name ?? ''),
+        country_code: String((entry as any).country_code ?? ''),
+        country_name_en: String((entry as any).country_name ?? (entry as any).country_name_en ?? ''),
+        country_name_zh: String((entry as any).country_name_zh ?? (entry as any).country_name ?? ''),
+        primary_team_id: (entry as any).team_id ?? null,
+        primary_team_name: (entry as any).team_name ?? null,
+        role_title_en: String((entry as any).role ?? ''),
+        role_title_zh: String((entry as any).role_zh ?? ''),
+        photo_url: (entry as any).photo_url ?? null,
+        kpis,
+        sections: sections as any,
+        distillation_status: distillationStatus,
+        source_status: (entry as any).source_status ?? 'available',
+        source_urls: Array.isArray((entry as any).source_urls) ? (entry as any).source_urls : [],
+        updated_at: String((entry as any).updated_at ?? '')
+      } satisfies PersonProfile;
+    })
+    .filter(Boolean) as PersonProfile[];
+}
 
 export type QualifierSourceReport = {
   confederationId: QualifierMatchData['confederationId'] | 'intercontinental' | 'shared';
@@ -391,20 +490,20 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
     ),
     baseUrl
   ).toString();
-  // NOTE: People datasets are still in integration. We only activate runtime fetch when the manifest
-  // explicitly advertises them. Otherwise we keep the DEMO dataset to avoid mismatched partial feeds.
-  const peopleContract = (manifest.runtime_contract?.core as any)?.people;
-  const peopleIndexUrl = peopleContract?.people_index
-    ? new URL(selectRuntimeEntry(peopleContract.people_index?.path, peopleContract.people_index?.url, './core/people-index.json'), baseUrl).toString()
+  // People datasets (coaches/players/referees) live in data-platform and are optional. We only fetch them when the
+  // runtime manifest advertises their location. This prevents broken routes during partial rollouts.
+  const coreContract = (manifest.runtime_contract?.core as any) ?? {};
+  const peopleIndexUrl = coreContract.people_index
+    ? new URL(selectRuntimeEntry(coreContract.people_index?.path, coreContract.people_index?.url, './core/people-index.json'), baseUrl).toString()
     : null;
-  const coachProfilesUrl = peopleContract?.coach_profiles
-    ? new URL(selectRuntimeEntry(peopleContract.coach_profiles?.path, peopleContract.coach_profiles?.url, './core/coach-profiles.json'), baseUrl).toString()
+  const coachProfilesUrl = coreContract.coach_profiles
+    ? new URL(selectRuntimeEntry(coreContract.coach_profiles?.path, coreContract.coach_profiles?.url, './core/coach-profiles.json'), baseUrl).toString()
     : null;
-  const playerProfilesUrl = peopleContract?.player_profiles
-    ? new URL(selectRuntimeEntry(peopleContract.player_profiles?.path, peopleContract.player_profiles?.url, './core/player-profiles.json'), baseUrl).toString()
+  const playerProfilesUrl = coreContract.player_profiles
+    ? new URL(selectRuntimeEntry(coreContract.player_profiles?.path, coreContract.player_profiles?.url, './core/player-profiles.json'), baseUrl).toString()
     : null;
-  const refereeProfilesUrl = peopleContract?.referee_profiles
-    ? new URL(selectRuntimeEntry(peopleContract.referee_profiles?.path, peopleContract.referee_profiles?.url, './core/referee-profiles.json'), baseUrl).toString()
+  const refereeProfilesUrl = coreContract.referee_profiles
+    ? new URL(selectRuntimeEntry(coreContract.referee_profiles?.path, coreContract.referee_profiles?.url, './core/referee-profiles.json'), baseUrl).toString()
     : null;
 
   const [rosterRes, staffRes, recentRes, historyRes, peopleIndexRes, coachProfilesRes, playerProfilesRes, refereeProfilesRes] = await Promise.allSettled([
@@ -468,7 +567,7 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
 
   if (peopleIndexRes.status === 'fulfilled' && peopleIndexRes.value.ok) {
     try {
-      peopleIndex = await peopleIndexRes.value.json() as PeopleIndexEntry[];
+      peopleIndex = normalizePeopleIndex(await peopleIndexRes.value.json());
     } catch {
       warnings.push('Failed to parse runtime core people-index.json');
       peopleIndex = mockPeopleIndex;
@@ -477,7 +576,7 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
 
   if (coachProfilesRes.status === 'fulfilled' && coachProfilesRes.value.ok) {
     try {
-      coachProfiles = await coachProfilesRes.value.json() as PersonProfile[];
+      coachProfiles = normalizePersonProfiles(await coachProfilesRes.value.json(), 'coach');
     } catch {
       warnings.push('Failed to parse runtime core coach-profiles.json');
       coachProfiles = mockCoachProfiles;
@@ -486,7 +585,7 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
 
   if (playerProfilesRes.status === 'fulfilled' && playerProfilesRes.value.ok) {
     try {
-      playerProfiles = await playerProfilesRes.value.json() as PersonProfile[];
+      playerProfiles = normalizePersonProfiles(await playerProfilesRes.value.json(), 'player');
     } catch {
       warnings.push('Failed to parse runtime core player-profiles.json');
       playerProfiles = mockPlayerProfiles;
@@ -495,7 +594,7 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
 
   if (refereeProfilesRes.status === 'fulfilled' && refereeProfilesRes.value.ok) {
     try {
-      refereeProfiles = await refereeProfilesRes.value.json() as PersonProfile[];
+      refereeProfiles = normalizePersonProfiles(await refereeProfilesRes.value.json(), 'referee');
     } catch {
       warnings.push('Failed to parse runtime core referee-profiles.json');
       refereeProfiles = mockRefereeProfiles;
