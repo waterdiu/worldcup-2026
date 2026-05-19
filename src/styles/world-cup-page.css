@@ -6762,16 +6762,6 @@
   }
 
   .page-nav__meta {
-    display: none;
-  }
-}
-
-.page-nav--admin .page-nav__meta {
-  display: flex;
-}
-
-@media (max-width: 860px) {
-  .page-nav--admin .page-nav__meta {
     justify-content: flex-end;
   }
 }
