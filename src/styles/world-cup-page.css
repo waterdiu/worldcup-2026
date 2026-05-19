@@ -10257,7 +10257,7 @@
   border: 1px solid var(--account-rule-2);
   display: grid;
   gap: 1rem;
-  grid-template-columns: auto minmax(220px, 1fr) auto;
+  grid-template-columns: auto 1fr auto;
   margin-bottom: 1px;
   min-height: 52px;
 }
@@ -10280,7 +10280,6 @@
 }
 
 .admin-console-brand span,
-.admin-console-search span,
 .admin-console-user,
 .admin-console-user b {
   color: var(--account-ink-3);
@@ -10438,6 +10437,98 @@
   padding: 0.75rem 1rem;
 }
 
+.admin-people-row {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr);
+  padding: 14px 14px 10px;
+}
+
+.admin-people-cards {
+  background: var(--account-rule-2);
+  border: 1px solid var(--account-rule-2);
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+}
+
+.admin-people-cards button {
+  align-items: center;
+  background: var(--account-bg-2);
+  border: 0;
+  color: var(--account-ink-2);
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.admin-people-cards button span {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-people-cards button b {
+  background: var(--account-bg-3);
+  border: 1px solid var(--account-rule-2);
+  color: var(--account-ink-3);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+}
+
+.admin-people-cards button.is-active {
+  background: rgba(200, 242, 48, 0.055);
+  color: var(--account-lime);
+}
+
+.admin-people-cards button.is-active b {
+  border-color: var(--account-lime);
+  color: var(--account-lime);
+}
+
+.admin-people-filters {
+  align-items: center;
+  border-top: 1px solid var(--account-rule-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 10px 14px 14px;
+}
+
+.admin-people-filters .admin-people-controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-people-filters .admin-people-controls button {
+  background: transparent;
+  border: 1px solid var(--account-rule-2);
+  color: var(--account-ink-2);
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 5px 10px;
+  text-transform: uppercase;
+}
+
+.admin-people-filters .admin-people-controls button.is-active {
+  border-color: var(--account-lime);
+  color: var(--account-lime);
+}
+
 .admin-data-table {
   border: 0;
   overflow-x: auto;
@@ -10474,6 +10565,10 @@
 
 .admin-data-row--records {
   grid-template-columns: minmax(160px, 0.8fr) minmax(260px, 1.4fr) 160px;
+}
+
+.admin-data-row--people {
+  grid-template-columns: minmax(220px, 1.2fr) minmax(170px, 1fr) minmax(220px, 1.15fr) 130px 130px;
 }
 
 .admin-data-row--prediction-records {
@@ -11231,11 +11326,39 @@
   margin-bottom: 0.25rem;
 }
 
+.admin-sidebar-search {
+  display: grid;
+  gap: 8px;
+  padding: 0 1rem 0.85rem;
+}
+
+.admin-sidebar-search span {
+  color: var(--account-ink-3);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-sidebar-search input {
+  background: transparent;
+  border: 1px solid var(--account-rule-2);
+  color: var(--account-ink);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 6px 10px;
+}
+
+.admin-sidebar-search input:focus {
+  border-color: var(--account-lime);
+  outline: none;
+}
+
 .admin-sidebar-label {
   color: var(--account-ink-3);
   display: block;
   font-family: 'DM Mono', monospace;
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   padding: 0.625rem 1rem 0.25rem;
   text-transform: uppercase;
@@ -11250,7 +11373,7 @@
   cursor: pointer;
   display: flex;
   font: inherit;
-  font-size: 12px;
+  font-size: 10px;
   gap: 8px;
   padding: 0.45rem 1rem;
   text-align: left;
@@ -11269,7 +11392,8 @@
 
 .admin-sidebar button > span {
   color: inherit;
-  flex: 0 0 16px;
+  flex: 0 0 18px;
+  font-size: 13px;
   text-align: center;
 }
 
@@ -12150,11 +12274,12 @@
 .world-cup-page .admin-page .admin-section-head h2 {
   color: #f0ede6 !important;
   font-family: 'Barlow Condensed', sans-serif !important;
-  font-size: clamp(28px, 3.2vw, 44px) !important;
-  font-style: italic;
+  font-size: 18px !important;
+  font-style: normal;
   font-weight: 800 !important;
-  letter-spacing: -0.025em !important;
-  line-height: 0.95 !important;
+  letter-spacing: 0.1em !important;
+  line-height: 1.05 !important;
+  text-transform: uppercase;
 }
 
 .world-cup-page .admin-page .admin-section-head h2::before {
