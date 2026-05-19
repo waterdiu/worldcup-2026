@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host --port 5175 --strictPort",
+    "dev": "vite --host --port 5176 --strictPort",
     "build": "tsc -b && vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "fetch:qualifiers": "node scripts/fetch_api_football_qualifiers.mjs",
