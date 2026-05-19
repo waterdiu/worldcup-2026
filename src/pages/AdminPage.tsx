@@ -149,6 +149,8 @@ function roleLabel(role: WorldCupOfficialRole, locale: AppCopy['locale']) {
   return '其他';
 }
 
+type OfficialSourceScope = 'fifa' | 'historical' | 'all';
+
 function toPermissionLevel(permission: AdminPagePermissionRecord, level: string): AdminPagePermissionRecord {
   return {
     ...permission,
@@ -176,6 +178,7 @@ export function AdminPage({
   const [peopleScope, setPeopleScope] = useState<'coaches' | 'players' | 'referees'>('coaches');
   const [peopleQuery, setPeopleQuery] = useState('');
   const [officialRoleFilter, setOfficialRoleFilter] = useState<'all' | WorldCupOfficialRole>('referee');
+  const [officialSourceScope, setOfficialSourceScope] = useState<OfficialSourceScope>('fifa');
   const isZh = copy.locale === 'zh';
   const pendingUsers = dashboard.profiles.filter((profile) => (profile.status ?? 'pending') === 'pending');
   const activeUsers = dashboard.profiles.filter((profile) => (profile.status ?? 'pending') === 'active');
@@ -210,7 +213,15 @@ export function AdminPage({
 
     if (peopleScope === 'referees') {
       const fifaOfficials = officials.filter((item) => item.source_status === 'official_fifa_match_official_list');
-      const roleFiltered = officialRoleFilter === 'all' ? fifaOfficials : fifaOfficials.filter((item) => item.role === officialRoleFilter);
+      const historicalOfficials = officials.filter((item) => item.source_status === 'historical_sample_only');
+      const scopedOfficials =
+        officialSourceScope === 'fifa'
+          ? fifaOfficials
+          : officialSourceScope === 'historical'
+            ? historicalOfficials
+            : officials;
+
+      const roleFiltered = officialRoleFilter === 'all' ? scopedOfficials : scopedOfficials.filter((item) => item.role === officialRoleFilter);
       const searched = query
         ? roleFiltered.filter((item) => {
             const tokens = [
@@ -230,9 +241,14 @@ export function AdminPage({
 
       return {
         kind: 'referee' as const,
-        total: fifaOfficials.length,
+        total: scopedOfficials.length,
         visible: searched.slice(0, 600),
-        mode: 'officials' as const
+        mode: 'officials' as const,
+        counts: {
+          fifa: fifaOfficials.length,
+          historical: historicalOfficials.length,
+          all: officials.length
+        }
       };
     }
 
@@ -591,6 +607,18 @@ export function AdminPage({
                   </label>
                   {peopleScope === 'referees' ? (
                     <div className="admin-people-controls" aria-label={isZh ? '裁判角色筛选' : 'Official role filters'}>
+                      <button type="button" className={officialSourceScope === 'fifa' ? 'is-active' : ''} onClick={() => setOfficialSourceScope('fifa')}>
+                        {isZh ? 'FIFA名单' : 'FIFA'}
+                        {(peopleProfiles as any).counts ? <b className="is-muted">{(peopleProfiles as any).counts.fifa}</b> : null}
+                      </button>
+                      <button type="button" className={officialSourceScope === 'historical' ? 'is-active' : ''} onClick={() => setOfficialSourceScope('historical')}>
+                        {isZh ? '历史样本' : 'Sample'}
+                        {(peopleProfiles as any).counts ? <b className="is-muted">{(peopleProfiles as any).counts.historical}</b> : null}
+                      </button>
+                      <button type="button" className={officialSourceScope === 'all' ? 'is-active' : ''} onClick={() => setOfficialSourceScope('all')}>
+                        {isZh ? '全部来源' : 'All'}
+                        {(peopleProfiles as any).counts ? <b className="is-muted">{(peopleProfiles as any).counts.all}</b> : null}
+                      </button>
                       <button type="button" className={officialRoleFilter === 'referee' ? 'is-active' : ''} onClick={() => setOfficialRoleFilter('referee')}>
                         {isZh ? '主裁' : 'Referee'}
                       </button>

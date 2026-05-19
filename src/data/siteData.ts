@@ -630,9 +630,8 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
   const refereeProfilesUrl = coreContract.referee_profiles
     ? new URL(selectRuntimeEntry(coreContract.referee_profiles?.path, coreContract.referee_profiles?.url, './core/referee-profiles.json'), baseUrl).toString()
     : null;
-  const officialsUrl = coreContract.officials
-    ? new URL(selectRuntimeEntry(coreContract.officials?.path, coreContract.officials?.url, './core/officials.json'), baseUrl).toString()
-    : null;
+  const officialsEntry = selectRuntimeEntry(coreContract.officials?.path, coreContract.officials?.url, './core/officials.json');
+  const officialsUrl = new URL(officialsEntry, baseUrl).toString();
   const playerExternalFactsUrl = coreContract.player_external_facts
     ? new URL(selectRuntimeEntry(coreContract.player_external_facts?.path, coreContract.player_external_facts?.url, './core/player-external-facts.json'), baseUrl).toString()
     : null;
@@ -661,7 +660,7 @@ export async function loadRuntimeWorldCupSiteData(signal?: AbortSignal): Promise
     coachProfilesUrl ? fetch(coachProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('coach-profiles disabled')),
     playerProfilesUrl ? fetch(playerProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('player-profiles disabled')),
     refereeProfilesUrl ? fetch(refereeProfilesUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('referee-profiles disabled')),
-    officialsUrl ? fetch(officialsUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('officials disabled')),
+    fetch(officialsUrl, { cache: 'no-store', signal }),
     playerExternalFactsUrl ? fetch(playerExternalFactsUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('player-external-facts disabled')),
     staffExternalFactsUrl ? fetch(staffExternalFactsUrl, { cache: 'no-store', signal }) : Promise.reject(new Error('staff-external-facts disabled'))
   ]);
