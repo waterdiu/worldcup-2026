@@ -20,10 +20,11 @@ export function PageNav({ pathname, locale }: PageNavProps) {
   const { isAdmin } = useAdminStatus(user);
   const hasCachedAdminStatus =
     typeof window !== 'undefined' && window.localStorage.getItem('worldcup2026:is-admin') === 'true';
-  const visibleLinks = isAdmin || (authLoading && hasCachedAdminStatus)
+  const adminEligible = isAdmin || (authLoading && hasCachedAdminStatus);
+  const visibleLinks = adminEligible
     ? [...links, { href: '/admin', label: { en: 'Admin', zh: '管理' } }]
     : links;
-  const showAdminIdentity = pathname.startsWith('/admin');
+  const showAdminIdentity = pathname.startsWith('/admin') && adminEligible;
 
   return (
     <nav aria-label="Page navigation" className={`page-nav${showAdminIdentity ? ' page-nav--admin' : ''}`}>
