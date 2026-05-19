@@ -2,6 +2,7 @@ import { localizePath, type Locale } from '../i18n/content';
 import { useAdminStatus } from '../hooks/useAdminStatus';
 import { useAuth } from '../hooks/useAuth';
 import { getAuthDisplayName } from '../lib/supabase';
+import { useEffect } from 'react';
 
 const links = [
   { href: '/', label: { en: 'Home', zh: '首页' } },
@@ -24,7 +25,25 @@ export function PageNav({ pathname, locale }: PageNavProps) {
   const visibleLinks = adminEligible
     ? [...links, { href: '/admin', label: { en: 'Admin', zh: '管理' } }]
     : links;
-  const identityLabel = user ? getAuthDisplayName(user) : (locale === 'zh' ? '未登录' : 'Signed out');
+  const cachedIdentity =
+    typeof window !== 'undefined' ? window.localStorage.getItem('worldcup2026:last-auth-name') : null;
+  const signedOutLabel = locale === 'zh' ? '未登录' : 'Signed out';
+  const identityLabel = user
+    ? getAuthDisplayName(user)
+    : authLoading && cachedIdentity
+      ? cachedIdentity
+      : signedOutLabel;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (user) {
+      window.localStorage.setItem('worldcup2026:last-auth-name', getAuthDisplayName(user));
+      return;
+    }
+    if (!authLoading) {
+      window.localStorage.removeItem('worldcup2026:last-auth-name');
+    }
+  }, [authLoading, user]);
 
   return (
     <nav aria-label="Page navigation" className={`page-nav${adminEligible ? ' page-nav--admin' : ''}`}>
