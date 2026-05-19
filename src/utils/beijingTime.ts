@@ -67,3 +67,14 @@ export function formatBeijingMonthDay(dateLabel: string, locale: Locale): string
   if (locale === 'zh') return `${Number(mm)}月${Number(dd)}日`;
   return `${mm}-${dd}`;
 }
+
+export function beijingDateKey(dateLabel: string): string {
+  const dateOnly = dateLabel.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnly) return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}`;
+
+  const parts = getBeijingParts(dateLabel, 'en');
+  const yyyy = parts.year;
+  const mm = parts.month;
+  const dd = parts.day;
+  return `${yyyy}-${mm}-${dd}`;
+}

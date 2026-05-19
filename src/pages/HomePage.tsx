@@ -10,7 +10,7 @@ import {
 import { localizePath, type Locale } from '../i18n/content';
 import type { FullScheduleMatchData, GroupCardData, GroupFixtureData } from '../types/tournament';
 import { publicAssetPath } from '../utils/publicAssets';
-import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
+import { beijingDateKey, formatBeijingMonthDay, formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 interface HomePageProps {
   slides: HeroSlideData[];
@@ -98,14 +98,16 @@ function formatFixtureDayLabel(dateLabel: string, locale: Locale): string {
     return `${Number(month)}月${Number(day)}日`;
   }
 
-  const date = new Date(dateLabel);
-  if (Number.isNaN(date.getTime())) return dateLabel;
+  // When dateLabel includes a timestamp, normalize day boundary to Beijing time.
+  const key = beijingDateKey(dateLabel);
+  const [y, m, d] = key.split('-').map(Number);
+  if (!y || !m || !d) return dateLabel;
 
   if (locale === 'en') {
-    return new Intl.DateTimeFormat('en', { weekday: 'short', month: 'short', day: 'numeric' }).format(date);
+    return new Intl.DateTimeFormat('en', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d));
   }
 
-  return `${date.getMonth() + 1}月${date.getDate()}日`;
+  return formatBeijingMonthDay(key, 'zh');
 }
 
 function formatBeijingFixtureTime(fixture: FullScheduleMatchData, locale: Locale): string {
@@ -138,9 +140,7 @@ function formatHomeFixtureTeam(team: string, locale: Locale): string {
 }
 
 function localDateKey(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return beijingDateKey(value);
 }
 
 function formatGroupLabel(groupId: string, locale: Locale): string {
