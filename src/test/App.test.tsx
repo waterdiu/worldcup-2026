@@ -473,8 +473,9 @@ describe('App routes', () => {
     expect(screen.getByTestId('match-info-card')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /🇲🇽 墨西哥/ })).toHaveAttribute('href', '/teams/Mexico');
     expect(screen.getByRole('link', { name: /🇿🇦 南非/ })).toHaveAttribute('href', '/teams/South%20Africa');
-    expect(screen.getAllByText(/2026年6月11日 20:00/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/墨西哥城球场/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/2026年6月11日 15:00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/北京时间 2026年6月12日 03:00/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/阿兹特克球场/).length).toBeGreaterThan(0);
     expect(screen.getByText(/22°C/)).toBeInTheDocument();
     expect(screen.getByText(/主裁判/)).toBeInTheDocument();
 

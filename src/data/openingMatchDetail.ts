@@ -61,12 +61,12 @@ export interface OpeningMatchDetailData {
 export const openingMatchDetail: OpeningMatchDetailData = {
   id: '1',
   kickoffLocal: {
-    zh: '2026年6月11日 20:00（当地时间）',
-    en: '11 Jun 2026 · 20:00 local time'
+    zh: '当地 2026年6月11日 15:00 / 北京时间 2026年6月12日 03:00',
+    en: '11 Jun 2026 · 15:00 Mexico City / 12 Jun 2026 · 03:00 Beijing'
   },
   venueDetail: {
-    zh: '墨西哥城球场 · 墨西哥城',
-    en: 'Mexico City Stadium · Mexico City'
+    zh: '墨西哥城阿兹特克球场（Estadio Azteca）',
+    en: 'Estadio Azteca · Mexico City'
   },
   weather: {
     zh: '22°C · 微风 · 草皮偏快',
