@@ -169,6 +169,7 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
         coachProfiles={coachProfiles}
         playerProfiles={playerProfiles}
         refereeProfiles={refereeProfiles}
+        officials={siteData.officials}
       />
     );
   }
