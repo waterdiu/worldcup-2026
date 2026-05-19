@@ -82,7 +82,7 @@ function pickRefereeHeroFacts(profile: PersonProfile, locale: AppCopy['locale'])
   if (profile.country_name_en || profile.country_name_zh) {
     facts.push([locale === 'zh' ? '国籍' : 'Nation', locale === 'zh' ? profile.country_name_zh : profile.country_name_en]);
   }
-  if (typeof metrics.matches === 'number') facts.push([locale === 'zh' ? '样本场次' : 'Sample', `${metrics.matches}`]);
+  if (typeof metrics.matches === 'number') facts.push([locale === 'zh' ? '执法场次' : 'Matches', `${metrics.matches}`]);
   if (typeof metrics.yellow_cards_per_match === 'number') facts.push([locale === 'zh' ? '场均黄牌' : 'Yellows', `${metrics.yellow_cards_per_match}`]);
   return facts;
 }
@@ -365,7 +365,7 @@ function renderRealtimeGrid(profile: PersonProfile, locale: AppCopy['locale']) {
           <div className="data-row"><span className="field">{locale === 'zh' ? '触发动作' : 'Trigger'}</span><span className="val">{locale === 'zh' ? '确认后更新 L3' : 'Update L3 on confirm'}</span><span className="note">auto</span></div>
         </div>
         <div className="rt-col">
-          <div className="rt-col__label">{locale === 'zh' ? '近期执法状态（样本）' : 'Recent sample'} <span className="src src-a">{locale === 'zh' ? '派生分析' : 'Derived'}</span></div>
+          <div className="rt-col__label">{locale === 'zh' ? '近期执法数据' : 'Recent officiating'} <span className="src src-a">{locale === 'zh' ? '派生分析' : 'Derived'}</span></div>
           <div className="data-row"><span className="field">{locale === 'zh' ? '场均黄牌' : 'Yellows/m'}</span><span className="val" style={{ color: 'var(--lime)' }}>{yellows}</span><span className="note">avg</span></div>
           <div className="data-row"><span className="field">{locale === 'zh' ? '场均红牌' : 'Reds/m'}</span><span className="val">{reds}</span><span className="note">avg</span></div>
         </div>
@@ -497,7 +497,7 @@ function renderDataGrid(profile: PersonProfile, locale: AppCopy['locale']) {
   }
 
   if (profile.kind === 'referee') {
-    rightRows.push({ field: locale === 'zh' ? '样本场次' : 'Sample', value: metrics.matches ?? null, note: derived.status ?? 'derived' });
+    rightRows.push({ field: locale === 'zh' ? '执法场次' : 'Matches', value: metrics.matches ?? null, note: derived.status ?? 'derived' });
     rightRows.push({ field: locale === 'zh' ? '场均黄牌' : 'Yellows', value: metrics.yellow_cards_per_match ?? null, note: derived.status ?? 'derived' });
     rightRows.push({ field: locale === 'zh' ? '场均红牌' : 'Reds', value: metrics.red_cards_per_match ?? null, note: derived.status ?? 'derived' });
     rightRows.push({ field: locale === 'zh' ? '平局率' : 'Draw rate', value: metrics.draw_rate ?? null, note: derived.status ?? 'derived' });
@@ -682,12 +682,12 @@ function renderMethodology(profile: PersonProfile, locale: AppCopy['locale']) {
         ? '官方确认“谁是主教练”、所属球队。补充事实来自可追溯的第三方离线数据，字段带来源标记。'
         : kind === 'player'
           ? '官方名单确认“谁在 26 人名单”、位置。俱乐部/生日等补充事实来自可追溯的第三方离线数据，字段带来源标记。'
-          : '裁判名单与历史执法样本来自公开赛果数据集；世界杯官方指派发布后会替换为赛事样本。'
+          : '裁判名单来自官方名单与公开赛果数据集的聚合；官方指派公布后会追加到“本场执法指派”。'
       : kind === 'coach'
         ? 'Direct facts: official head coach + team. Extra facts come from auditable offline datasets and are source-tagged.'
         : kind === 'player'
           ? 'Direct facts: official roster membership + position. Extra facts (club/DOB) come from auditable offline datasets and are source-tagged.'
-          : 'Referee facts: public match-result datasets. Will be replaced by official World Cup assignments when published.';
+          : 'Referee facts: aggregated from official lists and public match-result datasets. Official assignments will be attached when published.';
 
   const derivedText =
     locale === 'zh'
@@ -695,7 +695,7 @@ function renderMethodology(profile: PersonProfile, locale: AppCopy['locale']) {
         ? '近 10 场窗口派生：胜/平/负、胜率、场均进失球、零封率。公式只依赖比分，不做主观打分。'
         : kind === 'player'
           ? '国家队出场/进球为事实汇总；影响力当前为代理分（impact_proxy_score），仅用于展示“已接入/待升级”。'
-          : '按历史样本计算：黄/红/点球/平局率等，并可与样本均值做对比。样本不足时会标注。'
+          : '按已导入的历史执法记录计算：黄/红/点球/平局率等；样本不足时会标注并避免输出强结论。'
       : kind === 'coach'
         ? 'Derived: last-10 window W/D/L, win rate, goals for/against per match, clean sheet rate. Scoreline-only, no subjective scoring.'
         : kind === 'player'

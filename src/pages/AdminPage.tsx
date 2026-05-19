@@ -547,6 +547,15 @@ export function AdminPage({
                     <span>{isZh ? '球队/归属' : 'Team'}</span>
                     <span>{isZh ? '国籍' : 'Nation'}</span>
                   </div>
+                  {peopleProfiles.visible.length === 0 ? (
+                    <div className="admin-data-row admin-data-row--records">
+                      <span className="admin-muted">
+                        {isZh ? '暂无可展示人员数据。' : 'No people records available.'}
+                      </span>
+                      <span />
+                      <span />
+                    </div>
+                  ) : null}
                   {peopleProfiles.visible.map((profile) => (
                     <a
                       key={profile.person_id}
