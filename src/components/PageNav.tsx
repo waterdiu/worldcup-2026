@@ -23,7 +23,7 @@ export function PageNav({ pathname, locale }: PageNavProps) {
   const visibleLinks = isAdmin || (authLoading && hasCachedAdminStatus)
     ? [...links, { href: '/admin', label: { en: 'Admin', zh: '管理' } }]
     : links;
-  const showAdminIdentity = pathname.startsWith('/admin') && Boolean(user);
+  const showAdminIdentity = pathname.startsWith('/admin');
 
   return (
     <nav aria-label="Page navigation" className={`page-nav${showAdminIdentity ? ' page-nav--admin' : ''}`}>
@@ -48,7 +48,7 @@ export function PageNav({ pathname, locale }: PageNavProps) {
         {showAdminIdentity ? (
           <>
             <span className="page-nav__dot" aria-hidden="true" />
-            <span className="page-nav__identity">{user ? getAuthDisplayName(user) : ''}</span>
+            <span className="page-nav__identity">{user ? getAuthDisplayName(user) : (locale === 'zh' ? '未登录' : 'Signed out')}</span>
             <b className="page-nav__role">ADMIN</b>
           </>
         ) : (
