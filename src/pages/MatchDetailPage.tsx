@@ -35,9 +35,27 @@ const statisticRows = [
 ];
 
 function formatDetailDate(dateLabel: string, locale: AppCopy['locale']): string {
-  if (locale === 'en') return dateLabel;
   const date = new Date(dateLabel);
-  return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日`;
+  // Always show kickoff in Beijing time to match the rest of the site.
+  const fmt = new Intl.DateTimeFormat(locale === 'zh' ? 'zh-CN' : 'en-GB', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(date).map((p) => [p.type, p.value]));
+  const yyyy = parts.year;
+  const mm = parts.month;
+  const dd = parts.day;
+  const hh = parts.hour;
+  const min = parts.minute;
+  if (locale === 'zh') {
+    return `${yyyy}年${Number(mm)}月${Number(dd)}日 ${hh}:${min}`;
+  }
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
 }
 
 function formatMatchday(matchdayLabel: string | undefined, locale: AppCopy['locale']): string {
