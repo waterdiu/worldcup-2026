@@ -1,6 +1,15 @@
 import type { PersonDataTier, PersonProfile, PersonSection } from '../data/mockPeople';
 import { localizePath, type AppCopy } from '../i18n/content';
 
+function adminPeopleBack(locale: AppCopy['locale']) {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('from') !== 'admin') return null;
+  const scope = params.get('people');
+  const normalized = scope === 'players' || scope === 'referees' || scope === 'coaches' ? scope : 'coaches';
+  const label = locale === 'zh' ? '返回人员' : 'Back to people';
+  return { href: localizePath(`/admin?tab=people&scope=${normalized}`, locale), label };
+}
+
 function tierLabel(tier: PersonDataTier, locale: AppCopy['locale']) {
   if (locale === 'en') {
     if (tier === 'direct') return 'Direct';
@@ -924,13 +933,14 @@ export function PersonDetailPage({
   emptyReason?: string;
 }) {
   const locale = copy.locale;
+  const adminBack = adminPeopleBack(locale);
 
   if (!profile) {
     return (
       <main className="world-cup-page world-cup-page--people">
         <section className="section page-intro">
-          <a className="back-link" href={localizePath('/people', locale)}>
-            {locale === 'zh' ? '返回人物列表' : 'Back to people'}
+          <a className="back-link" href={adminBack?.href ?? localizePath('/people', locale)}>
+            {adminBack?.label ?? (locale === 'zh' ? '返回人物列表' : 'Back to people')}
           </a>
           <div className="section-header">
             <h1 className="page-title">{locale === 'zh' ? '人物档案不可用' : 'Profile unavailable'}</h1>
@@ -954,8 +964,8 @@ export function PersonDetailPage({
   return (
     <main className="world-cup-page world-cup-page--people">
       <section className="section page-intro">
-        <a className="back-link" href={localizePath('/people', locale)}>
-          {locale === 'zh' ? '返回人物列表' : 'Back to people'}
+        <a className="back-link" href={adminBack?.href ?? localizePath('/people', locale)}>
+          {adminBack?.label ?? (locale === 'zh' ? '返回人物列表' : 'Back to people')}
         </a>
         {renderHero(profile, locale)}
       </section>

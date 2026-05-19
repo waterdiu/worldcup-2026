@@ -10462,7 +10462,7 @@
   cursor: pointer;
   display: flex;
   gap: 10px;
-  justify-content: space-between;
+  justify-content: center;
   padding: 10px 12px;
   text-align: left;
 }
@@ -10475,23 +10475,18 @@
   text-transform: uppercase;
 }
 
-.admin-people-cards button b {
-  background: var(--account-bg-3);
-  border: 1px solid var(--account-rule-2);
-  color: var(--account-ink-3);
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  font-weight: 500;
-  padding: 2px 8px;
-}
-
 .admin-people-cards button.is-active {
   background: rgba(200, 242, 48, 0.055);
   color: var(--account-lime);
 }
 
-.admin-people-cards button.is-active b {
-  border-color: var(--account-lime);
+.admin-people-cards button:hover {
+  background: rgba(200, 242, 48, 0.04);
+  color: var(--account-ink);
+}
+
+.admin-people-cards button.is-active:hover {
+  background: rgba(200, 242, 48, 0.07);
   color: var(--account-lime);
 }
 
@@ -10568,7 +10563,7 @@
 }
 
 .admin-data-row--people {
-  grid-template-columns: minmax(220px, 1.2fr) minmax(170px, 1fr) minmax(220px, 1.15fr) 130px 130px;
+  grid-template-columns: minmax(220px, 1.25fr) minmax(160px, 0.9fr) minmax(150px, 0.8fr) 110px minmax(150px, 0.85fr);
 }
 
 .admin-data-row--prediction-records {

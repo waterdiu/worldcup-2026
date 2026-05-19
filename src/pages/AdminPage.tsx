@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useAdminDashboard, type AdminPagePermissionRecord, type AdminProfileRecord } from '../hooks/useAdminDashboard';
 import { useAdminStatus } from '../hooks/useAdminStatus';
@@ -128,6 +128,10 @@ function getPersonHref(kind: 'coach' | 'player' | 'referee', personId: string, l
   return localizePath(`/people/${segment}/${encodeURIComponent(personId)}`, locale);
 }
 
+function getAdminPeopleBackHref(locale: AppCopy['locale'], scope: PeopleScope) {
+  return localizePath(`/admin?tab=people&scope=${scope}`, locale);
+}
+
 function normalizePeopleQuery(value: string) {
   return value.trim().toLowerCase();
 }
@@ -150,6 +154,19 @@ function roleLabel(role: WorldCupOfficialRole, locale: AppCopy['locale']) {
 }
 
 type OfficialSourceScope = 'fifa' | 'historical' | 'all';
+
+type PeopleScope = 'coaches' | 'players' | 'referees';
+
+function peopleScopeLabel(scope: PeopleScope, locale: AppCopy['locale']) {
+  if (locale === 'en') {
+    if (scope === 'coaches') return 'Coaches';
+    if (scope === 'players') return 'Players';
+    return 'Referees';
+  }
+  if (scope === 'coaches') return '主教练';
+  if (scope === 'players') return '球员';
+  return '裁判';
+}
 
 function coachFormLabel(profile: PersonProfile) {
   const derived = (profile.derived ?? {}) as any;
@@ -192,14 +209,28 @@ export function AdminPage({
   officials
 }: AdminPageProps) {
   // NOTE: Admin-only UI reads tournament datasets from the same runtime bundle as the public pages.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab !== 'people') return;
+    const scope = params.get('scope');
+    if (scope === 'coaches' || scope === 'players' || scope === 'referees') {
+      setActiveTab('people');
+      setPeopleScope(scope);
+    } else {
+      setActiveTab('people');
+    }
+  }, []);
+
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminStatus(user);
   const dashboard = useAdminDashboard(Boolean(user && isAdmin));
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
-  const [peopleScope, setPeopleScope] = useState<'coaches' | 'players' | 'referees'>('coaches');
+  const [peopleScope, setPeopleScope] = useState<PeopleScope>('coaches');
   const [peopleQuery, setPeopleQuery] = useState('');
-  const [officialRoleFilter, setOfficialRoleFilter] = useState<'all' | WorldCupOfficialRole>('referee');
-  const [officialSourceScope, setOfficialSourceScope] = useState<OfficialSourceScope>('fifa');
+  // Fixed for now: People > Referees only shows FIFA head referees.
+  const officialRoleFilter: WorldCupOfficialRole = 'referee';
+  const officialSourceScope: OfficialSourceScope = 'fifa';
   const [navQuery, setNavQuery] = useState('');
   const isZh = copy.locale === 'zh';
   const pendingUsers = dashboard.profiles.filter((profile) => (profile.status ?? 'pending') === 'pending');
@@ -236,14 +267,10 @@ export function AdminPage({
     if (peopleScope === 'referees') {
       const fifaOfficials = officials.filter((item) => item.source_status === 'official_fifa_match_official_list');
       const historicalOfficials = officials.filter((item) => item.source_status === 'historical_sample_only');
-      const scopedOfficials =
-        officialSourceScope === 'fifa'
-          ? fifaOfficials
-          : officialSourceScope === 'historical'
-            ? historicalOfficials
-            : officials;
 
-      const roleFiltered = officialRoleFilter === 'all' ? scopedOfficials : scopedOfficials.filter((item) => item.role === officialRoleFilter);
+      // For the admin People view, referees means FIFA head referees only.
+      const scopedOfficials = fifaOfficials;
+      const roleFiltered = scopedOfficials.filter((item) => item.role === 'referee');
       const searched = query
         ? roleFiltered.filter((item) => {
             const tokens = [
@@ -426,7 +453,6 @@ export function AdminPage({
       <div className="admin-console-topbar">
         <div className="admin-console-brand">
           <strong>WC 2026</strong>
-          <span>{isZh ? '管理后台' : 'Admin'}</span>
         </div>
         <div className="admin-console-user">
           <span>{getAuthDisplayName(user)}</span>
@@ -606,69 +632,48 @@ export function AdminPage({
                   </label>
                   <div className="admin-people-cards" aria-label={isZh ? '人员子菜单' : 'People sub navigation'}>
                     <button type="button" className={peopleScope === 'coaches' ? 'is-active' : ''} onClick={() => setPeopleScope('coaches')}>
-                      <span>{isZh ? '主教练' : 'Coaches'}</span>
-                      <b>{coachProfiles.length}</b>
+                      <span>{peopleScopeLabel('coaches', copy.locale)} ({coachProfiles.length})</span>
                     </button>
                     <button type="button" className={peopleScope === 'players' ? 'is-active' : ''} onClick={() => setPeopleScope('players')}>
-                      <span>{isZh ? '球员' : 'Players'}</span>
-                      <b>{playerProfiles.length}</b>
+                      <span>{peopleScopeLabel('players', copy.locale)} ({playerProfiles.length})</span>
                     </button>
                     <button type="button" className={peopleScope === 'referees' ? 'is-active' : ''} onClick={() => setPeopleScope('referees')}>
-                      <span>{isZh ? '裁判/官员' : 'Officials'}</span>
-                      <b>{officials.length}</b>
+                      <span>{peopleScopeLabel('referees', copy.locale)} ({(peopleProfiles as any).counts?.fifa ?? peopleProfiles.total})</span>
                     </button>
                   </div>
                 </div>
 
-                {peopleScope === 'referees' ? (
-                  <div className="admin-people-filters" aria-label={isZh ? '裁判筛选' : 'Official filters'}>
-                    <div className="admin-people-controls">
-                      <button type="button" className={officialSourceScope === 'fifa' ? 'is-active' : ''} onClick={() => setOfficialSourceScope('fifa')}>
-                        {isZh ? 'FIFA名单' : 'FIFA'}
-                        {(peopleProfiles as any).counts ? <b className="is-muted">{(peopleProfiles as any).counts.fifa}</b> : null}
-                      </button>
-                      <button type="button" className={officialSourceScope === 'historical' ? 'is-active' : ''} onClick={() => setOfficialSourceScope('historical')}>
-                        {isZh ? '历史样本' : 'Sample'}
-                        {(peopleProfiles as any).counts ? <b className="is-muted">{(peopleProfiles as any).counts.historical}</b> : null}
-                      </button>
-                      <button type="button" className={officialSourceScope === 'all' ? 'is-active' : ''} onClick={() => setOfficialSourceScope('all')}>
-                        {isZh ? '全部来源' : 'All'}
-                        {(peopleProfiles as any).counts ? <b className="is-muted">{(peopleProfiles as any).counts.all}</b> : null}
-                      </button>
-                    </div>
-                    <div className="admin-people-controls">
-                      <button type="button" className={officialRoleFilter === 'referee' ? 'is-active' : ''} onClick={() => setOfficialRoleFilter('referee')}>
-                        {isZh ? '主裁' : 'Referee'}
-                      </button>
-                      <button type="button" className={officialRoleFilter === 'assistant_referee' ? 'is-active' : ''} onClick={() => setOfficialRoleFilter('assistant_referee')}>
-                        {isZh ? '助理' : 'Assistant'}
-                      </button>
-                      <button type="button" className={officialRoleFilter === 'video_match_official' ? 'is-active' : ''} onClick={() => setOfficialRoleFilter('video_match_official')}>
-                        {isZh ? '视频官员' : 'VMO'}
-                      </button>
-                      <button type="button" className={officialRoleFilter === 'all' ? 'is-active' : ''} onClick={() => setOfficialRoleFilter('all')}>
-                        {isZh ? '全部角色' : 'All roles'}
-                      </button>
-                    </div>
-                    <span className="admin-muted">
-                      {isZh ? `显示 ${peopleProfiles.visible.length} / ${peopleProfiles.total}` : `Showing ${peopleProfiles.visible.length} / ${peopleProfiles.total}`}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="admin-people-filters">
-                    <span className="admin-muted">
-                      {isZh ? `显示 ${peopleProfiles.visible.length} / ${peopleProfiles.total}` : `Showing ${peopleProfiles.visible.length} / ${peopleProfiles.total}`}
-                    </span>
-                  </div>
-                )}
+                <div className="admin-people-filters">
+                  <span className="admin-muted">
+                    {isZh ? `显示 ${peopleProfiles.visible.length} / ${peopleProfiles.total}` : `Showing ${peopleProfiles.visible.length} / ${peopleProfiles.total}`}
+                  </span>
+                </div>
 
                 <div className="admin-data-table">
                   <div className="admin-data-row admin-data-row--head admin-data-row--people">
                     <span>{isZh ? '姓名' : 'Name'}</span>
                     <span>{isZh ? '球队/归属' : 'Team'}</span>
-                    <span>{peopleScope === 'players' ? (isZh ? '位置/俱乐部' : 'Pos/Club') : peopleScope === 'coaches' ? (isZh ? '近10场' : 'Last 10') : (isZh ? '角色' : 'Role')}</span>
-                    <span>{isZh ? '国籍' : 'Nation'}</span>
-                    <span>{peopleScope === 'players' ? (isZh ? '出场/进球' : 'Caps/Goals') : peopleScope === 'referees' ? (isZh ? '来源' : 'Source') : ''}</span>
+                    <span>
+                      {peopleScope === 'players'
+                        ? (isZh ? '俱乐部' : 'Club')
+                        : peopleScope === 'coaches'
+                          ? (isZh ? '国籍' : 'Nation')
+                          : (isZh ? '国籍' : 'Nation')}
+                    </span>
+                    <span>
+                      {peopleScope === 'players'
+                        ? (isZh ? '位置' : 'Position')
+                        : peopleScope === 'coaches'
+                          ? (isZh ? '年龄' : 'Age')
+                          : (isZh ? '年龄' : 'Age')}
+                    </span>
+                    <span>
+                      {peopleScope === 'players'
+                        ? (isZh ? '年龄' : 'Age')
+                        : peopleScope === 'coaches'
+                          ? (isZh ? '近10场' : 'Last 10')
+                          : ''}
+                    </span>
                   </div>
                   {peopleProfiles.visible.length === 0 ? (
                     <div className="admin-data-row admin-data-row--people">
@@ -686,7 +691,7 @@ export function AdminPage({
                         <a
                           key={official.person_id}
                           className="admin-data-row admin-data-row--people admin-data-row--link"
-                          href={getPersonHref('referee', official.person_id, copy.locale)}
+                          href={`${getPersonHref('referee', official.person_id, copy.locale)}?from=admin&people=referees`}
                           aria-label={isZh ? `打开人物档案: ${official.name_zh || official.display_name}` : `Open person: ${official.display_name}`}
                         >
                           <span>
@@ -694,9 +699,9 @@ export function AdminPage({
                             <small className="admin-muted">{official.display_name}</small>
                           </span>
                           <span>—</span>
-                          <span>{roleLabel(official.role, copy.locale)}</span>
                           <span>{isZh ? (official.country_name_zh || official.country_name_en || '—') : (official.country_name_en || official.country_name_zh || '—')}</span>
-                          <span className="admin-muted">{official.source_status || '—'}</span>
+                          <span>{typeof (official as any).age === 'number' ? String((official as any).age) : '—'}</span>
+                          <span />
                         </a>
                       ))
                     : (peopleProfiles.visible as PersonProfile[]).map((profile) => (
@@ -706,27 +711,17 @@ export function AdminPage({
                           const position = profile.kind === 'player' ? (direct.position ?? null) : null;
                           const club = profile.kind === 'player' ? (direct.club ?? null) : null;
                           const coachForm = profile.kind === 'coach' ? coachFormLabel(profile) : null;
+                          const age = direct.age;
 
-                          const extra =
-                            profile.kind === 'coach'
-                              ? coachForm ?? (isZh ? '待补齐' : 'Pending')
-                              : profile.kind === 'player'
-                                ? [position, club].filter(Boolean).join(' · ') || (isZh ? '待补齐' : 'Pending')
-                                : '—';
                           const teamLabel = profile.primary_team_name ? formatTeamName(profile.primary_team_name, copy.locale) : '—';
                           const nationLabel = isZh ? (profile.country_name_zh || profile.country_name_en || '—') : (profile.country_name_en || profile.country_name_zh || '—');
-                          const capsGoalsLabel =
-                            profile.kind === 'player'
-                              ? capsGoals
-                                ? `${capsGoals.caps}/${capsGoals.goals}`
-                                : (isZh ? '待补齐' : 'Pending')
-                              : '';
+                          const ageLabel = typeof age === 'number' ? String(age) : (isZh ? '待补齐' : 'Pending');
 
                           return (
                             <a
                               key={profile.person_id}
                               className="admin-data-row admin-data-row--people admin-data-row--link"
-                              href={getPersonHref(peopleProfiles.kind, profile.person_id, copy.locale)}
+                              href={`${getPersonHref(peopleProfiles.kind, profile.person_id, copy.locale)}?from=admin&people=${peopleScope}`}
                               aria-label={isZh ? `打开人物档案: ${profile.name_zh || profile.display_name}` : `Open person: ${profile.display_name}`}
                             >
                               <span>
@@ -734,9 +729,19 @@ export function AdminPage({
                                 <small className="admin-muted">{profile.display_name}</small>
                               </span>
                               <span>{teamLabel}</span>
-                              <span>{extra}</span>
-                              <span>{nationLabel}</span>
-                              <span>{capsGoalsLabel}</span>
+                              {peopleScope === 'coaches' ? (
+                                <>
+                                  <span>{nationLabel}</span>
+                                  <span>{ageLabel}</span>
+                                  <span>{coachForm ?? (isZh ? '待补齐' : 'Pending')}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>{club ?? (isZh ? '待补齐' : 'Pending')}</span>
+                                  <span>{position ?? (isZh ? '待补齐' : 'Pending')}</span>
+                                  <span>{ageLabel}</span>
+                                </>
+                              )}
                             </a>
                           );
                         })()
