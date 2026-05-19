@@ -12657,6 +12657,121 @@
   letter-spacing:.1em;text-transform:uppercase;color:var(--lime);margin-bottom:6px;
 }
 
+/* ── REALTIME BAND ── */
+.rt-band{
+  background:var(--bg);
+  border-bottom:1px solid var(--rule2);
+  border-top:1px solid var(--rule2);
+  position:sticky;
+  top:52px;
+  z-index:80;
+}
+.rt-band__inner{
+  max-width:1400px;
+  margin:0 auto;
+  display:flex;
+  align-items:stretch;
+  gap:0;
+  overflow-x:auto;
+}
+.rt-pill{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:.6rem 1.25rem;
+  border-right:1px solid var(--rule);
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  white-space:nowrap;
+}
+.rt-pill:last-child{border-right:none;}
+.rt-label{color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;}
+.rt-val{font-weight:500;white-space:nowrap;}
+.rt-val.ok{color:var(--lime);}
+.rt-val.warn{color:var(--gold);}
+.rt-val.danger{color:var(--red);}
+.rt-val.neutral{color:var(--ink2);}
+.rt-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.rt-dot.ok{background:var(--lime);}
+.rt-dot.warn{background:var(--gold);}
+.rt-dot.danger{background:var(--red);}
+.rt-dot.neutral{background:var(--ink3);}
+.rt-ts{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  color:var(--ink3);
+  margin-left:auto;
+  padding:.6rem 1.25rem;
+  white-space:nowrap;
+}
+
+/* ── REALTIME SECTION ── */
+.rt-grid{
+  display:grid;
+  gap:1px;
+  background:var(--rule2);
+  border:1px solid var(--rule2);
+  margin-bottom:2rem;
+}
+.rt-grid.cols-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.rt-grid.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.rt-grid.cols-2{grid-template-columns:1fr 1fr;}
+.rt-col{background:var(--bg2);padding:1.25rem;}
+.rt-col__label{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  margin-bottom:1rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.rt-badge{
+  font-family:'DM Mono',monospace;
+  font-size:8px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  padding:2px 6px;
+  background:rgba(200,242,48,.1);
+  color:var(--lime);
+  border:1px solid rgba(200,242,48,.2);
+}
+
+/* form dots */
+.form-strip{display:flex;gap:5px;margin:6px 0 12px;flex-wrap:wrap;}
+.form-dot{
+  width:28px;height:28px;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;
+}
+.form-dot.W{background:rgba(200,242,48,.15);color:var(--lime);}
+.form-dot.D{background:rgba(242,184,48,.12);color:var(--gold);}
+.form-dot.L{background:rgba(242,90,48,.12);color:var(--red);}
+.form-dot.M{background:rgba(74,71,64,.3);color:var(--ink3);}
+
+/* news feed */
+.news-item{padding:7px 0;border-bottom:1px solid var(--rule);display:flex;gap:10px;align-items:flex-start;}
+.news-item:last-child{border-bottom:none;}
+.news-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+.news-text{font-size:12px;color:var(--ink2);line-height:1.5;flex:1;}
+.news-meta{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);white-space:nowrap;}
+
+/* availability meter */
+.avail-meter{margin:8px 0 14px;}
+.avail-meter__track{height:6px;background:var(--rule2);position:relative;}
+.avail-meter__fill{height:6px;transition:width .5s ease;}
+.avail-meter__labels{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);margin-top:3px;}
+
+/* schedule strip */
+.sched-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);}
+.sched-item{background:var(--bg3);padding:.6rem .75rem;}
+.sched-item__date{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);margin-bottom:2px;}
+.sched-item__match{font-size:12px;color:var(--ink2);}
+.sched-item__comp{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);}
+
 /* PEOPLE INDEX */
 .people-index-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;}
 .people-index-card{
@@ -12739,6 +12854,8 @@
   .person-hero__text{border-right:0; border-bottom:1px solid var(--rule2);}
   .kpi-strip.cols-5, .kpi-strip.cols-6{grid-template-columns: repeat(2, 1fr);}
   .method-grid{grid-template-columns: 1fr;}
+  .rt-grid.cols-4{grid-template-columns:1fr;}
+  .rt-grid.cols-3{grid-template-columns:1fr;}
 }
 
 .people-kpi-grid {

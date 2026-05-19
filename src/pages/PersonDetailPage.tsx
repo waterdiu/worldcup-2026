@@ -134,6 +134,252 @@ function renderHero(profile: PersonProfile, locale: AppCopy['locale']) {
   );
 }
 
+type RtTone = 'ok' | 'warn' | 'danger' | 'neutral';
+
+function rtToneLabel(tone: RtTone) {
+  return tone;
+}
+
+function rtPill({
+  label,
+  value,
+  tone
+}: {
+  label: string;
+  value: string;
+  tone: RtTone;
+}) {
+  return (
+    <div className="rt-pill">
+      <div className={`rt-dot ${tone}`} aria-hidden="true" />
+      <span className="rt-label">{label}</span>
+      <span className={`rt-val ${tone}`}>{value}</span>
+    </div>
+  );
+}
+
+function renderRealtimeBand(profile: PersonProfile, locale: AppCopy['locale']) {
+  const derived = (profile.derived ?? {}) as any;
+  const metrics = (derived.metrics ?? {}) as any;
+
+  if (profile.kind === 'coach') {
+    const last10 = metrics.recent_10_form ?? {};
+    const w = typeof last10.won === 'number' ? last10.won : null;
+    const d = typeof last10.drawn === 'number' ? last10.drawn : null;
+    const l = typeof last10.lost === 'number' ? last10.lost : null;
+    const form = w === null || d === null || l === null ? (locale === 'zh' ? '待补齐' : 'Pending') : `${w}-${d}-${l}`;
+
+    const winRate = typeof metrics.win_rate_pct === 'number' ? `${metrics.win_rate_pct.toFixed(1)}%` : (locale === 'zh' ? '待补齐' : 'Pending');
+    const clean = typeof metrics.clean_sheet_rate_pct === 'number' ? `${metrics.clean_sheet_rate_pct.toFixed(0)}%` : (locale === 'zh' ? '待补齐' : 'Pending');
+
+    return (
+      <div className="rt-band" aria-label={locale === 'zh' ? '实时状态条' : 'Realtime status band'}>
+        <div className="rt-band__inner">
+          {rtPill({ label: locale === 'zh' ? '近10场' : 'Last 10', value: form, tone: 'neutral' })}
+          {rtPill({ label: locale === 'zh' ? '胜率' : 'Win rate', value: winRate, tone: 'ok' })}
+          {rtPill({ label: locale === 'zh' ? '零封率' : 'Shutouts', value: clean, tone: 'neutral' })}
+          {rtPill({ label: locale === 'zh' ? '首发窗口' : 'Lineups', value: 'T-90m', tone: 'warn' })}
+          {rtPill({ label: locale === 'zh' ? 're-score' : 're-score', value: locale === 'zh' ? '待首发确认' : 'Pending lineups', tone: 'neutral' })}
+          <span className="rt-ts">{locale === 'zh' ? '更新 T-24h · 数据层' : 'Updated T-24h · data layer'}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (profile.kind === 'player') {
+    const direct = (profile.direct ?? {}) as any;
+    const caps = metrics.caps ?? null;
+    const goals = metrics.goals ?? null;
+    const impact = metrics.impact_score ?? null;
+    const status = coerceString(direct.status) ?? (locale === 'zh' ? '待官方公布' : 'Pending');
+
+    return (
+      <div className="rt-band" aria-label={locale === 'zh' ? '实时状态条' : 'Realtime status band'}>
+        <div className="rt-band__inner">
+          {rtPill({ label: locale === 'zh' ? '状态' : 'Status', value: status, tone: status.includes('伤') ? 'danger' : 'warn' })}
+          {rtPill({ label: locale === 'zh' ? '国家队' : 'NT', value: caps !== null && goals !== null ? `${caps}c/${goals}g` : (locale === 'zh' ? '待补齐' : 'Pending'), tone: 'neutral' })}
+          {rtPill({ label: locale === 'zh' ? '影响力' : 'Impact', value: impact !== null ? `${impact}` : (locale === 'zh' ? '待补齐' : 'Pending'), tone: impact !== null ? 'ok' : 'neutral' })}
+          {rtPill({ label: locale === 'zh' ? '首发窗口' : 'Lineups', value: 'T-90m', tone: 'warn' })}
+          {rtPill({ label: locale === 'zh' ? 're-score' : 're-score', value: locale === 'zh' ? '待首发确认' : 'Pending lineups', tone: 'neutral' })}
+          <span className="rt-ts">{locale === 'zh' ? '更新 T-24h · 数据层' : 'Updated T-24h · data layer'}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // referee
+  const yellows = typeof metrics.yellow_cards_per_match === 'number' ? `${metrics.yellow_cards_per_match.toFixed(1)}/m` : (locale === 'zh' ? '待补齐' : 'Pending');
+  const pens = typeof metrics.penalties_per_match === 'number' ? `${metrics.penalties_per_match.toFixed(2)}/m` : (locale === 'zh' ? '待补齐' : 'Pending');
+
+  return (
+    <div className="rt-band" aria-label={locale === 'zh' ? '实时状态条' : 'Realtime status band'}>
+      <div className="rt-band__inner">
+        {rtPill({ label: locale === 'zh' ? '本场执法' : 'Assignment', value: locale === 'zh' ? '待官方公布' : 'Pending', tone: 'warn' })}
+        {rtPill({ label: locale === 'zh' ? '场均黄牌' : 'Yellows', value: yellows, tone: 'ok' })}
+        {rtPill({ label: locale === 'zh' ? '点球/场' : 'Pens', value: pens, tone: 'neutral' })}
+        {rtPill({ label: 'VAR', value: locale === 'zh' ? '待补齐' : 'Pending', tone: 'neutral' })}
+        {rtPill({ label: locale === 'zh' ? '上次执法' : 'Last match', value: locale === 'zh' ? '待补齐' : 'Pending', tone: 'neutral' })}
+        <span className="rt-ts">{locale === 'zh' ? '更新 T-48h · 数据层' : 'Updated T-48h · data layer'}</span>
+      </div>
+    </div>
+  );
+}
+
+function renderFormDots(w: number | null, d: number | null, l: number | null) {
+  if (w === null || d === null || l === null) {
+    return (
+      <div className="form-strip">
+        <div className="form-dot M">—</div>
+        <div className="form-dot M">—</div>
+        <div className="form-dot M">—</div>
+      </div>
+    );
+  }
+  const dots: Array<'W' | 'D' | 'L'> = [
+    ...Array.from({ length: w }, () => 'W' as const),
+    ...Array.from({ length: d }, () => 'D' as const),
+    ...Array.from({ length: l }, () => 'L' as const)
+  ].slice(0, 5);
+  return (
+    <div className="form-strip" aria-label="form-strip">
+      {dots.map((t, i) => (
+        <div key={`${t}-${i}`} className={`form-dot ${t}`}>{t}</div>
+      ))}
+      {dots.length < 5 ? Array.from({ length: 5 - dots.length }, (_, i) => <div key={`M-${i}`} className="form-dot M">—</div>) : null}
+    </div>
+  );
+}
+
+function renderRealtimeGrid(profile: PersonProfile, locale: AppCopy['locale']) {
+  const derived = (profile.derived ?? {}) as any;
+  const metrics = (derived.metrics ?? {}) as any;
+
+  if (profile.kind === 'coach') {
+    const last10 = metrics.recent_10_form ?? {};
+    const w = typeof last10.won === 'number' ? last10.won : null;
+    const d = typeof last10.drawn === 'number' ? last10.drawn : null;
+    const l = typeof last10.lost === 'number' ? last10.lost : null;
+    const winRate = typeof metrics.win_rate_pct === 'number' ? `${metrics.win_rate_pct.toFixed(1)}%` : (locale === 'zh' ? '待补齐' : 'Pending');
+
+    return (
+      <section className="section">
+        <div className="sec-rule">
+          <span className="sec-title">{locale === 'zh' ? '实时状态' : 'Realtime'}</span>
+          <span className="sec-note"><span className="rt-badge">LIVE</span> {locale === 'zh' ? 'T-24h 每日更新 · T-90m 首发触发 re-score' : 'T-24h daily · T-90m lineups trigger re-score'}</span>
+        </div>
+        <div className="rt-grid cols-3">
+          <div className="rt-col">
+            <div className="rt-col__label">{locale === 'zh' ? '近期执教状态（近10场）' : 'Recent form (last 10)'} <span className="src src-a">{locale === 'zh' ? '派生分析' : 'Derived'}</span></div>
+            {renderFormDots(w, d, l)}
+            <div className="data-row"><span className="field">{locale === 'zh' ? '胜率' : 'Win rate'}</span><span className="val" style={{ color: 'var(--lime)' }}>{winRate}</span><span className="note">last_10</span></div>
+            <div className="data-row"><span className="field">{locale === 'zh' ? '首发窗口' : 'Lineups'}</span><span className="val" style={{ color: 'var(--gold)' }}>T-90m</span><span className="note">re-score</span></div>
+            <div className="data-row"><span className="field">re-score</span><span className="val" style={{ color: 'var(--ink3)' }}>{locale === 'zh' ? '待首发确认' : 'Pending'}</span><span className="note">auto</span></div>
+          </div>
+          <div className="rt-col">
+            <div className="rt-col__label">{locale === 'zh' ? '发布会/新闻线索' : 'Press/news signals'} <span className="src src-a">{locale === 'zh' ? '派生分析' : 'Derived'}</span></div>
+            <div className="news-item"><div className="news-dot" style={{ background: 'var(--gold)' }} /><div className="news-text">{locale === 'zh' ? '暂未接入发布会 NLP 信号。' : 'Press conference NLP signals not connected yet.'}</div><div className="news-meta">pending</div></div>
+            <div className="news-item"><div className="news-dot" style={{ background: 'var(--ink3)' }} /><div className="news-text">{locale === 'zh' ? '轮换意图/阵型暗示等字段由数据层后续补齐。' : 'Rotation/formation signals will be published by the data layer.'}</div><div className="news-meta">T-24h</div></div>
+          </div>
+          <div className="rt-col">
+            <div className="rt-col__label">{locale === 'zh' ? '对本场模型的修正 · 进入 L2' : 'Model impact · L2'} <span className="src src-a">L2</span></div>
+            <div className="data-row"><span className="field">{locale === 'zh' ? '战术稳定性' : 'Stability'}</span><span className="val" style={{ color: 'var(--ink3)' }}>{locale === 'zh' ? '待补齐' : 'Pending'}</span><span className="note">L2</span></div>
+            <div className="data-row"><span className="field">{locale === 'zh' ? '轮换风险' : 'Rotation risk'}</span><span className="val" style={{ color: 'var(--ink3)' }}>{locale === 'zh' ? '待补齐' : 'Pending'}</span><span className="note">Kelly</span></div>
+            <div className="data-row"><span className="field">{locale === 'zh' ? '阵型信号' : 'Formation'}</span><span className="val" style={{ color: 'var(--ink3)' }}>{locale === 'zh' ? '待补齐' : 'Pending'}</span><span className="note">L2</span></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (profile.kind === 'player') {
+    const caps = metrics.caps ?? null;
+    const goals = metrics.goals ?? null;
+    const impact = metrics.impact_score ?? null;
+    const pos = coerceString((profile.direct ?? {})?.position) ?? '—';
+    return (
+      <section className="section">
+        <div className="sec-rule">
+          <span className="sec-title">{locale === 'zh' ? '实时状态' : 'Realtime'}</span>
+          <span className="sec-note"><span className="rt-badge">LIVE</span> {locale === 'zh' ? 'T-24h 每日 · T-90m 首发确认触发 re-score' : 'T-24h daily · T-90m lineups trigger re-score'}</span>
+        </div>
+        <div className="rt-grid cols-4">
+          <div className="rt-col">
+            <div className="rt-col__label">{locale === 'zh' ? '可用性/伤停' : 'Availability'} <span className="src src-a">{locale === 'zh' ? '派生分析' : 'Derived'}</span></div>
+            <div className="avail-meter">
+              <div className="avail-meter__track">
+                <div className="avail-meter__fill" style={{ width: '0%', background: 'var(--rule2)' }} />
+              </div>
+              <div className="avail-meter__labels">
+                <span>{locale === 'zh' ? '缺失' : 'Missing'}</span>
+                <span>0%</span>
+                <span>100%</span>
+              </div>
+            </div>
+            <div className="data-row"><span className="field">{locale === 'zh' ? '首发确认' : 'Starting XI'}</span><span className="val" style={{ color: 'var(--gold)' }}>{locale === 'zh' ? '待确认' : 'Pending'}</span><span className="note">T-90</span></div>
+            <div className="data-row"><span className="field">re-score</span><span className="val" style={{ color: 'var(--ink3)' }}>{locale === 'zh' ? '待首发确认后触发' : 'Pending lineups'}</span><span className="note">auto</span></div>
+          </div>
+          <div className="rt-col">
+            <div className="rt-col__label">{locale === 'zh' ? '基础统计摘要' : 'Summary'} <span className="src src-d">{locale === 'zh' ? '直接数据' : 'Direct'}</span></div>
+            <div className="data-row"><span className="field">{locale === 'zh' ? '位置' : 'Position'}</span><span className="val">{pos}</span><span className="note">FIFA</span></div>
+            <div className="data-row"><span className="field">{locale === 'zh' ? '国家队出场' : 'Caps'}</span><span className="val">{caps ?? (locale === 'zh' ? '待补齐' : 'Pending')}</span><span className="note">facts</span></div>
+            <div className="data-row"><span className="field">{locale === 'zh' ? '国家队进球' : 'Goals'}</span><span className="val">{goals ?? (locale === 'zh' ? '待补齐' : 'Pending')}</span><span className="note">facts</span></div>
+          </div>
+          <div className="rt-col">
+            <div className="rt-col__label">{locale === 'zh' ? '赛程负荷' : 'Load'} <span className="src src-a">{locale === 'zh' ? '派生分析' : 'Derived'}</span></div>
+            <div className="sched-strip" aria-label="schedule-strip">
+              <div className="sched-item"><div className="sched-item__date">T-7d</div><div className="sched-item__match">{locale === 'zh' ? '待补齐' : 'Pending'}</div><div className="sched-item__comp">—</div></div>
+              <div className="sched-item"><div className="sched-item__date">T-3d</div><div className="sched-item__match">{locale === 'zh' ? '待补齐' : 'Pending'}</div><div className="sched-item__comp">—</div></div>
+              <div className="sched-item"><div className="sched-item__date">T+0</div><div className="sched-item__match">{locale === 'zh' ? '本场' : 'Matchday'}</div><div className="sched-item__comp">WC</div></div>
+            </div>
+          </div>
+          <div className="rt-col">
+            <div className="rt-col__label">{locale === 'zh' ? '对本场模型的修正 · L2' : 'Model impact · L2'} <span className="src src-a">L2</span></div>
+            <div className="data-row"><span className="field">{locale === 'zh' ? '缺阵影响' : 'Absence impact'}</span><span className="val" style={{ color: impact !== null ? 'var(--red)' : 'var(--ink3)' }}>{impact !== null ? `${impact}` : (locale === 'zh' ? '待补齐' : 'Pending')}</span><span className="note">proxy</span></div>
+            <div className="data-row"><span className="field">re-score</span><span className="val" style={{ color: 'var(--ink3)' }}>{locale === 'zh' ? '待首发确认' : 'Pending'}</span><span className="note">auto</span></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // referee
+  const yellows = typeof metrics.yellow_cards_per_match === 'number' ? `${metrics.yellow_cards_per_match.toFixed(1)}张` : (locale === 'zh' ? '待补齐' : 'Pending');
+  const reds = typeof metrics.red_cards_per_match === 'number' ? `${metrics.red_cards_per_match.toFixed(2)}张` : (locale === 'zh' ? '待补齐' : 'Pending');
+  return (
+    <section className="section">
+      <div className="sec-rule">
+        <span className="sec-title">{locale === 'zh' ? '实时状态' : 'Realtime'}</span>
+        <span className="sec-note"><span className="rt-badge">LIVE</span> {locale === 'zh' ? '本场指派赛前24-48h公布 · 统计每场更新' : 'Assignment T-24~48h · stats updated per match'}</span>
+      </div>
+      <div className="rt-grid cols-3">
+        <div className="rt-col">
+          <div className="rt-col__label">{locale === 'zh' ? '本场执法指派' : 'Assignment'} <span className="src src-d">FIFA</span></div>
+          <div style={{ padding: '1rem 0', textAlign: 'center', borderBottom: '1px solid var(--rule)', marginBottom: 12 }}>
+            <div style={{ fontFamily: 'Barlow Condensed, sans-serif', fontSize: 13, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--gold)' }}>
+              {locale === 'zh' ? '⏳ 待官方公布' : '⏳ Pending'}
+            </div>
+            <div style={{ fontFamily: 'DM Mono, monospace', fontSize: 9, color: 'var(--ink3)', marginTop: 4 }}>
+              {locale === 'zh' ? '通常赛前 24-48 小时发布' : 'Typically 24-48h before kickoff'}
+            </div>
+          </div>
+          <div className="data-row"><span className="field">{locale === 'zh' ? '触发动作' : 'Trigger'}</span><span className="val">{locale === 'zh' ? '确认后更新 L3' : 'Update L3 on confirm'}</span><span className="note">auto</span></div>
+        </div>
+        <div className="rt-col">
+          <div className="rt-col__label">{locale === 'zh' ? '近期执法状态（样本）' : 'Recent sample'} <span className="src src-a">{locale === 'zh' ? '派生分析' : 'Derived'}</span></div>
+          <div className="data-row"><span className="field">{locale === 'zh' ? '场均黄牌' : 'Yellows/m'}</span><span className="val" style={{ color: 'var(--lime)' }}>{yellows}</span><span className="note">avg</span></div>
+          <div className="data-row"><span className="field">{locale === 'zh' ? '场均红牌' : 'Reds/m'}</span><span className="val">{reds}</span><span className="note">avg</span></div>
+        </div>
+        <div className="rt-col">
+          <div className="rt-col__label">{locale === 'zh' ? '对本场模型的实时修正 · L3' : 'Model impact · L3'} <span className="src src-a">L3</span></div>
+          <div className="data-row"><span className="field">{locale === 'zh' ? '大小球修正' : 'Totals mod'}</span><span className="val" style={{ color: 'var(--ink3)' }}>{locale === 'zh' ? '待补齐' : 'Pending'}</span><span className="note">L3</span></div>
+          <div className="data-row"><span className="field">{locale === 'zh' ? '点球风险' : 'Penalty risk'}</span><span className="val" style={{ color: 'var(--ink3)' }}>{locale === 'zh' ? '待补齐' : 'Pending'}</span><span className="note">L3</span></div>
+          <div className="data-row"><span className="field">Kelly</span><span className="val">{locale === 'zh' ? '待补齐' : 'Pending'}</span><span className="note">risk</span></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function renderKpiStrip(profile: PersonProfile, locale: AppCopy['locale']) {
   const items = profile.kpis.slice(0, profile.kind === 'player' ? 6 : 5);
   const cols = items.length;
@@ -714,6 +960,8 @@ export function PersonDetailPage({
         {renderHero(profile, locale)}
       </section>
 
+      {renderRealtimeBand(profile, locale)}
+
       <section className="section">
         <div className="sec-rule">
           <span className="sec-title">{locale === 'zh' ? '核心指标' : 'Key metrics'}</span>
@@ -721,6 +969,8 @@ export function PersonDetailPage({
         </div>
         {renderKpiStrip(profile, locale)}
       </section>
+
+      {renderRealtimeGrid(profile, locale)}
 
       {renderDataGrid(profile, locale)}
       {renderStyleProfile(profile, locale)}

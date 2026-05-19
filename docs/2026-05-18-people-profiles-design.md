@@ -31,11 +31,13 @@
 ### 2.1 通用骨架
 
 1. Hero（左：身份与关键事实；右：大号字母图形）
+2. Real-time band（顶部实时状态条：T-24h/T-90m/re-score/指派等）
 2. KPI Strip（4-6 个最关键数字）
-3. Profile Grid（direct/derived 两列摘要）
-4. Style Profile（distilled 标签 + 摘要；样本不足则显式提示）
-5. Methodology（数据与模型说明：direct/derived/distilled 三列）
-6. Sources（来源链接列表）
+3. Real-time grid（实时状态面板：可用性/新闻/赛程负荷/模型修正等，按人物类型差异化）
+4. Profile Grid（direct/derived 两列摘要）
+5. Style Profile（distilled 标签 + 摘要；样本不足则显式提示）
+6. Methodology（数据与模型说明：direct/derived/distilled 三列）
+7. Sources（来源链接列表）
 
 ### 2.2 教练（Coach）
 
@@ -124,6 +126,21 @@ P1（未来）：
 - `player-external-facts.json`
 - `staff-external-facts.json`
 
+为了承接 “实时数据分析 + 对模型的修正（L2/L3）” 的 UI（参考 `person-profiles-new.html`），建议数据层新增并发布：
+
+- `person-realtime-snapshots.json`
+  - 目标：让前端直接渲染 `rt-band` 与 `rt-grid`，并准确表达采样频率与更新时间。
+  - 必含：`person_id`, `updated_at`, `refresh_policy`, `confidence`, `sample_size`
+  - 建议：`rt_band[]`（pill 数组）、`rt_panels[]`（网格面板，直接可渲染 data-row/news/schedule 等）
+
+- `person-model-impact.json`
+  - 目标：输出进入预测链路的结构化字段（L2 结构调整 / L3 信号共振）与 evidence。
+  - 必含：`person_id`, `layer`（L2/L3）, `impact_rows[]`（data-row 列表）, `evidence[]`
+
+- `match-official-assignments.json`
+  - 目标：裁判本场指派（赛前 24-48h）与比赛详情页裁判链接的可靠来源。
+  - 必含：`match_id`, `crew[]`, `published_at`, `source_urls`
+
 说明：
 - external facts 属于“第三方补充事实”，不得覆盖官方 master，而是以字段级来源标记合并。
 - 世界杯裁判名单未发布前，referee 样本可能来自其他赛事历史（必须显式标注）。
@@ -156,4 +173,3 @@ Phase B（待做）
 
 Phase C（后续）
 - 事件级数据接入后开放 distilled 标签与能力维度评分
-
