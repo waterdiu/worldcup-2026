@@ -10,6 +10,7 @@ import { localizePath, type AppCopy } from '../i18n/content';
 import { formatConfederationName, formatTeamName, formatVenueName, getTeamDisplay } from '../i18n/formatters';
 import type { ConfederationCardData, GroupCardData, GroupStageMatchData } from '../types/tournament';
 import { buildPersonId, buildPersonPath, slugifyPersonId } from '../utils/personRoutes';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 interface TeamDetailPageProps {
   team: string;
@@ -48,9 +49,7 @@ function findTeamFixtures(team: string, fixtures: GroupStageMatchData[]) {
 }
 
 function formatDetailDate(dateLabel: string, locale: AppCopy['locale']): string {
-  if (locale === 'en') return dateLabel;
-  const date = new Date(dateLabel);
-  return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日`;
+  return formatBeijingMonthDayKickoff(dateLabel, locale);
 }
 
 function formatMatchday(matchdayLabel: string, locale: AppCopy['locale']): string {

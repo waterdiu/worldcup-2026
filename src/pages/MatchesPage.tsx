@@ -3,6 +3,7 @@ import { KnockoutBracketSection } from '../components/KnockoutBracketSection';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatTeamName, formatVenueName } from '../i18n/formatters';
 import type { BracketRoundData, GroupStageMatchData } from '../types/tournament';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 interface MatchesPageProps {
   fixtures: GroupStageMatchData[];
@@ -11,9 +12,7 @@ interface MatchesPageProps {
 }
 
 function formatDetailDate(dateLabel: string, locale: AppCopy['locale']): string {
-  if (locale === 'en') return dateLabel;
-  const date = new Date(dateLabel);
-  return `${date.getMonth() + 1}月${date.getDate()}日`;
+  return formatBeijingMonthDayKickoff(dateLabel, locale);
 }
 
 function formatMatchday(matchdayLabel: string, locale: AppCopy['locale']): string {

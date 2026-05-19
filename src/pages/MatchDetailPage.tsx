@@ -5,6 +5,7 @@ import type { BracketMatchData, GroupFixtureData, GroupStageMatchData } from '..
 import { FavoriteButton } from '../components/FavoriteButton';
 import { PredictionForm } from '../components/PredictionForm';
 import { buildPersonId, buildPersonPath, normalizeTeamId } from '../utils/personRoutes';
+import { formatBeijingKickoff } from '../utils/beijingTime';
 import type { WorldCupTeamRoster, WorldCupTeamStaff } from '../data/siteData';
 
 type KnockoutMatchDetailData = BracketMatchData & {
@@ -35,27 +36,7 @@ const statisticRows = [
 ];
 
 function formatDetailDate(dateLabel: string, locale: AppCopy['locale']): string {
-  const date = new Date(dateLabel);
-  // Always show kickoff in Beijing time to match the rest of the site.
-  const fmt = new Intl.DateTimeFormat(locale === 'zh' ? 'zh-CN' : 'en-GB', {
-    timeZone: 'Asia/Shanghai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-  const parts = Object.fromEntries(fmt.formatToParts(date).map((p) => [p.type, p.value]));
-  const yyyy = parts.year;
-  const mm = parts.month;
-  const dd = parts.day;
-  const hh = parts.hour;
-  const min = parts.minute;
-  if (locale === 'zh') {
-    return `${yyyy}年${Number(mm)}月${Number(dd)}日 ${hh}:${min}`;
-  }
-  return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+  return formatBeijingKickoff(dateLabel, locale);
 }
 
 function formatMatchday(matchdayLabel: string | undefined, locale: AppCopy['locale']): string {
