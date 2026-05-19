@@ -492,6 +492,10 @@ export function AdminPage({
                     ? isZh
                       ? '球员名单可后续按官方 26 人名单增量补齐'
                       : 'Players can be finalized once official rosters are published'
+                    : peopleScope === 'referees'
+                      ? isZh
+                        ? '当前仅展示主裁名单（不含助理裁判/VAR）；指派发布后可补齐完整裁判组'
+                        : 'Currently listing head referees only (no assistants/VAR); crews can be completed after assignments are published'
                     : isZh
                       ? '名单来自数据层 core/person profiles'
                       : 'Roster sourced from data platform core person profiles'}

@@ -682,12 +682,12 @@ function renderMethodology(profile: PersonProfile, locale: AppCopy['locale']) {
         ? '官方确认“谁是主教练”、所属球队。补充事实来自可追溯的第三方离线数据，字段带来源标记。'
         : kind === 'player'
           ? '官方名单确认“谁在 26 人名单”、位置。俱乐部/生日等补充事实来自可追溯的第三方离线数据，字段带来源标记。'
-          : '裁判名单来自官方名单与公开赛果数据集的聚合；官方指派公布后会追加到“本场执法指派”。'
+          : '裁判名单当前按“主裁”维度发布；助理裁判/第四官员/VAR 等将随官方指派数据补齐。'
       : kind === 'coach'
         ? 'Direct facts: official head coach + team. Extra facts come from auditable offline datasets and are source-tagged.'
         : kind === 'player'
           ? 'Direct facts: official roster membership + position. Extra facts (club/DOB) come from auditable offline datasets and are source-tagged.'
-          : 'Referee facts: aggregated from official lists and public match-result datasets. Official assignments will be attached when published.';
+          : 'Referee facts are currently published for head referees only; assistant/VAR officials will be added once official assignments are available.';
 
   const derivedText =
     locale === 'zh'
