@@ -165,6 +165,10 @@ function renderPage(pathname: string, locale: Locale, siteData: WorldCupSiteData
         copy={copy}
         finalsMatchResults={finalsMatchResults}
         groupStageMatches={groupStageMatches}
+        peopleIndex={peopleIndex}
+        coachProfiles={coachProfiles}
+        playerProfiles={playerProfiles}
+        refereeProfiles={refereeProfiles}
       />
     );
   }

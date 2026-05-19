@@ -3,10 +3,12 @@ import { useAuth } from '../hooks/useAuth';
 import { useAdminDashboard, type AdminPagePermissionRecord, type AdminProfileRecord } from '../hooks/useAdminDashboard';
 import { useAdminStatus } from '../hooks/useAdminStatus';
 import { type AppCopy } from '../i18n/content';
+import { localizePath } from '../i18n/content';
 import { formatBracketLabel, formatTeamName } from '../i18n/formatters';
 import { getAuthDisplayName, isSupabaseConfigured } from '../lib/supabase';
 import type { BracketRoundData, FinalsMatchResultData, GroupStageMatchData } from '../types/tournament';
 import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
+import type { PeopleIndexEntry, PersonProfile } from '../data/mockPeople';
 
 type AdminTab =
   | 'dashboard'
@@ -14,6 +16,7 @@ type AdminTab =
   | 'matches'
   | 'scores'
   | 'groups'
+  | 'people'
   | 'users'
   | 'predictions'
   | 'favorites'
@@ -25,6 +28,10 @@ interface AdminPageProps {
   copy: AppCopy;
   finalsMatchResults: FinalsMatchResultData[];
   groupStageMatches: GroupStageMatchData[];
+  peopleIndex: PeopleIndexEntry[];
+  coachProfiles: PersonProfile[];
+  playerProfiles: PersonProfile[];
+  refereeProfiles: PersonProfile[];
 }
 
 interface MatchSummary {
@@ -114,6 +121,15 @@ function getAccessLabel(level: string, isZh: boolean) {
   return isZh ? '公开' : 'Public';
 }
 
+function getPersonHref(kind: 'coach' | 'player' | 'referee', personId: string, locale: AppCopy['locale']) {
+  const segment = kind === 'coach' ? 'coaches' : kind === 'player' ? 'players' : 'referees';
+  return localizePath(`/people/${segment}/${encodeURIComponent(personId)}`, locale);
+}
+
+function normalizePeopleQuery(value: string) {
+  return value.trim().toLowerCase();
+}
+
 function toPermissionLevel(permission: AdminPagePermissionRecord, level: string): AdminPagePermissionRecord {
   return {
     ...permission,
@@ -122,11 +138,23 @@ function toPermissionLevel(permission: AdminPagePermissionRecord, level: string)
   };
 }
 
-export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches }: AdminPageProps) {
+export function AdminPage({
+  bracket,
+  copy,
+  finalsMatchResults,
+  groupStageMatches,
+  peopleIndex,
+  coachProfiles,
+  playerProfiles,
+  refereeProfiles
+}: AdminPageProps) {
+  // NOTE: Admin-only UI reads tournament datasets from the same runtime bundle as the public pages.
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminStatus(user);
   const dashboard = useAdminDashboard(Boolean(user && isAdmin));
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+  const [peopleScope, setPeopleScope] = useState<'coaches' | 'players' | 'referees'>('coaches');
+  const [peopleQuery, setPeopleQuery] = useState('');
   const isZh = copy.locale === 'zh';
   const pendingUsers = dashboard.profiles.filter((profile) => (profile.status ?? 'pending') === 'pending');
   const activeUsers = dashboard.profiles.filter((profile) => (profile.status ?? 'pending') === 'active');
@@ -156,6 +184,37 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
   const completedMatches = finalsMatchResults.filter((match) => match.status === 'completed');
   const pendingScoreMatches = finalsMatchResults.filter((match) => match.status !== 'completed').slice(0, 6);
   const sampleMatches = groupStageMatches.slice(0, 8);
+  const peopleProfiles = useMemo(() => {
+    const scopeProfiles =
+      peopleScope === 'coaches' ? coachProfiles : peopleScope === 'players' ? playerProfiles : refereeProfiles;
+    const kind: PeopleIndexEntry['kind'] =
+      peopleScope === 'coaches' ? 'coach' : peopleScope === 'players' ? 'player' : 'referee';
+    const query = normalizePeopleQuery(peopleQuery);
+
+    const filtered = query
+      ? scopeProfiles.filter((profile) => {
+          const tokens = [
+            profile.display_name,
+            profile.name_zh,
+            profile.primary_team_name,
+            profile.country_name_en,
+            profile.country_name_zh,
+            profile.role_title_en,
+            profile.role_title_zh
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+          return tokens.includes(query);
+        })
+      : scopeProfiles;
+
+    return {
+      kind,
+      total: scopeProfiles.length,
+      visible: filtered.slice(0, 400)
+    };
+  }, [coachProfiles, peopleQuery, peopleScope, playerProfiles, refereeProfiles]);
   const adminNavGroups: Array<{
     label: string;
     items: Array<{ id: AdminTab; icon: string; label: string; badge?: string | number; tone?: 'red' | 'gold' | 'muted' }>;
@@ -172,7 +231,8 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
       items: [
         { id: 'matches', icon: '⚽', label: isZh ? '赛程管理' : 'Matches', badge: groupStageMatches.length, tone: 'gold' },
         { id: 'scores', icon: '✎', label: isZh ? '比分录入' : 'Scores', badge: pendingScoreMatches.length, tone: pendingScoreMatches.length ? 'red' : 'muted' },
-        { id: 'groups', icon: '≡', label: isZh ? '积分榜' : 'Groups' }
+        { id: 'groups', icon: '≡', label: isZh ? '积分榜' : 'Groups' },
+        { id: 'people', icon: '⌁', label: isZh ? '人员' : 'People', badge: peopleIndex.length, tone: 'gold' }
       ]
     },
     {
@@ -422,6 +482,91 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
               </div>
             </section>
           ) : null}
+
+          {activeTab === 'people' ? (
+            <section className="stats-section">
+              <div className="admin-section-head">
+                <h2>{isZh ? '人员' : 'People'}</h2>
+                <span>
+                  {peopleScope === 'players'
+                    ? isZh
+                      ? '球员名单可后续按官方 26 人名单增量补齐'
+                      : 'Players can be finalized once official rosters are published'
+                    : isZh
+                      ? '名单来自数据层 core/person profiles'
+                      : 'Roster sourced from data platform core person profiles'}
+                </span>
+              </div>
+
+              <article className="admin-card admin-card--compact">
+                <div className="admin-table-toolbar">
+                  <h3>
+                    {peopleScope === 'coaches'
+                      ? isZh
+                        ? `主教练（${peopleProfiles.total}）`
+                        : `Head coaches (${peopleProfiles.total})`
+                      : peopleScope === 'players'
+                        ? isZh
+                          ? `球员（${peopleProfiles.total}）`
+                          : `Players (${peopleProfiles.total})`
+                        : isZh
+                          ? `裁判（${peopleProfiles.total}）`
+                          : `Referees (${peopleProfiles.total})`}
+                  </h3>
+                  <div className="admin-people-controls" aria-label={isZh ? '人员筛选' : 'People filters'}>
+                    <button type="button" className={peopleScope === 'coaches' ? 'is-active' : ''} onClick={() => setPeopleScope('coaches')}>
+                      {isZh ? '主教练' : 'Coaches'}
+                    </button>
+                    <button type="button" className={peopleScope === 'players' ? 'is-active' : ''} onClick={() => setPeopleScope('players')}>
+                      {isZh ? '球员' : 'Players'}
+                    </button>
+                    <button type="button" className={peopleScope === 'referees' ? 'is-active' : ''} onClick={() => setPeopleScope('referees')}>
+                      {isZh ? '裁判' : 'Referees'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="admin-table-toolbar admin-table-toolbar--sub">
+                  <label className="admin-console-search admin-console-search--inline">
+                    <span>{isZh ? '搜索' : 'Search'}</span>
+                    <input
+                      type="search"
+                      value={peopleQuery}
+                      onChange={(event) => setPeopleQuery(event.target.value)}
+                      placeholder={isZh ? '搜索姓名、球队、国籍...' : 'Search name, team, nation...'}
+                    />
+                  </label>
+                  <span className="admin-muted">
+                    {isZh ? `显示 ${peopleProfiles.visible.length} / ${peopleProfiles.total}` : `Showing ${peopleProfiles.visible.length} / ${peopleProfiles.total}`}
+                  </span>
+                </div>
+
+                <div className="admin-data-table">
+                  <div className="admin-data-row admin-data-row--head admin-data-row--records">
+                    <span>{isZh ? '姓名' : 'Name'}</span>
+                    <span>{isZh ? '球队/归属' : 'Team'}</span>
+                    <span>{isZh ? '国籍' : 'Nation'}</span>
+                  </div>
+                  {peopleProfiles.visible.map((profile) => (
+                    <a
+                      key={profile.person_id}
+                      className="admin-data-row admin-data-row--records admin-data-row--link"
+                      href={getPersonHref(peopleProfiles.kind, profile.person_id, copy.locale)}
+                      aria-label={isZh ? `打开人物档案: ${profile.name_zh || profile.display_name}` : `Open person: ${profile.display_name}`}
+                    >
+                      <span>
+                        <b>{profile.name_zh || profile.display_name}</b>
+                        <small className="admin-muted">{profile.display_name}</small>
+                      </span>
+                      <span>{profile.primary_team_name ? formatTeamName(profile.primary_team_name, copy.locale) : '—'}</span>
+                      <span>{isZh ? (profile.country_name_zh || profile.country_name_en || '—') : (profile.country_name_en || profile.country_name_zh || '—')}</span>
+                    </a>
+                  ))}
+                </div>
+              </article>
+            </section>
+          ) : null}
+
           {activeTab === 'users' ? (
             <section className="stats-section">
               <h2>{isZh ? '用户管理' : 'User Management'}</h2>
