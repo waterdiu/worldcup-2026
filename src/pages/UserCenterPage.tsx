@@ -8,6 +8,7 @@ import { localizePath, type AppCopy } from '../i18n/content';
 import { formatBracketLabel, formatTeamName, formatVenueName } from '../i18n/formatters';
 import { getAuthDisplayName, isSupabaseConfigured, supabase } from '../lib/supabase';
 import type { BracketRoundData, FinalsMatchResultData, GroupStageMatchData } from '../types/tournament';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 interface UserCenterPageProps {
   bracket: BracketRoundData[];
@@ -37,7 +38,7 @@ function buildMatchLookup(
   const groupMatches = groupStageMatches.map((match) => ({
     id: match.id,
     title: `${formatTeamName(match.homeTeam, locale)} VS ${formatTeamName(match.awayTeam, locale)}`,
-    meta: `${locale === 'zh' ? `${match.groupId} 组` : `Group ${match.groupId}`} · ${match.dateLabel} · ${formatVenueName(match.venue, locale)}`,
+    meta: `${locale === 'zh' ? `${match.groupId} 组` : `Group ${match.groupId}`} · ${formatBeijingMonthDayKickoff(match.dateLabel, locale)} · ${formatVenueName(match.venue, locale)}`,
     homeLabel: formatTeamName(match.homeTeam, locale),
     awayLabel: formatTeamName(match.awayTeam, locale),
     status: resultById.get(match.id)?.status ?? 'scheduled',
@@ -49,7 +50,7 @@ function buildMatchLookup(
     round.matches.map((match) => ({
       id: match.id,
       title: `${formatBracketLabel(match.homeLabel, locale)} VS ${formatBracketLabel(match.awayLabel, locale)}`,
-      meta: `${formatBracketLabel(round.round, locale)} · ${match.dateLabel} · ${formatVenueName(match.venue, locale)}`,
+      meta: `${formatBracketLabel(round.round, locale)} · ${formatBeijingMonthDayKickoff(match.dateLabel, locale)} · ${formatVenueName(match.venue, locale)}`,
       homeLabel: formatBracketLabel(match.homeLabel, locale),
       awayLabel: formatBracketLabel(match.awayLabel, locale),
       status: resultById.get(match.id)?.status ?? 'scheduled',

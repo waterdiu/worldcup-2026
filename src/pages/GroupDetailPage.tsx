@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatTeamName, formatVenueName } from '../i18n/formatters';
 import type { GroupCardData, GroupStageMatchData } from '../types/tournament';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 interface GroupDetailPageProps {
   group: GroupCardData;
@@ -10,9 +11,7 @@ interface GroupDetailPageProps {
 }
 
 function formatMatchDate(dateLabel: string, locale: AppCopy['locale']): string {
-  if (locale === 'en') return dateLabel;
-  const date = new Date(dateLabel);
-  return `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日`;
+  return formatBeijingMonthDayKickoff(dateLabel, locale);
 }
 
 function formatMatchday(matchdayLabel: string, locale: AppCopy['locale']): string {

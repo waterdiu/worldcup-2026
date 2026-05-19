@@ -4,6 +4,7 @@ import { localizePath } from '../i18n/content';
 import { formatBracketLabel } from '../i18n/formatters';
 import type { BracketMatchData, BracketRoundData } from '../types/tournament';
 import { SectionHeader } from './SectionHeader';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 interface KnockoutBracketSectionProps {
   rounds: BracketRoundData[];
@@ -38,10 +39,7 @@ function getSlotStyle(matchCount: number, index: number): KnockoutSlotStyle {
 }
 
 function formatKnockoutDate(dateLabel: string, copy: AppCopy) {
-  if (copy.locale === 'en') return dateLabel;
-
-  const date = new Date(dateLabel);
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+  return formatBeijingMonthDayKickoff(dateLabel, copy.locale);
 }
 
 function renderKnockoutMatch(match: BracketMatchData, copy: AppCopy) {

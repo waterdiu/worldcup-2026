@@ -6,6 +6,7 @@ import { type AppCopy } from '../i18n/content';
 import { formatBracketLabel, formatTeamName } from '../i18n/formatters';
 import { getAuthDisplayName, isSupabaseConfigured } from '../lib/supabase';
 import type { BracketRoundData, FinalsMatchResultData, GroupStageMatchData } from '../types/tournament';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 type AdminTab =
   | 'dashboard'
@@ -380,7 +381,7 @@ export function AdminPage({ bracket, copy, finalsMatchResults, groupStageMatches
                     <div className="admin-data-row admin-data-row--records" key={match.id}>
                       <span>{formatTeamName(match.homeTeam, copy.locale)} VS {formatTeamName(match.awayTeam, copy.locale)}</span>
                       <span>{match.groupId}</span>
-                      <span>{match.dateLabel}</span>
+                      <span>{formatBeijingMonthDayKickoff(match.dateLabel, copy.locale)}</span>
                     </div>
                   ))}
                 </div>

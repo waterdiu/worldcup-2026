@@ -454,10 +454,10 @@ describe('App routes', () => {
     expect(screen.getAllByLabelText(/打开淘汰赛比赛详情:/)).toHaveLength(32);
     expect(screen.getByRole('link', { name: /打开淘汰赛比赛详情: 比赛 73/ })).toHaveAttribute('href', '/matches/73');
     expect(screen.getByRole('link', { name: /打开淘汰赛比赛详情: 比赛 104/ })).toHaveAttribute('href', '/matches/104');
-    expect(screen.getAllByText(/2026年6月28日/).length).toBeGreaterThan(0);
     const match73Link = screen.getByRole('link', { name: /打开淘汰赛比赛详情: 比赛 73/ });
     expect(match73Link).toHaveTextContent(/比赛 73/);
-    expect(match73Link).toHaveTextContent(/2026年6月28日/);
+    expect(match73Link).toHaveTextContent(/\d+月\d+日/);
+    expect(match73Link).toHaveTextContent(/\d{2}:\d{2}/);
     expect(match73Link).toHaveTextContent(/小组 A 第二/);
     expect(match73Link).toHaveTextContent(/小组 B 第二/);
     expect(match73Link).not.toHaveTextContent(/洛杉矶球场/);

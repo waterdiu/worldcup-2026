@@ -8,6 +8,7 @@ import {
 } from '../i18n/formatters';
 import { localizePath, type Locale } from '../i18n/content';
 import type { GroupCardData, GroupFixtureData } from '../types/tournament';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 interface HomeMetricPanelProps {
   groups: GroupCardData[];
@@ -18,11 +19,7 @@ interface HomeMetricPanelProps {
 }
 
 function formatFixtureDate(dateLabel: string, locale: Locale): string {
-  const date = new Date(dateLabel);
-  if (locale === 'en') {
-    return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(date);
-  }
-  return `${date.getMonth() + 1}月${date.getDate()}日`;
+  return formatBeijingMonthDayKickoff(dateLabel, locale);
 }
 
 function formatCompactVenue(venue: string, locale: Locale): string {

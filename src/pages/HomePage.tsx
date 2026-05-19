@@ -10,6 +10,7 @@ import {
 import { localizePath, type Locale } from '../i18n/content';
 import type { FullScheduleMatchData, GroupCardData, GroupFixtureData } from '../types/tournament';
 import { publicAssetPath } from '../utils/publicAssets';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 interface HomePageProps {
   slides: HeroSlideData[];
@@ -108,25 +109,9 @@ function formatFixtureDayLabel(dateLabel: string, locale: Locale): string {
 }
 
 function formatBeijingFixtureTime(fixture: FullScheduleMatchData, locale: Locale): string {
-  if (locale === 'en') {
-    const date = new Date(fixture.dateLabel);
-    if (!Number.isNaN(date.getTime())) {
-      return `${new Intl.DateTimeFormat('en', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        timeZone: 'Asia/Shanghai'
-      }).format(date)} BJT`;
-    }
-    return `${fixture.beijingTimeLabel} BJT`;
-  }
-
-  const match = fixture.beijingTimeLabel.match(/(\d+)年(\d+)月(\d+)日\s+(\d{2}:\d{2})/);
-  if (!match) return `${fixture.beijingTimeLabel} 北京时间`;
-  const [, , month, day, time] = match;
-  return `${Number(month)}月${Number(day)}日 ${time}`;
+  // Normalize to the same Beijing kickoff formatting used across match pages.
+  // Avoid printing timezone suffixes like "北京时间" or "BJT" in UI.
+  return formatBeijingMonthDayKickoff(fixture.dateLabel, locale);
 }
 
 function formatHomeFixtureVenue(fixture: FullScheduleMatchData, locale: Locale): string {

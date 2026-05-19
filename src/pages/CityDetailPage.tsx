@@ -3,6 +3,7 @@ import { hostCityDetails } from '../data/hostCityDetails';
 import { localizePath, type AppCopy } from '../i18n/content';
 import { formatBracketLabel, formatHostCityName, formatMatchupLabel, formatVenueName } from '../i18n/formatters';
 import type { BracketRoundData, GroupFixtureData } from '../types/tournament';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 
 interface CityDetailPageProps {
   city: string;
@@ -54,10 +55,7 @@ function formatCapacity(value: number, locale: AppCopy['locale']) {
 }
 
 function formatLocalDate(dateLabel: string, locale: AppCopy['locale']) {
-  if (locale === 'en') return dateLabel;
-  const date = new Date(dateLabel);
-  if (Number.isNaN(date.getTime())) return dateLabel;
-  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+  return formatBeijingMonthDayKickoff(dateLabel, locale);
 }
 
 function getMockCityProfile(detail: { city: string; country: string }, locale: AppCopy['locale']) {

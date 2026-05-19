@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { AppCopy } from '../i18n/content';
 import { formatTeamName, formatVenueName } from '../i18n/formatters';
 import type { GroupFixtureData } from '../types/tournament';
+import { formatBeijingMonthDayKickoff } from '../utils/beijingTime';
 import { SectionHeader } from './SectionHeader';
 
 interface OpeningFixturesSectionProps {
@@ -66,7 +67,7 @@ export function OpeningFixturesSection({ fixtures, copy }: OpeningFixturesSectio
         {visibleFixtures.map((fixture) => (
           <article key={fixture.id} className="fixture-card">
             <p className="fixture-card__meta">
-              {copy.labels.groupPrefix} {fixture.groupId} · {fixture.dateLabel}
+              {copy.labels.groupPrefix} {fixture.groupId} · {formatBeijingMonthDayKickoff(fixture.dateLabel, copy.locale)}
             </p>
             <h3>
               {formatTeamName(fixture.homeTeam, copy.locale)} {copy.locale === 'zh' ? '对' : 'vs'}{' '}
