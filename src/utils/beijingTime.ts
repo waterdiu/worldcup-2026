@@ -33,6 +33,13 @@ export function formatBeijingKickoff(dateLabel: string, locale: Locale): string 
 }
 
 export function formatBeijingMonthDayKickoff(dateLabel: string, locale: Locale): string {
+  const dateOnly = dateLabel.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnly) {
+    const [, , mm, dd] = dateOnly;
+    if (locale === 'zh') return `${Number(mm)}月${Number(dd)}日`;
+    return `${mm}-${dd}`;
+  }
+
   const parts = getBeijingParts(dateLabel, locale);
   const mm = parts.month;
   const dd = parts.day;
@@ -46,3 +53,17 @@ export function formatBeijingMonthDayKickoff(dateLabel: string, locale: Locale):
   return `${mm}-${dd} ${hh}:${min}`;
 }
 
+export function formatBeijingMonthDay(dateLabel: string, locale: Locale): string {
+  const dateOnly = dateLabel.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnly) {
+    const [, , mm, dd] = dateOnly;
+    if (locale === 'zh') return `${Number(mm)}月${Number(dd)}日`;
+    return `${mm}-${dd}`;
+  }
+
+  const parts = getBeijingParts(dateLabel, locale);
+  const mm = parts.month;
+  const dd = parts.day;
+  if (locale === 'zh') return `${Number(mm)}月${Number(dd)}日`;
+  return `${mm}-${dd}`;
+}
