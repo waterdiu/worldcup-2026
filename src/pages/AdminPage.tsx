@@ -652,7 +652,11 @@ export function AdminPage({
                 <div className="admin-data-table">
                   <div className="admin-data-row admin-data-row--head admin-data-row--people">
                     <span>{isZh ? '姓名' : 'Name'}</span>
-                    <span>{isZh ? '球队/归属' : 'Team'}</span>
+                    <span>
+                      {peopleScope === 'referees'
+                        ? (isZh ? '所属协会' : 'Association')
+                        : (isZh ? '球队/归属' : 'Team')}
+                    </span>
                     <span>
                       {peopleScope === 'players'
                         ? (isZh ? '俱乐部' : 'Club')
@@ -698,7 +702,7 @@ export function AdminPage({
                             <b>{official.name_zh || official.display_name}</b>
                             <small className="admin-muted">{official.display_name}</small>
                           </span>
-                          <span>—</span>
+                          <span>{official.confederation || official.association_code || '—'}</span>
                           <span>{isZh ? (official.country_name_zh || official.country_name_en || '—') : (official.country_name_en || official.country_name_zh || '—')}</span>
                           <span>{typeof (official as any).age === 'number' ? String((official as any).age) : '—'}</span>
                           <span />

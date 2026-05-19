@@ -149,6 +149,8 @@ function normalizeOfficials(entries: unknown): WorldCupOfficial[] {
         country_code: (entry as any)?.country_code ?? null,
         country_name_en: (entry as any)?.country_name ?? (entry as any)?.country_name_en ?? null,
         country_name_zh: (entry as any)?.country_name_zh ?? (entry as any)?.country_name ?? null,
+        association_code: (entry as any)?.association_code ?? null,
+        confederation: (entry as any)?.confederation ?? null,
         source_status: String((entry as any)?.source_status ?? ''),
         updated_at: (entry as any)?.updated_at ?? null
       } satisfies WorldCupOfficial;
@@ -428,6 +430,8 @@ export type WorldCupOfficial = {
   country_code: string | null;
   country_name_en: string | null;
   country_name_zh: string | null;
+  association_code: string | null;
+  confederation: string | null;
   source_status: string;
   updated_at?: string | null;
 };
