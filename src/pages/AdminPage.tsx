@@ -450,16 +450,6 @@ export function AdminPage({
 
   return (
     <section className="section admin-page stats-page">
-      <div className="admin-console-topbar">
-        <div className="admin-console-brand">
-          <strong>WC 2026</strong>
-        </div>
-        <div className="admin-console-user">
-          <span>{getAuthDisplayName(user)}</span>
-          <b>ADMIN</b>
-        </div>
-      </div>
-
       {dashboard.error ? (
         <article className="admin-card admin-card--warning">
           <h2>{isZh ? '后台数据暂不可用' : 'Admin data is unavailable'}</h2>

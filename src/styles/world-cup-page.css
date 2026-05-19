@@ -6766,6 +6766,34 @@
   }
 }
 
+.page-nav--admin .page-nav__meta {
+  display: flex;
+}
+
+@media (max-width: 860px) {
+  .page-nav--admin .page-nav__meta {
+    justify-content: flex-end;
+  }
+}
+
+.page-nav__identity {
+  color: #9a9488;
+  font-family: 'DM Mono', 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page-nav__role {
+  border: 1px solid #c8f230;
+  color: #c8f230;
+  font-family: 'DM Mono', 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  padding: 2px 7px;
+  text-transform: uppercase;
+}
+
 /* Qualifiers rebuilt into the same editorial data language as /stats. */
 .qualifier-match-board,
 .qualifier-match-detail-page {
