@@ -503,6 +503,23 @@ function requireDataset<T>(value: T | undefined, label: string): T {
   return value;
 }
 
+function mergeBracketKickoffsFromFullSchedule(bracket: BracketRoundData[], fullSchedule: FullScheduleMatchData[]) {
+  if (!Array.isArray(bracket) || !Array.isArray(fullSchedule)) return bracket;
+  const byId = new Map(fullSchedule.map((match) => [String(match.id), match]));
+  return bracket.map((round) => ({
+    ...round,
+    matches: round.matches.map((match) => {
+      const schedule = byId.get(String(match.id));
+      if (!schedule) return match;
+      return {
+        ...match,
+        dateLabel: schedule.dateLabel,
+        venue: schedule.venue
+      };
+    })
+  }));
+}
+
 function toSiteData(
   bundle: RuntimeSiteBundle,
   rosters: WorldCupTeamRoster[],
@@ -517,6 +534,8 @@ function toSiteData(
   runtimeWarnings: string[]
 ): WorldCupSiteData {
   const datasets = bundle.datasets ?? {};
+  const fullScheduleDataset = requireDataset(datasets.full_schedule, 'full_schedule');
+  const bracketDataset = mergeBracketKickoffsFromFullSchedule(requireDataset(datasets.bracket, 'bracket'), fullScheduleDataset);
 
   return {
     source: 'runtime',
@@ -525,8 +544,8 @@ function toSiteData(
     groups: requireDataset(datasets.groups, 'groups'),
     groupFixtures: requireDataset(datasets.group_fixtures, 'group_fixtures'),
     groupStageMatches: requireDataset(datasets.group_stage_matches, 'group_stage_matches'),
-    bracket: requireDataset(datasets.bracket, 'bracket'),
-    fullSchedule: requireDataset(datasets.full_schedule, 'full_schedule'),
+    bracket: bracketDataset,
+    fullSchedule: fullScheduleDataset,
     finalsMatchResults: requireDataset(datasets.finals_results, 'finals_results'),
     finalsDataCoverage: requireDataset(datasets.finals_coverage, 'finals_coverage'),
     qualifierMatches: requireDataset(datasets.qualifier_matches, 'qualifier_matches'),
