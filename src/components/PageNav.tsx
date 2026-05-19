@@ -46,7 +46,7 @@ export function PageNav({ pathname, locale }: PageNavProps) {
   }, [authLoading, user]);
 
   return (
-    <nav aria-label="Page navigation" className={`page-nav${adminEligible ? ' page-nav--admin' : ''}`}>
+    <nav aria-label="Page navigation" className="page-nav">
       <a className="page-nav__brand" href={localizePath('/', locale)} aria-label={locale === 'zh' ? '返回首页' : 'Back home'}>
         WC 2026<span>DATA</span>
       </a>
@@ -67,7 +67,6 @@ export function PageNav({ pathname, locale }: PageNavProps) {
       <div className="page-nav__meta">
         <span className="page-nav__dot" aria-hidden="true" />
         <span className="page-nav__identity">{identityLabel}</span>
-        {adminEligible ? <b className="page-nav__role">ADMIN</b> : null}
       </div>
     </nav>
   );
