@@ -83,6 +83,15 @@ export type PersonSection =
         location?: string | null;
         tier: PersonDataTier;
       }>;
+    }
+  | {
+      type: 'runtime_section';
+      runtime_type: string;
+      title_zh: string;
+      title_en: string;
+      status?: string | null;
+      data_tier?: PersonDataTier | null;
+      raw: Record<string, unknown>;
     };
 
 export type PersonProfile = {

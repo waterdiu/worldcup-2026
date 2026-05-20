@@ -45,6 +45,128 @@ function coerceString(value: unknown): string | null {
   return null;
 }
 
+type RuntimePersonSection = Extract<PersonSection, { type: 'runtime_section' }>;
+
+function runtimeSections(profile: PersonProfile, runtimeType?: string) {
+  const sections = profile.sections.filter((section): section is RuntimePersonSection => section.type === 'runtime_section');
+  return runtimeType ? sections.filter((section) => section.runtime_type === runtimeType) : sections;
+}
+
+function runtimeSection(profile: PersonProfile, runtimeType: string) {
+  return runtimeSections(profile, runtimeType)[0] ?? null;
+}
+
+function rawRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function displayValue(value: unknown, locale: AppCopy['locale']): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (Array.isArray(value)) {
+    const values = value.map((item) => displayValue(item, locale)).filter(Boolean);
+    return values.length ? values.join(' / ') : null;
+  }
+  if (typeof value === 'boolean') return locale === 'zh' ? (value ? '是' : '否') : (value ? 'Yes' : 'No');
+  if (typeof value === 'number') return Number.isFinite(value) ? String(value) : null;
+  if (typeof value === 'string') {
+    if (value === 'null' || value === 'undefined') return null;
+    if (value === 'pending_source') return locale === 'zh' ? '待来源补齐' : 'Pending source';
+    if (value === 'insufficient_sample') return locale === 'zh' ? '样本不足' : 'Insufficient sample';
+    return value;
+  }
+  return null;
+}
+
+function labelFromKey(key: string, locale: AppCopy['locale']) {
+  const labels: Record<string, [string, string]> = {
+    age: ['年龄', 'Age'],
+    appearance_count: ['历史出场', 'Historical apps'],
+    appearances: ['出场', 'Apps'],
+    appointment_status: ['任命状态', 'Appointment'],
+    assists: ['助攻', 'Assists'],
+    attacking_output: ['进攻产出', 'Attacking output'],
+    attacking_tendency: ['进攻倾向', 'Attacking tendency'],
+    bench_count: ['替补', 'Bench'],
+    card_strictness: ['判罚尺度', 'Card strictness'],
+    club: ['俱乐部', 'Club'],
+    confidence_label: ['置信度', 'Confidence'],
+    contract_until: ['合同至', 'Contract until'],
+    date_of_birth: ['出生日期', 'DOB'],
+    defensive_solidity: ['防守稳定', 'Defensive solidity'],
+    defensive_stability: ['防守稳定', 'Defensive stability'],
+    display_market_value: ['身价参考', 'Market value'],
+    display_profile: ['展示画像', 'Display profile'],
+    event_rows: ['事件样本', 'Event rows'],
+    fifa_listed_since: ['FIFA 登记年份', 'FIFA listed since'],
+    foot: ['惯用脚', 'Foot'],
+    goals: ['进球', 'Goals'],
+    goals_against_per_match: ['场均失球', 'GA/match'],
+    goals_for_per_match: ['场均进球', 'GF/match'],
+    height_cm: ['身高', 'Height'],
+    historical_number_candidate: ['历史常用号码候选', 'Historical number candidate'],
+    historical_number_sample_size: ['号码样本', 'Number sample'],
+    impact_proxy_score: ['影响力代理分', 'Impact proxy'],
+    lineup_rows: ['阵容样本', 'Lineup rows'],
+    matches: ['比赛场次', 'Matches'],
+    matches_managed_total: ['执教场次', 'Managed matches'],
+    minutes: ['分钟', 'Minutes'],
+    nationality: ['国籍', 'Nationality'],
+    penalty_rate: ['点球率', 'Penalty rate'],
+    red_cards_per_match: ['场均红牌', 'Reds/match'],
+    recent_control: ['近期控制力', 'Recent control'],
+    recent_win_rate: ['近期胜率', 'Recent win rate'],
+    role: ['角色', 'Role'],
+    role_zh: ['角色', 'Role'],
+    sample_confidence: ['样本置信度', 'Sample confidence'],
+    sample_size_matches: ['样本场次', 'Sample matches'],
+    shirt_number: ['号码', 'Shirt'],
+    start_count: ['首发', 'Starts'],
+    start_share_pct: ['首发占比', 'Start share'],
+    style_tags: ['风格标签', 'Style tags'],
+    style_tags_zh: ['风格标签', 'Style tags'],
+    sub_position: ['细分位置', 'Sub-position'],
+    volatility: ['波动性', 'Volatility'],
+    win_rate_pct: ['胜率', 'Win rate'],
+    yellow_cards_per_match: ['场均黄牌', 'Yellows/match']
+  };
+  const hit = labels[key];
+  if (hit) return locale === 'zh' ? hit[0] : hit[1];
+  return key.replace(/_/g, ' ');
+}
+
+function runtimeRowsFromRecord(record: Record<string, unknown>, locale: AppCopy['locale']) {
+  return Object.entries(record)
+    .map(([key, value]) => ({ key, label: labelFromKey(key, locale), value: displayValue(value, locale) }))
+    .filter((row) => row.value !== null);
+}
+
+function stylePayload(profile: PersonProfile, locale: AppCopy['locale']) {
+  const distilled = rawRecord(profile.distilled);
+  const directTags = Array.isArray(distilled.style_tags) ? distilled.style_tags.map(String) : [];
+  const coach = rawRecord(runtimeSection(profile, 'coach_tactical_proxy')?.raw.items);
+  const player = rawRecord(runtimeSection(profile, 'player_role_proxy')?.raw.items);
+  const referee = rawRecord(runtimeSection(profile, 'referee_style_proxy')?.raw.items);
+  const displayProxy = rawRecord(runtimeSection(profile, 'style_distillation')?.raw.display_proxy);
+  const source = [coach, player, referee, displayProxy].find((item) => Object.keys(item).length) ?? {};
+  const sectionTags = locale === 'zh'
+    ? (Array.isArray(source.style_tags_zh) ? source.style_tags_zh : source.style_tags)
+    : source.style_tags;
+  const tags = directTags.length ? directTags : (Array.isArray(sectionTags) ? sectionTags.map(String) : []);
+  const summary = coerceString(locale === 'zh'
+    ? (source.summary_zh ?? displayProxy.role_proxy ?? displayProxy.style_proxy ?? displayProxy.assignment_proxy)
+    : (source.summary_en ?? displayProxy.role_proxy ?? displayProxy.style_proxy ?? displayProxy.assignment_proxy));
+  const status = String(
+    runtimeSection(profile, 'style_distillation')?.status ??
+    runtimeSection(profile, 'coach_tactical_proxy')?.status ??
+    runtimeSection(profile, 'player_role_proxy')?.status ??
+    runtimeSection(profile, 'referee_style_proxy')?.status ??
+    distilled.distillation_status ??
+    profile.distillation_status ??
+    'insufficient_sample'
+  );
+  return { tags, summary, status };
+}
+
 function pickCoachHeroFacts(profile: PersonProfile, locale: AppCopy['locale']) {
   const direct = (profile.direct ?? {}) as any;
   const derived = (profile.derived ?? {}) as any;
@@ -109,9 +231,8 @@ function renderHero(profile: PersonProfile, locale: AppCopy['locale']) {
         ? pickPlayerHeroFacts(profile, locale)
         : pickRefereeHeroFacts(profile, locale);
 
-  const distilled = (profile.distilled ?? {}) as any;
-  const styleTags = Array.isArray(distilled.style_tags) ? distilled.style_tags : [];
-  const showTags = profile.distillation_status === 'available' && styleTags.length;
+  const style = stylePayload(profile, locale);
+  const showTags = style.status === 'available' && style.tags.length;
 
   return (
     <div className="person-hero">
@@ -130,7 +251,7 @@ function renderHero(profile: PersonProfile, locale: AppCopy['locale']) {
         </div>
         {showTags ? (
           <div className="person-hero__tags">
-            {styleTags.slice(0, 6).map((tag: any) => (
+            {style.tags.slice(0, 6).map((tag: any) => (
               <span className="tag lime" key={String(tag)}>{String(tag)}</span>
             ))}
           </div>
@@ -542,21 +663,32 @@ function renderDataGrid(profile: PersonProfile, locale: AppCopy['locale']) {
 }
 
 function renderAbilityBars(profile: PersonProfile, locale: AppCopy['locale']) {
-  if (profile.kind !== 'player') return null;
   const derived = (profile.derived ?? {}) as any;
+  const abilitySection = runtimeSection(profile, 'ability_bars');
+  const abilityItems = Array.isArray(abilitySection?.raw.items) ? abilitySection.raw.items as Array<Record<string, unknown>> : [];
+  const officiating = runtimeSection(profile, 'officiating_metrics');
+  const officiatingRatings = rawRecord(officiating?.raw.dimension_ratings);
   const ratings = (derived.dimension_ratings ?? {}) as Record<string, number>;
-  const hasRatings = ratings && Object.keys(ratings).length > 0;
 
   const placeholder = [
-    { label_zh: '速度突破', label_en: 'Pace', value: null },
-    { label_zh: '终结能力', label_en: 'Finishing', value: null },
-    { label_zh: '传球创造', label_en: 'Creation', value: null },
-    { label_zh: '防守参与', label_en: 'Defending', value: null }
+    { label_zh: profile.kind === 'coach' ? '近期胜率' : profile.kind === 'referee' ? '判罚尺度' : '速度突破', label_en: profile.kind === 'coach' ? 'Recent win rate' : profile.kind === 'referee' ? 'Card strictness' : 'Pace', value: null },
+    { label_zh: profile.kind === 'coach' ? '进攻产出' : profile.kind === 'referee' ? '样本置信度' : '终结能力', label_en: profile.kind === 'coach' ? 'Attacking output' : profile.kind === 'referee' ? 'Sample confidence' : 'Finishing', value: null },
+    { label_zh: profile.kind === 'coach' ? '防守稳定' : profile.kind === 'referee' ? '点球倾向' : '传球创造', label_en: profile.kind === 'coach' ? 'Defensive solidity' : profile.kind === 'referee' ? 'Penalty tendency' : 'Creation', value: null },
+    { label_zh: profile.kind === 'coach' ? '样本置信度' : profile.kind === 'referee' ? '控场稳定' : '防守参与', label_en: profile.kind === 'coach' ? 'Sample confidence' : profile.kind === 'referee' ? 'Control stability' : 'Defending', value: null }
   ];
 
-  const items = hasRatings
-    ? Object.entries(ratings).slice(0, 6).map(([k, v]) => ({ label_zh: k, label_en: k, value: v }))
-    : placeholder;
+  const items = abilityItems.length
+    ? abilityItems.map((item) => ({
+        label_zh: String(item.label_zh ?? item.key ?? ''),
+        label_en: String(item.label_en ?? item.key ?? ''),
+        value: item.value
+      }))
+    : Object.keys(officiatingRatings).length
+      ? Object.entries(officiatingRatings).slice(0, 6).map(([k, v]) => ({ label_zh: labelFromKey(k, 'zh'), label_en: labelFromKey(k, 'en'), value: v }))
+      : Object.keys(ratings).length
+        ? Object.entries(ratings).slice(0, 6).map(([k, v]) => ({ label_zh: labelFromKey(k, 'zh'), label_en: labelFromKey(k, 'en'), value: v }))
+        : placeholder;
+  const hasRatings = items.some((item) => typeof item.value === 'number');
 
   return (
     <section className="section">
@@ -594,8 +726,8 @@ function renderAbilityBars(profile: PersonProfile, locale: AppCopy['locale']) {
           </div>
           <p className="people-card__muted">
             {locale === 'zh'
-              ? '能力评分需要稳定的分钟数、技术统计或事件数据源。当前若显示“待补齐”，表示数据层尚未发布可复现的评分输入。'
-              : 'Ability ratings require stable minutes + stats/event feeds. Pending means the data layer has not published reproducible inputs yet.'}
+              ? '此处只展示数据层已发布的可复现评分或代理分。若显示“待补齐”，表示底层样本或来源不足，前端不会自行打分。'
+              : 'Only data-layer ratings/proxies are rendered here. Pending means the underlying sample/source is not sufficient; the frontend does not score people.'}
           </p>
         </div>
       </div>
@@ -604,10 +736,7 @@ function renderAbilityBars(profile: PersonProfile, locale: AppCopy['locale']) {
 }
 
 function renderStyleProfile(profile: PersonProfile, locale: AppCopy['locale']) {
-  const distilled = (profile.distilled ?? {}) as any;
-  const tags = Array.isArray(distilled.style_tags) ? distilled.style_tags : [];
-  const status = distilled.distillation_status ?? profile.distillation_status ?? 'insufficient_sample';
-  const summary = coerceString(distilled.summary);
+  const { tags, summary, status } = stylePayload(profile, locale);
 
   return (
     <section className="section">
@@ -646,8 +775,10 @@ function renderStyleProfile(profile: PersonProfile, locale: AppCopy['locale']) {
 function renderImpactBox(profile: PersonProfile, locale: AppCopy['locale']) {
   if (profile.kind !== 'player') return null;
   const derived = (profile.derived ?? {}) as any;
-  const box = derived.impact_box ?? {};
+  const impactSection = runtimeSection(profile, 'impact_box');
+  const box = rawRecord(impactSection?.raw ?? derived.impact_box);
   const pct = box.absence_impact_pct;
+  const proxy = box.impact_proxy_score;
   const explain = locale === 'zh' ? box.absence_impact_explain_zh : box.absence_impact_explain_en;
   const pending = pct === null || pct === undefined;
   return (
@@ -656,7 +787,9 @@ function renderImpactBox(profile: PersonProfile, locale: AppCopy['locale']) {
         <div className="impact-title">{locale === 'zh' ? '缺阵影响' : 'Absence impact'}</div>
         <p>
           {pending
-            ? (locale === 'zh' ? '需要可靠的出场分钟、进球贡献或模型输入源后才能计算。' : 'Requires reliable minutes/stats or model inputs.')
+            ? (proxy !== null && proxy !== undefined
+              ? `${locale === 'zh' ? '当前仅有影响力代理分：' : 'Current display proxy score: '}${proxy}。${locale === 'zh' ? '这不是缺阵影响百分比。' : 'This is not absence impact percentage.'}`
+              : (locale === 'zh' ? '需要可靠的出场分钟、进球贡献或模型输入源后才能计算。' : 'Requires reliable minutes/stats or model inputs.'))
             : `${locale === 'zh' ? '缺席时球队预期进球变化：' : 'Estimated team xG change when absent: '}${pct}%`}
           {!pending && explain ? ` ${explain}` : ''}
         </p>
@@ -758,6 +891,76 @@ function renderMethodology(profile: PersonProfile, locale: AppCopy['locale']) {
 
 function renderSection(section: PersonSection, locale: AppCopy['locale']) {
   const title = locale === 'zh' ? section.title_zh : section.title_en;
+
+  if (section.type === 'runtime_section') {
+    const raw = section.raw;
+    const primaryRecords = [
+      rawRecord(raw.fields),
+      rawRecord(raw.metrics),
+      rawRecord(raw.items),
+      rawRecord(raw.display_profile),
+      rawRecord(raw.display_proxy),
+      rawRecord(raw.activity)
+    ];
+    const rows = primaryRecords.flatMap((record) => runtimeRowsFromRecord(record, locale));
+    const status = section.status ?? String(raw.status ?? '');
+    const detailRows = Array.isArray(raw.lineups)
+      ? (raw.lineups as Array<Record<string, unknown>>).slice(0, 5)
+      : Array.isArray(raw.events)
+        ? (raw.events as Array<Record<string, unknown>>).slice(0, 5)
+        : [];
+
+    return (
+      <article className="people-card">
+        <header className="people-card__header">
+          <h2>{title}</h2>
+          <p className="people-card__muted">
+            {status
+              ? `${locale === 'zh' ? '状态' : 'Status'}: ${status}`
+              : `${locale === 'zh' ? '数据层 section' : 'Data-layer section'}: ${section.runtime_type}`}
+          </p>
+        </header>
+        {rows.length ? (
+          <div className="people-table" role="table" aria-label={title}>
+            <div className="people-table__head" aria-hidden="true">
+              <span>{locale === 'zh' ? '字段' : 'Field'}</span>
+              <span>{locale === 'zh' ? '值' : 'Value'}</span>
+              <span>{locale === 'zh' ? '性质' : 'Tier'}</span>
+              <span>{locale === 'zh' ? '备注' : 'Note'}</span>
+            </div>
+            {rows.map((row, index) => (
+              <div className="people-table__row" role="row" key={`${section.runtime_type}:${row.key}:${index}`}>
+                <span>{row.label}</span>
+                <strong>{row.value}</strong>
+                <span className={`tier-badge tier-badge--${section.data_tier ?? 'derived'}`}>{tierLabel(section.data_tier ?? 'derived', locale)}</span>
+                <span className="people-table__note">{section.runtime_type}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="people-card__muted">
+            {status === 'insufficient_sample'
+              ? (locale === 'zh' ? '样本不足，暂不输出结论。' : 'Insufficient sample; no conclusion rendered.')
+              : (locale === 'zh' ? '数据层暂未发布可展示字段。' : 'No renderable fields published yet.')}
+          </p>
+        )}
+        {detailRows.length ? (
+          <div className="people-table" role="table" aria-label={`${title}-details`}>
+            {detailRows.map((row, index) => {
+              const rendered = runtimeRowsFromRecord(row, locale).slice(0, 4);
+              return (
+                <div className="people-table__row" role="row" key={`${section.runtime_type}:detail:${index}`}>
+                  {rendered.map((item) => (
+                    <span key={item.key}>{item.value}</span>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+      </article>
+    );
+  }
 
   if (section.type === 'profile_facts') {
     return (
@@ -953,13 +1156,19 @@ export function PersonDetailPage({
     );
   }
 
-  const country = locale === 'zh' ? profile.country_name_zh : profile.country_name_en;
-  const role = locale === 'zh' ? profile.role_title_zh : profile.role_title_en;
-  const teamMeta = profile.primary_team_name ? ` · ${profile.primary_team_name}` : '';
-  const sections = profile.sections.filter((section) => !['profile_facts', 'style_tags'].includes(section.type));
-  const coachSections = sections.filter((s) => s.type === 'career_timeline' || s.type === 'recent_matches');
-  const refereeSections = sections.filter((s) => s.type === 'referee_bias' || s.type === 'recent_matches');
-  const miscSections = sections.filter((s) => !['career_timeline', 'referee_bias', 'recent_matches'].includes(s.type));
+  const hiddenRuntimeSections = new Set([
+    'identity',
+    'data_grid',
+    'kpi_strip',
+    'ability_bars',
+    'impact_box',
+    'style_distillation'
+  ]);
+  const sections = profile.sections.filter((section) => {
+    if (section.type === 'profile_facts' || section.type === 'style_tags') return false;
+    if (section.type === 'runtime_section') return !hiddenRuntimeSections.has(section.runtime_type);
+    return true;
+  });
 
   return (
     <main className="world-cup-page world-cup-page--people">
@@ -988,26 +1197,10 @@ export function PersonDetailPage({
       {renderAbilityBars(profile, locale)}
       {renderMethodology(profile, locale)}
 
-      {profile.kind === 'coach' && coachSections.length ? (
+      {sections.length ? (
         <section className="section people-sections">
-          {coachSections.map((section) => (
-            <div key={`${profile.person_id}:${section.type}`}>{renderSection(section, locale)}</div>
-          ))}
-        </section>
-      ) : null}
-
-      {profile.kind === 'referee' && refereeSections.length ? (
-        <section className="section people-sections">
-          {refereeSections.map((section) => (
-            <div key={`${profile.person_id}:${section.type}`}>{renderSection(section, locale)}</div>
-          ))}
-        </section>
-      ) : null}
-
-      {profile.kind === 'player' && miscSections.length ? (
-        <section className="section people-sections">
-          {miscSections.map((section) => (
-            <div key={`${profile.person_id}:${section.type}`}>{renderSection(section, locale)}</div>
+          {sections.map((section) => (
+            <div key={`${profile.person_id}:${section.type === 'runtime_section' ? section.runtime_type : section.type}`}>{renderSection(section, locale)}</div>
           ))}
         </section>
       ) : null}

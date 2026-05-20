@@ -169,9 +169,12 @@ core/people-index.json
 core/coach-profiles.json
 core/player-profiles.json
 core/referee-profiles.json
+core/officials.json
 core/player-external-facts.json
 core/staff-external-facts.json
 ```
+
+The profile adapter preserves the data-platform `sections[]` contract as runtime sections and renders them directly. The frontend may format rows, bars, tags, and empty states, but it must not calculate win rate, ability scores, absence impact, referee style, or distilled labels. `pending_source`, `low_sample`, `insufficient_sample`, `null`, empty strings, and empty arrays are treated as missing/limited coverage states, not zero values. Player shirt numbers remain hidden unless the data layer publishes a reliable `shirt_number`; historical number candidates are only labeled as historical candidates.
 
 ### Source Health And Data Coverage
 

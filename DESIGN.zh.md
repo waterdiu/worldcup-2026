@@ -152,6 +152,22 @@ core/bundle.json
 
 当前 2026 展示站消费的是页面兼容层 `site/bundle.json`，不是更底层的 `core/bundle.json`。
 
+### 人物档案（教练 / 球员 / 裁判）
+
+人物档案通过 `manifest.json` 暴露的运行时数据集读取：
+
+```text
+core/people-index.json
+core/coach-profiles.json
+core/player-profiles.json
+core/referee-profiles.json
+core/officials.json
+core/player-external-facts.json
+core/staff-external-facts.json
+```
+
+前端适配层必须保留数据层 `sections[]` 契约，并把它作为运行时 section 直接渲染。前端只负责排版、空态、状态标签和跳转，不计算胜率、能力评分、缺阵影响、裁判尺度或风格蒸馏标签。`pending_source`、`low_sample`、`insufficient_sample`、`null`、空字符串、空数组都只能作为缺失/样本不足状态处理，不能显示成 0 或强结论。球员号码只有数据层发布可靠 `shirt_number` 时才显示；历史常用号码候选只能标注为历史候选，不能当作 2026 世界杯号码。
+
 ### 数据源健康与覆盖状态
 
 `football-data-platform` 已发布 source health v2，这是兼容增强。当前 2026 展示站不需要立刻修改 UI，因为原有 coverage 字段仍保持兼容。

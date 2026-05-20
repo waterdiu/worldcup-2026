@@ -23,7 +23,8 @@ import {
   mockRefereeProfiles,
   type PeopleIndexEntry,
   type PersonProfile,
-  type PersonDataTier
+  type PersonDataTier,
+  type PersonSection
 } from './mockPeople';
 
 function normalizeTier(value: unknown): PersonDataTier {
@@ -55,6 +56,22 @@ function normalizePeopleIndex(entries: unknown): PeopleIndexEntry[] {
     .filter(Boolean) as PeopleIndexEntry[];
 }
 
+function normalizeRuntimePersonSection(section: unknown): PersonSection | null {
+  if (!section || typeof section !== 'object') return null;
+  const raw = section as Record<string, unknown>;
+  const runtimeType = String(raw.type ?? '');
+  if (!runtimeType) return null;
+  return {
+    type: 'runtime_section',
+    runtime_type: runtimeType,
+    title_zh: String(raw.title_zh ?? raw.title ?? runtimeType),
+    title_en: String(raw.title_en ?? raw.title ?? runtimeType),
+    status: typeof raw.status === 'string' ? raw.status : null,
+    data_tier: raw.data_tier ? normalizeTier(raw.data_tier) : null,
+    raw
+  };
+}
+
 function normalizePersonProfiles(entries: unknown, kind: PeopleIndexEntry['kind']): PersonProfile[] {
   if (!Array.isArray(entries)) {
     if (kind === 'coach') return mockCoachProfiles;
@@ -80,8 +97,6 @@ function normalizePersonProfiles(entries: unknown, kind: PeopleIndexEntry['kind'
         note_en: k.note_en ?? null
       }));
 
-      // Sections from data platform are not guaranteed to match our fine-grained schema yet.
-      // For Phase 1, we keep a minimal, renderable set: profile facts + sources.
       const factsSection = {
         type: 'profile_facts',
         title_zh: '基础档案',
@@ -98,7 +113,10 @@ function normalizePersonProfiles(entries: unknown, kind: PeopleIndexEntry['kind'
       } as const;
 
       const distillationStatus = (entry as any).distillation_status ?? (entry as any).distilled?.distillation_status ?? undefined;
-      const sections = [factsSection];
+      const runtimeSections = Array.isArray((entry as any).sections)
+        ? (entry as any).sections.map(normalizeRuntimePersonSection).filter(Boolean)
+        : [];
+      const sections = [factsSection, ...runtimeSections];
 
       return {
         person_id: String((entry as any).person_id ?? ''),
@@ -114,7 +132,7 @@ function normalizePersonProfiles(entries: unknown, kind: PeopleIndexEntry['kind'
         role_title_zh: String((entry as any).role_zh ?? ''),
         photo_url: (entry as any).photo_url ?? null,
         kpis,
-        sections: sections as any,
+        sections: sections as PersonSection[],
         direct: (entry as any).direct ?? undefined,
         derived: (entry as any).derived ?? undefined,
         distilled: (entry as any).distilled ?? undefined,

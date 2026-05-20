@@ -123,8 +123,17 @@ P1（未来）：
 - `coach-profiles.json`
 - `player-profiles.json`
 - `referee-profiles.json`
+- `officials.json`
 - `player-external-facts.json`
 - `staff-external-facts.json`
+
+2026-05-20 之后，`coach/player/referee-profiles.json` 已经包含可渲染的 `sections[]`。前端适配层应保留这些 section，并把未知类型作为运行时 section 以通用 data-row 方式展示，而不是丢弃后在前端重新拼装结论。
+
+约束：
+- 前端不计算胜率、能力评分、缺阵影响、裁判尺度、风格标签。
+- `derived_display_proxy`、`impact_proxy_score` 只能作为展示代理，不得当作真实模型特征或缺阵影响百分比。
+- `pending_source`、`low_sample`、`insufficient_sample`、`null`、空字符串、空数组都不能显示为 0。
+- 历史号码候选只能显示为“历史常用号码候选”，不能显示为 2026 世界杯球衣号码。
 
 为了承接 “实时数据分析 + 对模型的修正（L2/L3）” 的 UI（参考 `person-profiles-new.html`），建议数据层新增并发布：
 
