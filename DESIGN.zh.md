@@ -152,6 +152,30 @@ core/bundle.json
 
 当前 2026 展示站消费的是页面兼容层 `site/bundle.json`，不是更底层的 `core/bundle.json`。
 
+### 数据源健康与覆盖状态
+
+`football-data-platform` 已发布 source health v2，这是兼容增强。当前 2026 展示站不需要立刻修改 UI，因为原有 coverage 字段仍保持兼容。
+
+新增可选运行时文件：
+
+```text
+source-health.json
+../source-health.json
+```
+
+`core/data-coverage.json` 的每场比赛可以包含更丰富的字段：
+
+```text
+overall_confidence
+overall_confidence_score
+kelly_multiplier_cap
+sources
+blocking_flags
+fallbacks_used
+```
+
+原有 `fixture`、`result`、`events`、`lineups`、`odds`、`injuries`、`weather`、`prediction` 等 coverage 字段仍属于兼容契约。后续如果管理后台或比赛详情页要展示“数据为什么缺失、数据源是否过期、是否使用 fallback、数据可信度”，应优先读取 `data-coverage.sources`、`blocking_flags`、`fallbacks_used` 和 `source-health.json`，不要在前端自行编造状态结论。
+
 ### 运行时 site bundle 结构
 
 `src/data/siteData.ts` 期望的数据结构：

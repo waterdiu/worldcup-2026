@@ -173,6 +173,30 @@ core/player-external-facts.json
 core/staff-external-facts.json
 ```
 
+### Source Health And Data Coverage
+
+`football-data-platform` publishes source-health v2 as a compatible runtime enhancement. The current 2026 site does not need to change UI to keep running, because existing coverage fields remain compatible.
+
+New optional runtime files:
+
+```text
+source-health.json
+../source-health.json
+```
+
+`core/data-coverage.json` may include richer per-match fields:
+
+```text
+overall_confidence
+overall_confidence_score
+kelly_multiplier_cap
+sources
+blocking_flags
+fallbacks_used
+```
+
+Existing coverage fields such as `fixture`, `result`, `events`, `lineups`, `odds`, `injuries`, `weather`, and `prediction` remain part of the compatibility contract. Future admin or match-detail UI that explains missing data, stale sources, fallbacks, or confidence should prefer `data-coverage.sources`, `blocking_flags`, `fallbacks_used`, and `source-health.json` instead of inventing frontend-only status labels.
+
 ### Runtime Site Bundle Shape
 
 `src/data/siteData.ts` expects:
